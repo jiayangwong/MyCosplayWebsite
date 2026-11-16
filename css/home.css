@@ -1,0 +1,195 @@
+/* Home: hero (guest pass on a lanyard), convention hall walk-through, YOU ARE HERE strip. */
+
+/* ---------- Hero ---------- */
+.hero { position: relative; }
+
+.hero-inner {
+  display: grid;
+  gap: var(--space-8);
+  padding-top: var(--space-12);
+  padding-bottom: var(--space-12);
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .hero-inner { grid-template-columns: minmax(280px, 340px) 1fr; gap: var(--space-16); }
+}
+
+.pass-hanger { position: relative; display: flex; justify-content: center; padding-top: 72px; }
+
+.lanyard {
+  position: absolute;
+  top: calc(-1 * var(--space-12));
+  width: 2px;
+  height: calc(72px + var(--space-12) + 6px);
+  background: var(--color-purple);
+}
+
+.lanyard-left { left: calc(50% - 36px); transform: rotate(-10deg); transform-origin: top; }
+.lanyard-right { left: calc(50% + 36px); transform: rotate(10deg); transform-origin: top; }
+
+.guest-pass {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  background: var(--color-surface);
+  border: var(--outline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pass);
+  overflow: hidden;
+  transform: rotate(-2deg);
+  transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .guest-pass { animation: pass-swing 5s ease-in-out infinite alternate; }
+  @keyframes pass-swing {
+    from { transform: rotate(-2.5deg); }
+    to { transform: rotate(-0.5deg); }
+  }
+}
+
+.pass-strip {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-pink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+
+.pass-body { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-4); }
+
+.pass-photo {
+  width: 96px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--outline);
+  border-radius: var(--radius-btn);
+  background: var(--ph-lilac);
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  text-align: center;
+  padding: var(--space-1);
+}
+
+.pass-name { font-size: clamp(2rem, 1.6rem + 1.4vw, 2.6rem); letter-spacing: 1px; margin-top: var(--space-1); }
+.pass-sub { font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
+.pass-tagline { font-weight: 700; }
+.pass-body .btn { margin-top: var(--space-2); }
+
+.barcode {
+  height: 26px;
+  margin-top: var(--space-2);
+  background: repeating-linear-gradient(90deg, var(--color-ink) 0 2px, transparent 2px 5px, var(--color-ink) 5px 9px, transparent 9px 11px);
+}
+
+.hero-intro { display: flex; flex-direction: column; gap: var(--space-4); max-width: 560px; }
+.hero-intro h2 { font-size: clamp(1.75rem, 1.2rem + 2.4vw, 3rem); }
+.hero-summary { font-family: var(--font-mono); font-size: 0.875rem; color: var(--color-purple-deep); font-weight: 700; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+/* ---------- Hall ---------- */
+.hall-wrap {
+  position: relative;
+  background-color: var(--color-floor);
+  background-image:
+    linear-gradient(var(--color-grid) 2px, transparent 2px),
+    linear-gradient(90deg, var(--color-grid) 2px, transparent 2px);
+  background-size: 80px 60px;
+  background-position: 0 var(--walk, 0);
+  border-top: var(--outline);
+}
+
+.hall-bar {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 30;
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  border-bottom: var(--outline);
+  backdrop-filter: blur(4px);
+}
+
+.hall-bar-inner { display: flex; align-items: center; gap: var(--space-3); padding-top: var(--space-2); padding-bottom: var(--space-2); }
+.timeline-slot { flex: 1 1 0; min-width: 0; }
+.hall-bar .timeline { width: 100%; min-width: 0; }
+.skip-reels { flex: none; }
+
+@media (max-width: 599px) {
+  .hall-bar-inner { flex-wrap: wrap; }
+  .timeline-slot { flex-basis: 100%; }
+  .skip-reels { margin-left: auto; }
+  .timeline-label { display: none; }
+}
+
+.hall {
+  list-style: none;
+  margin: 0 auto;
+  padding: var(--space-16) var(--gutter) var(--space-12);
+  max-width: var(--content-max);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  overflow: hidden;
+}
+
+.station { display: flex; justify-content: center; scroll-margin-top: 200px; }
+.station-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  transform: translateY(var(--cam-y, 0)) scale(var(--cam-scale, 1));
+  opacity: var(--cam-fade, 1);
+  transform-origin: center 60%;
+  will-change: transform;
+}
+
+.station.depth-near { --polaroid-w: 320px; }
+.station.depth-mid { --polaroid-w: 250px; }
+.station.depth-far { --polaroid-w: 190px; }
+
+@media (min-width: 900px) {
+  .station.side-left { justify-content: flex-start; padding-left: 12%; }
+  .station.side-right { justify-content: flex-end; padding-right: 12%; }
+  .station.depth-far.side-left { padding-left: 30%; }
+  .station.depth-far.side-right { padding-right: 30%; }
+}
+
+@media (max-width: 899px) {
+  .hall { gap: var(--space-12); }
+  .station.depth-near { --polaroid-w: 280px; }
+  .station.depth-mid { --polaroid-w: 250px; }
+  .station.depth-far { --polaroid-w: 220px; }
+  .station.side-left .station-inner { margin-right: 8%; }
+  .station.side-right .station-inner { margin-left: 8%; }
+}
+
+.hall-year { display: flex; justify-content: center; scroll-margin-top: 200px; }
+
+.year-sign {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) var(--space-8) var(--space-3);
+  background: var(--color-ink);
+  color: var(--color-on-dark);
+  border-radius: var(--radius-sm);
+  border-bottom: 6px solid var(--color-purple);
+  transform: translateY(var(--cam-y, 0)) scale(var(--cam-scale, 1));
+}
+
+.year-sign-label { font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-purple); letter-spacing: 2px; }
+.year-sign-num { font-family: var(--font-mono); font-size: clamp(2.5rem, 2rem + 2vw, 4rem); line-height: 1; letter-spacing: 2px; }
+
+.hall-end { display: flex; justify-content: center; padding: var(--space-8) 0 var(--space-16); }
+.end-sign { min-width: 260px; }
+.end-sign .hall-sign-name { font-size: 1.25rem; }
+
+/* Reduced motion (or JS fallback): a plain stacked list, no camera movement. */
+.hall-wrap.is-static { background-position: 0 0; }
+.hall-wrap.is-static .station-inner,
+.hall-wrap.is-static .year-sign { transform: none; opacity: 1; will-change: auto; }

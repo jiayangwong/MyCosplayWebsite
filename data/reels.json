@@ -1,0 +1,16 @@
+{
+  "header": {
+    "jp": "さしすせそ",
+    "romaji": "sa · shi · su · se · so",
+    "en": "The five compliments, one per kana",
+    "speak": "さ、し、す、せ、そ"
+  },
+  "subtitle": "Five reels, five reactions. Tap one to watch on Instagram.",
+  "reels": [
+    { "id": "sasuga", "kana": "さ", "kanaRomaji": "sa", "jp": "さすが！", "romaji": "sa-su-ga!", "en": "Impressive!", "category": "Best cosplay", "url": "", "thumb": "" },
+    { "id": "shiranakatta", "kana": "し", "kanaRomaji": "shi", "jp": "{知|し}らなかった！", "romaji": "shi-ra-na-kat-ta!", "en": "I didn't know that!", "category": "Behind the scenes", "url": "", "thumb": "" },
+    { "id": "sugoi", "kana": "す", "kanaRomaji": "su", "jp": "すごい！", "romaji": "su-go-i!", "en": "Amazing!", "category": "Transformation", "url": "", "thumb": "" },
+    { "id": "sensuiine", "kana": "せ", "kanaRomaji": "se", "jp": "センスいいね！", "romaji": "sen-su ii ne!", "en": "Great taste!", "category": "Outfit details", "url": "", "thumb": "" },
+    { "id": "sounanda", "kana": "そ", "kanaRomaji": "so", "jp": "そうなんだ！", "romaji": "sō nan da!", "en": "Oh, really? I see!", "category": "Event vlogs", "url": "", "thumb": "" }
+  ]
+}

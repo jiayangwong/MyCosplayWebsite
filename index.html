@@ -3,17 +3,90 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Coming Soon</title>
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-           font-family: system-ui, sans-serif; background: #111; color: #eee; text-align: center; }
-    p { color: #999; }
-  </style>
+  <title>Puzz Kezz · Cosplayer · Walk the hall</title>
+  <meta name="description" content="Puzz Kezz, Malaysian cosplayer and Lolita fan. Walk through every convention, newest first, and watch the さしすせそ reels.">
+  <meta property="og:title" content="Puzz Kezz · Cosplayer">
+  <meta property="og:description" content="Walk the convention hall: every con, newest first, plus the さしすせそ reels.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="og-image.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/reels.css">
 </head>
 <body>
-  <main>
-    <h1>Coming soon ✨</h1>
-    <p>puzzkezz-testing.loc.cc is live — the cosplay site is on its way.</p>
+  <main id="main">
+    <section class="hero" aria-labelledby="pass-name">
+      <div class="truss" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <div class="pass-hanger">
+          <span class="lanyard lanyard-left" aria-hidden="true"></span>
+          <span class="lanyard lanyard-right" aria-hidden="true"></span>
+          <article class="guest-pass">
+            <div class="lace-edge" aria-hidden="true"></div>
+            <div class="pass-strip"><span>GUEST PASS</span><span>No. 001</span></div>
+            <div class="pass-body">
+              <div class="pass-photo" role="img" aria-label="Portrait of Puzz Kezz (photo coming soon)">[Portrait]</div>
+              <h1 class="pass-name" id="pass-name">PUZZ KEZZ</h1>
+              <p class="pass-sub">COSPLAYER · LOLITA · MALAYSIA</p>
+              <p class="pass-tagline">Not a beatboxer. Just here to cosplay.</p>
+              <a class="btn btn-primary" href="#reels">Watch my reels</a>
+              <div class="barcode" aria-hidden="true"></div>
+            </div>
+          </article>
+        </div>
+        <div class="hero-intro">
+          <p class="eyebrow">Walk the hall</p>
+          <h2>Scroll forward.<br>Newest cons first.</h2>
+          <p class="hero-summary" id="hall-summary" aria-live="polite"></p>
+          <p>Every convention I've been to hangs in this hall. Tap a polaroid to flip it and watch the reel.</p>
+          <div class="hero-actions">
+            <a class="btn btn-secondary" href="#hall">Start walking</a>
+            <a class="btn btn-secondary" href="events.html">All events</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hall-wrap" id="hall" aria-labelledby="hall-title">
+      <div class="hall-bar">
+        <div class="container hall-bar-inner">
+          <div id="timeline-slot" class="timeline-slot"></div>
+          <a class="btn btn-secondary btn-sm skip-reels" href="#reels">Skip to reels</a>
+        </div>
+      </div>
+      <h2 class="visually-hidden" id="hall-title">Convention hall, newest event first</h2>
+      <ol class="hall" id="hall-list"></ol>
+      <div class="hall-end">
+        <div class="hall-sign end-sign">
+          <span class="hall-sign-label">END OF HALL</span>
+          <span class="hall-sign-name">5 REELS</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="reels-section" id="reels" aria-label="さしすせそ reels">
+      <div class="container" id="reels-mount"></div>
+    </section>
   </main>
+
+  <script type="module">
+    import { mountChrome } from './js/nav.js';
+    import { mountHall } from './js/hall.js';
+    import { mountReels } from './js/reels.js';
+
+    mountChrome('home');
+    mountHall({
+      hallList: document.getElementById('hall-list'),
+      timelineSlot: document.getElementById('timeline-slot'),
+      summary: document.getElementById('hall-summary'),
+    });
+    mountReels(document.getElementById('reels-mount'));
+  </script>
 </body>
 </html>
