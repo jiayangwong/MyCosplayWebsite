@@ -112,7 +112,7 @@ Mobile:
 
 ## IDEA-3: Convention walk-through (scroll-driven pastel con hall)
 - Date: 2026-11-16
-- Status: new
+- Status: ready-for-planning
 - Summary: Scrolling moves the camera through a dreamy pastel con hall, past floating polaroids from Comic Fiesta, AMG and Omatsuri, ending at the user's name on a stage banner.
 - Details:
   - Closest to SleepyStella's site, but in the user's style (pastel, Lolita touches).
@@ -210,7 +210,7 @@ Mobile:
 
 ## IDEA-5: さしすせそ reel section (from Concept 1)
 - Date: 2026-11-17
-- Status: new
+- Status: ready-for-planning
 - Summary: A reel section built on the さしすせそ reactions, wanted on both PC and phone web, combined with IDEA-3 as the end of the walk-through.
 - Details:
   - Header "さしすせそ", subtitle "Five reels, five reactions. Tap one to watch on Instagram.", and a "Sound on" button.
@@ -225,6 +225,28 @@ Mobile:
   - Phone: horizontal swipe carousel (about 1.5 cards visible) with page dots.
   - Follow the GLOBAL NOTES tone (3-4).
 - References: design canvas "Puzz Kezz homepage concepts", Concept 1 (original) and Concept 6B (restyled)
+- Priority (user's view): must-have
+
+## IDEA-6: Event timeline in descending years (replaces "CF - AMG - OMA - REELS")
+- Date: 2026-11-17
+- Status: ready-for-planning
+- Summary: The walk-through progress strip becomes a timeline in descending order (newest year first) that labels years only. Between two year markers sit many events (the user attends many cons per year).
+- Details:
+  - Labels on the strip are years only (e.g. 2026 ... 2025 ... 2024). Events between years are small ticks/dots, not text labels.
+  - The walk-through hall itself follows the same order: newest events first, a year marker when the year changes.
+  - Events come from data the user enters on the event manager page (IDEA-7), not hard-coded.
+- References: user message 2026-11-17
+- Priority (user's view): must-have
+
+## IDEA-7: Event manager page + media uploader with auto watermark
+- Date: 2026-11-17
+- Status: ready-for-planning
+- Summary: A page where the user enters each event's info, which then feeds the timeline, the hall and the events page.
+- Details:
+  - Fields: when (date), event short form (e.g. CF), event full name (e.g. Comic Fiesta), activities (names of what the user did there, e.g. cosplays, stage, booth), social media link (for an embedded video or a preview photo).
+  - Media uploader: the user uploads photos and the page automatically adds a watermark.
+  - User said: "skip db for now". So data must work without a database (developer's choice of approach).
+- References: user message 2026-11-17
 - Priority (user's view): must-have
 
 ## Comparison and recommendation (for the user to decide)

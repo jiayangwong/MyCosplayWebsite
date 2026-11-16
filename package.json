@@ -1,0 +1,13 @@
+{
+  "name": "puzz-kezz-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Puzz Kezz cosplay website (static HTML/CSS/JS, no build step)",
+  "scripts": {
+    "serve": "python3 -m http.server 4173 --bind 127.0.0.1",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}
