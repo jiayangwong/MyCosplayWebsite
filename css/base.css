@@ -46,6 +46,9 @@ a:hover { color: var(--color-ink); }
 
 [lang="ja"] { line-height: var(--lh-ja); }
 
+/* Japanese always uses the Japanese-capable font, even inside mono labels. */
+:lang(ja) { font-family: var(--font-body); }
+
 :focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 
 .visually-hidden {

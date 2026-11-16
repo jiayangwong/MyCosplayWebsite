@@ -161,8 +161,11 @@ function wireTimeline(timeline, hall) {
   const update = () => {
     const mid = window.innerHeight * 0.5;
     let best = 0;
+    // The current item is the last one whose centre has reached the middle of the screen.
     items.forEach((item, i) => {
-      if (item && item.getBoundingClientRect().top < mid) best = i;
+      if (!item) return;
+      const rect = item.getBoundingClientRect();
+      if (rect.top + rect.height / 2 <= mid + 2) best = i;
     });
     if (best === current) return;
     current = best;

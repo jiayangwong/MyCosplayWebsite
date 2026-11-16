@@ -136,7 +136,7 @@
   overflow: hidden;
 }
 
-.station { display: flex; justify-content: center; scroll-margin-top: 200px; }
+.station { display: flex; justify-content: center; }
 .station-inner {
   display: flex;
   flex-direction: column;
@@ -168,7 +168,7 @@
   .station.side-right .station-inner { margin-left: 8%; }
 }
 
-.hall-year { display: flex; justify-content: center; scroll-margin-top: 200px; }
+.hall-year { display: flex; justify-content: center; }
 
 .year-sign {
   display: flex;

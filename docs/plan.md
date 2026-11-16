@@ -168,9 +168,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - No horizontal scrollbar at 360px, 412px, or 1280px wide.
   - All interactive elements can be reached with Tab and have a visible focus style.
   - `robots.txt` exists and disallows `/admin/`.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-2: Data layer - events.json schema, sample events, loader (sort + group by year)
 - Linked idea(s): IDEA-6, IDEA-7
@@ -187,9 +187,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Anything else -> `{ platform: "link", embedUrl: null }`
   - If the JSON fails to load, the loader returns an empty list and logs one console warning. Pages show an "Events coming soon" message instead of crashing.
   - A Playwright test runs these functions in the page with `page.evaluate` and import, covering all the cases above.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-3: Home - guest pass intro + hall walk-through + descending year timeline strip
 - Linked idea(s): IDEA-3, IDEA-6
@@ -207,9 +207,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - The hall ends with the sign `END OF HALL · 5 REELS`, followed by an element with `id="reels"` (filled in by TASK-4).
   - Only the first 2 polaroid images load eagerly. The rest use `loading="lazy"`.
   - Works at 360px wide on phone. On phone, polaroids are larger and fewer appear per screen.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-4: Pronunciation component + さしすせそ reels (Home section + Reels page)
 - Linked idea(s): IDEA-5, GLOBAL NOTES (pronunciation)
@@ -230,9 +230,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - At phone width, the cards are a horizontal swipe carousel (scroll-snap) with about 1.5 cards visible and 5 page dots. The active dot updates on swipe, and tapping a dot scrolls to that card.
   - The same component is used on Home (`#reels`, under the `END OF HALL · 5 REELS` sign) and on `reels.html`.
   - Every other Japanese text on the site follows the full pattern too. Exception: the MENU subtitle "さしすせそ · sa shi su se so" shows Japanese + romaji only (see Open questions).
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-5: Events page - grouped by year, event cards, click-to-load embeds
 - Linked idea(s): IDEA-6, IDEA-7
@@ -251,9 +251,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - If there is no link and no photo, a neutral placeholder shows.
   - Sample events (`"sample": true`) show a small "Sample" tag, so nobody mistakes them for real history.
   - Works at 360px wide with no horizontal scrolling.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-6: Admin event manager (`/admin/`)
 - Linked idea(s): IDEA-7, IDEA-6
@@ -271,9 +271,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - "Discard draft" (asks for confirmation) clears localStorage and reloads from `data/events.json`.
   - A short help box on the page says: "Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push."
   - The page uses the site tokens and is usable at phone width.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-7: Media uploader with automatic watermark (on `/admin/`)
 - Linked idea(s): IDEA-7
@@ -292,9 +292,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - "Attach to selected event" puts that path in the event's photo field (TASK-6 form) and saves the draft.
   - Processing happens only in the browser. No network requests are made with the image (checked in the test by watching `page.on('request')`).
   - A note on the page says the output removes the photo's location and camera data.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-8: Gallery, About, Contact (simple v1 pages)
 - Linked idea(s): GLOBAL NOTES (tabs), IDEA-7 (photos feed the gallery)
@@ -305,9 +305,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - **Contact** has the heading "Collabs & bookings", a `[placeholder]` text, a `mailto:` link using the email from `js/site-config.js` (a placeholder until the user provides one), and social links (new tab, `rel="noopener"`).
   - Contact has no form.
   - On all three pages the correct tab is active (`aria-current="page"`). No horizontal scrolling at 360px.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-9: Polish pass - meta tags, 404, accessibility and performance check
 - Linked idea(s): GLOBAL NOTES, IDEA-3
@@ -318,9 +318,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - Before any interaction, the Home page makes no requests to youtube, instagram, or tiktok domains (checked in Playwright).
   - Text colour contrast against its background is at least 4.5:1 for body text, using the token pairs in the style guide.
   - All earlier `tests/task-*.spec.js` pass in both projects.
-- Status: todo
-- Review: -
-- QA: -
+- Status: done (built 2026-11-17 by the main session on site-v1)
+- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 Suggested build order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9. TASK-6 and TASK-7 only depend on 1 and 2.
 
