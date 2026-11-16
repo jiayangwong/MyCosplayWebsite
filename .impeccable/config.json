@@ -1,0 +1,62 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "css/base.css"
+        ],
+        "createdAt": "2026-11-16T19:32:39.877Z",
+        "reason": "assistant decided: Concept 6B hanging hall signs (ink plate + coloured bottom edge) approved by the user on the design canvas"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "css/components.css"
+        ],
+        "createdAt": "2026-11-16T19:32:39.946Z",
+        "reason": "assistant decided: Concept 6B hanging hall signs (ink plate + coloured bottom edge) approved by the user on the design canvas"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "css/reels.css"
+        ],
+        "createdAt": "2026-11-16T19:32:40.016Z",
+        "reason": "assistant decided: Concept 6B hanging hall signs (ink plate + coloured bottom edge) approved by the user on the design canvas"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "css/home.css"
+        ],
+        "createdAt": "2026-11-16T19:32:40.085Z",
+        "reason": "assistant decided: Concept 6B hanging hall signs (ink plate + coloured bottom edge) approved by the user on the design canvas"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "storyboard/style.css"
+        ],
+        "createdAt": "2026-11-16T19:32:40.155Z",
+        "reason": "assistant decided: Concept 6B hanging hall signs (ink plate + coloured bottom edge) approved by the user on the design canvas"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "storyboard/style.css"
+        ],
+        "createdAt": "2026-11-16T19:32:40.228Z",
+        "reason": "assistant decided: .strings left/right 2px borders draw the two hanging strings above each hall sign, not a card accent"
+      }
+    ]
+  }
+}
