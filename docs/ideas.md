@@ -4,6 +4,8 @@
 - Date: 2026-11-17
 - Tone: the user is male, mostly cosplays female characters and likes Lolita dress. The design should be LESS feminine: about 3-4 on a scale where 1 = very feminine and 10 = very masculine.
 - Colours: baby pink and purple are fine (as accents).
+- Pronunciation (user: "highly need", 2026-11-17): every Japanese word on the site must show how to say it. Pattern: line 1 Japanese (furigana over any kanji), line 2 romaji, line 3 English meaning, plus a speaker button that plays the word.
+- Tabs (2026-11-17, based on SleepyStella's menu: Home, Gallery, Events, Anniversary, Recap, Contact): HOME · GALLERY · REELS · EVENTS · ABOUT · CONTACT. PC: tabs in the top bar. Phone: a MENU button opens a full-screen list with a subtitle under each tab and social links.
 - Current direction: IDEA-3 (convention walk-through) + IDEA-5 (さしすせそ reels). See "Concept 6B" on the design canvas "Puzz Kezz homepage concepts" (https://claude.ai/artifact/G21i2sRrvB3f2cVuDZaiYF).
 
 ## IDEA-1: Lolita wardrobe (ornate doors, swaying photo-card hangers)
@@ -212,12 +214,13 @@ Mobile:
 - Summary: A reel section built on the さしすせそ reactions, wanted on both PC and phone web, combined with IDEA-3 as the end of the walk-through.
 - Details:
   - Header "さしすせそ", subtitle "Five reels, five reactions. Tap one to watch on Instagram.", and a "Sound on" button.
-  - Five reel cards, each with its kana as a big corner label:
-    - さすが！ (Best cosplay)
-    - 知らなかった！ (Behind the scenes)
-    - すごい！ (Transformation)
-    - センスいいね！ (Outfit details)
-    - そうなんだ！ (Event vlogs)
+  - Header shows romaji under it: "sa · shi · su · se · so".
+  - Five reel cards, each with its kana + romaji as a corner label, then Japanese / romaji / English meaning / category, and a speaker button:
+    - さすが！ sa-su-ga! "Impressive!" (Best cosplay)
+    - 知(し)らなかった！ shi-ra-na-kat-ta! "I didn't know that!" (Behind the scenes)
+    - すごい！ su-go-i! "Amazing!" (Transformation)
+    - センスいいね！ sen-su ii ne! "Great taste!" (Outfit details)
+    - そうなんだ！ sō nan da! "Oh, really? I see!" (Event vlogs)
   - PC: five cards in one row.
   - Phone: horizontal swipe carousel (about 1.5 cards visible) with page dots.
   - Follow the GLOBAL NOTES tone (3-4).
