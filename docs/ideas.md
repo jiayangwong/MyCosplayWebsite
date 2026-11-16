@@ -1,5 +1,11 @@
 # Ideas
 
+## GLOBAL NOTES (apply to ALL ideas)
+- Date: 2026-11-17
+- Tone: the user is male, mostly cosplays female characters and likes Lolita dress. The design should be LESS feminine: about 3-4 on a scale where 1 = very feminine and 10 = very masculine.
+- Colours: baby pink and purple are fine (as accents).
+- Current direction: IDEA-3 (convention walk-through) + IDEA-5 (さしすせそ reels). See "Concept 6B" on the design canvas "Puzz Kezz homepage concepts" (https://claude.ai/artifact/G21i2sRrvB3f2cVuDZaiYF).
+
 ## IDEA-1: Lolita wardrobe (ornate doors, swaying photo-card hangers)
 - Date: 2026-11-16
 - Status: new
@@ -14,7 +20,7 @@
   - Touch vs hover: there is no hover on touch, so names are shown as captions under each card on mobile.
   - Risks: ornate art needs a custom illustrator or asset work; if doors are slow the visitor waits (so cap at ~1.5s and allow skip); sway can feel gimmicky with more than ~12 cards (use paging or multiple rails).
 - References: none (concept suggested via another chat)
-- Priority (user's view): must-have (candidate)
+- Priority (user's view): nice-to-have (candidate). 2026-11-17: user prefers IDEA-3 instead.
 
 ### Layout sketches (IDEA-1)
 Desktop (open state):
@@ -115,8 +121,12 @@ Mobile:
   - Accessibility: the content exists as ordinary semantic sections (event headings, image alt text), so a plain linear-scroll fallback works with no camera effect; the reduced-motion fallback turns the walk-through into a normal stacked gallery; scroll-jacking is avoided (native scroll only).
   - Touch vs hover: tilt and hover reveals on desktop become tap-to-flip on mobile.
   - Risks: scroll-driven sites can feel long and slow; the effect resembles SleepyStella's site, so the visual identity must clearly differ; photos need permission/rights from events; a long page can bury the reels (so provide skip).
-- References: SleepyStella's site (user mentioned, link not provided)
-- Priority (user's view): nice-to-have (candidate)
+- User feedback (2026-11-17):
+  - This is the user's preferred concept (Concept 6 on the design canvas).
+  - The "NOW ON STAGE" stage-banner finale "is a bit weird" -> replace it. Concept 6B draft ends at a hall sign reading さしすせそ, which leads straight into IDEA-5's reel section. The stage-banner parts of the sketches below are superseded.
+  - Combine with IDEA-5 and apply the GLOBAL NOTES tone (3-4). Concept 6B draft direction: bold gothic sans + mono labels (no script fonts), ink outlines, square-ish corners, steel truss and hall signs, intro as a con "guest pass" on a lanyard, Lolita kept as a hint (one lace edge).
+- References: SleepyStella's site (user mentioned, link not provided); design canvas "Puzz Kezz homepage concepts", Concept 6 and 6B (https://claude.ai/artifact/G21i2sRrvB3f2cVuDZaiYF)
+- Priority (user's view): must-have (preferred concept, 2026-11-17)
 
 ### Layout sketches (IDEA-3)
 Desktop:
@@ -196,7 +206,27 @@ Mobile:
 +------------------+
 ```
 
+## IDEA-5: さしすせそ reel section (from Concept 1)
+- Date: 2026-11-17
+- Status: new
+- Summary: A reel section built on the さしすせそ reactions, wanted on both PC and phone web, combined with IDEA-3 as the end of the walk-through.
+- Details:
+  - Header "さしすせそ", subtitle "Five reels, five reactions. Tap one to watch on Instagram.", and a "Sound on" button.
+  - Five reel cards, each with its kana as a big corner label:
+    - さすが！ (Best cosplay)
+    - 知らなかった！ (Behind the scenes)
+    - すごい！ (Transformation)
+    - センスいいね！ (Outfit details)
+    - そうなんだ！ (Event vlogs)
+  - PC: five cards in one row.
+  - Phone: horizontal swipe carousel (about 1.5 cards visible) with page dots.
+  - Follow the GLOBAL NOTES tone (3-4).
+- References: design canvas "Puzz Kezz homepage concepts", Concept 1 (original) and Concept 6B (restyled)
+- Priority (user's view): must-have
+
 ## Comparison and recommendation (for the user to decide)
+- UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
+
 | Idea | Reel-click strength | Effort | Performance risk | Best for |
 |---|---|---|---|---|
 | 1 Wardrobe | Very high (the menu is the reels) | Medium (art-heavy) | Low | Strongest personal brand (Lolita style) |
