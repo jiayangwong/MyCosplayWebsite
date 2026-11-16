@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Puzz Gacha prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #FFE9F1; color: #5A2A45; font-family: 'Zen Maru Gothic', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+  canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; }
+  .hud { position: fixed; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: calc(16px + env(safe-area-inset-top)) 20px 0; pointer-events: none; }
+  .brand { font-weight: 900; font-size: 20px; letter-spacing: .5px; }
+  .pulls { font-size: 14px; font-weight: 700; background: #FFF8FB; border: 2px solid #5A2A45; border-radius: 999px; padding: 6px 12px; }
+  .bottom { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 20px calc(24px + env(safe-area-inset-bottom)); pointer-events: none; }
+  .hint { margin: 0; font-size: 14px; font-weight: 700; background: rgba(255,248,251,.85); padding: 4px 12px; border-radius: 999px; }
+  .turn { pointer-events: auto; font: inherit; font-weight: 900; font-size: 18px; min-height: 56px; padding: 0 36px; border-radius: 999px; border: 0; background: #5A2A45; color: #FFF1F5; cursor: pointer; transition: transform .15s; }
+  .turn:active { transform: scale(.96); }
+  .turn:disabled { opacity: .5; cursor: default; }
+  .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(90,42,69,.38); animation: fade .3s ease; }
+  .overlay[hidden] { display: none; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { transform: scale(.6) rotate(-6deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+  .card { width: min(330px, 100%); background: #FFF8FB; border: 3px solid #5A2A45; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px; text-align: center; animation: pop .45s cubic-bezier(.34,1.56,.64,1); }
+  .rarity { margin: 0; font-weight: 900; font-size: 14px; letter-spacing: 2px; color: #B8456B; }
+  .photo { height: 260px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #FFF8FB; }
+  .photo .kana { font-size: 92px; font-weight: 900; line-height: 1; }
+  .photo .note { font-size: 13px; opacity: .9; }
+  .card h2 { margin: 0; font-size: 28px; font-weight: 900; }
+  .card .sub { margin: 0; font-size: 15px; }
+  .actions { display: flex; gap: 10px; }
+  .actions a, .actions button { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 999px; font: inherit; font-weight: 700; font-size: 15px; text-decoration: none; cursor: pointer; }
+  .actions a { background: #5A2A45; color: #FFF1F5; border: 0; }
+  .actions button { background: #FFF1F5; color: #5A2A45; border: 2px solid #5A2A45; }
+  .loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Loading the gacha…</div>
+<div class="hud"><span class="brand">Puzz Kezz</span><span class="pulls" id="pulls">Pulls: 0</span></div>
+<div class="bottom">
+  <p class="hint" id="hint">Tap the machine or press Turn</p>
+  <button class="turn" id="turn" disabled>Turn</button>
+</div>
+<div class="overlay" id="overlay" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="r-phrase">
+    <p class="rarity" id="r-rarity">SSR ★★★★★</p>
+    <div class="photo" id="r-photo"><span class="kana" id="r-kana">さ</span><span class="note">Your reel cover goes here</span></div>
+    <h2 id="r-phrase">さすが！</h2>
+    <p class="sub" id="r-sub">Best cosplay</p>
+    <div class="actions">
+      <a id="r-link" href="https://www.instagram.com/notpuzzkezz/" target="_blank" rel="noopener">Watch reel</a>
+      <button id="again" type="button">Spin again</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const RESULTS = [
+  { k: 'さ', p: 'さすが！', s: 'Best cosplay', c: '#F28DB8', r: 'SSR ★★★★★' },
+  { k: 'し', p: '知らなかった！', s: 'Behind the scenes', c: '#A98BE0', r: 'SR ★★★★' },
+  { k: 'す', p: 'すごい！', s: 'Transformation', c: '#5FB6E6', r: 'SSR ★★★★★' },
+  { k: 'せ', p: 'センスいいね！', s: 'Outfit details', c: '#E9A949', r: 'SR ★★★★' },
+  { k: 'そ', p: 'そうなんだ！', s: 'Event vlog', c: '#3A2A3E', r: 'UR ★★★★★★' }
+];
+
+const $ = (id) => document.getElementById(id);
+const turnBtn = $('turn'), hint = $('hint'), overlay = $('overlay');
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+} catch (e) {
+  $('loading').textContent = 'This device cannot show 3D. The real site would show a picture here.';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#FFE9F1');
+scene.fog = new THREE.Fog('#FFE9F1', 7, 14);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 50);
+const lookAt = new THREE.Vector3(0, 1.25, 0);
+let baseZ = 6;
+
+scene.add(new THREE.HemisphereLight('#ffffff', '#F7B6CB', 1.1));
+const sun = new THREE.DirectionalLight('#fff4f8', 1.8);
+sun.position.set(-3, 6, 4);
+scene.add(sun);
+
+function blobTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grd.addColorStop(0, 'rgba(90,42,69,0.35)'); grd.addColorStop(1, 'rgba(90,42,69,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+const blobTex = blobTexture();
+function makeBlob(size) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.005; return m;
+}
+
+const floor = new THREE.Mesh(new THREE.CircleGeometry(6, 64), new THREE.MeshStandardMaterial({ color: '#FFDCE8', roughness: 0.9 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+scene.add(makeBlob(3.4));
+
+const machine = new THREE.Group(); scene.add(machine);
+const pink = new THREE.MeshStandardMaterial({ color: '#F49AC1', roughness: 0.35, metalness: 0.05 });
+const gold = new THREE.MeshStandardMaterial({ color: '#E8C27A', roughness: 0.25, metalness: 0.8 });
+const silver = new THREE.MeshStandardMaterial({ color: '#F7D6E4', roughness: 0.3, metalness: 0.5 });
+const dark = new THREE.MeshStandardMaterial({ color: '#5A2A45', roughness: 0.6 });
+
+const base = new THREE.Mesh(new RoundedBoxGeometry(1.6, 1.3, 1.4, 4, 0.12), pink);
+base.position.y = 0.65; machine.add(base);
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.82, 0.14, 48), gold);
+neck.position.y = 1.36; machine.add(neck);
+const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.14, 32), pink);
+cap.position.y = 2.82; machine.add(cap);
+const capBall = new THREE.Mesh(new THREE.SphereGeometry(0.1, 24, 16), gold);
+capBall.position.y = 2.95; machine.add(capBall);
+
+function labelTexture() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#FFF8FB'; g.beginPath(); g.roundRect(4, 4, 504, 120, 40); g.fill();
+  g.lineWidth = 6; g.strokeStyle = '#5A2A45'; g.stroke();
+  g.fillStyle = '#5A2A45'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = "900 54px 'Zen Maru Gothic', sans-serif";
+  g.fillText('PUZZ ガチャ', 256, 56);
+  g.font = "700 22px 'Zen Maru Gothic', sans-serif";
+  g.fillText('1回 FREE ・ さしすせそ', 256, 100);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const label = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.3), new THREE.MeshBasicMaterial({ map: labelTexture(), transparent: true }));
+label.position.set(0, 1.08, 0.711); machine.add(label);
+
+const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.05, 40), silver);
+plate.rotation.x = Math.PI / 2; plate.position.set(0, 0.7, 0.72); machine.add(plate);
+const handle = new THREE.Group(); handle.position.set(0, 0.7, 0.78); machine.add(handle);
+const bar = new THREE.Mesh(new RoundedBoxGeometry(0.46, 0.1, 0.1, 3, 0.04), dark);
+handle.add(bar);
+for (const x of [-0.23, 0.23]) {
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 20, 14), gold);
+  knob.position.set(x, 0, 0.04); handle.add(knob);
+}
+const chute = new THREE.Mesh(new RoundedBoxGeometry(0.56, 0.34, 0.1, 3, 0.04), dark);
+chute.position.set(0, 0.28, 0.68); machine.add(chute);
+const tray = new THREE.Mesh(new RoundedBoxGeometry(0.66, 0.08, 0.26, 3, 0.03), gold);
+tray.position.set(0, 0.1, 0.8); machine.add(tray);
+
+const whiteMat = new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.25, side: THREE.DoubleSide });
+const bandMat = new THREE.MeshStandardMaterial({ color: '#E8C27A', roughness: 0.3, metalness: 0.6 });
+function makeCapsule(r, color) {
+  const g = new THREE.Group();
+  const bottom = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), whiteMat);
+  const pivot = new THREE.Group(); pivot.position.set(0, 0, -r);
+  const lid = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.22, metalness: 0.05, side: THREE.DoubleSide }));
+  lid.position.set(0, 0, r); pivot.add(lid);
+  const band = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.07, 8, 40), bandMat);
+  band.rotation.x = Math.PI / 2;
+  g.add(bottom, pivot, band);
+  g.userData.pivot = pivot;
+  return g;
+}
+
+const domeCenter = new THREE.Vector3(0, 1.95, 0), domeR = 0.86;
+const inside = [];
+const r0 = 0.16;
+for (let tries = 0; tries < 900 && inside.length < 17; tries++) {
+  const p = new THREE.Vector3((Math.random() * 2 - 1) * 0.7, 1.45 + r0 + Math.random() * 0.75, (Math.random() * 2 - 1) * 0.7);
+  if (p.distanceTo(domeCenter) > domeR - r0 - 0.04) continue;
+  if (inside.some((c) => c.position.distanceTo(p) < r0 * 1.9)) continue;
+  const cap2 = makeCapsule(r0, RESULTS[inside.length % RESULTS.length].c);
+  cap2.position.copy(p);
+  cap2.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+  cap2.userData.home = p.clone(); cap2.userData.rot = cap2.rotation.clone();
+  machine.add(cap2); inside.push(cap2);
+}
+const dome = new THREE.Mesh(new THREE.SphereGeometry(domeR, 48, 32),
+  new THREE.MeshPhysicalMaterial({ color: '#ffffff', transparent: true, opacity: 0.2, roughness: 0.04, clearcoat: 1, depthWrite: false }));
+dome.position.copy(domeCenter); dome.renderOrder = 2; machine.add(dome);
+
+const PETALS = 140;
+const petalMesh = new THREE.InstancedMesh(new THREE.CircleGeometry(0.05, 10),
+  new THREE.MeshBasicMaterial({ color: '#F7B6CB', side: THREE.DoubleSide, transparent: true, opacity: 0.9 }), PETALS);
+const petals = [];
+for (let i = 0; i < PETALS; i++) {
+  petals.push({ x: (Math.random() * 2 - 1) * 4.5, y: Math.random() * 5, z: -3 + Math.random() * 5,
+    v: 0.18 + Math.random() * 0.3, ph: Math.random() * 6.28, rs: 0.5 + Math.random() * 2, burst: 0, bx: 0, bz: 0 });
+}
+scene.add(petalMesh);
+const dummy = new THREE.Object3D();
+
+const SPARK = 90;
+const sparkGeo = new THREE.BufferGeometry();
+const sparkPos = new Float32Array(SPARK * 3), sparkVel = new Float32Array(SPARK * 3);
+sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+const dotCanvas = document.createElement('canvas'); dotCanvas.width = dotCanvas.height = 64;
+{ const g = dotCanvas.getContext('2d'); const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, 'rgba(255,255,255,1)'); grd.addColorStop(0.35, 'rgba(255,255,255,0.9)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 64, 64); }
+const sparkMat = new THREE.PointsMaterial({ color: '#FFD27A', size: 0.11, map: new THREE.CanvasTexture(dotCanvas), transparent: true, opacity: 0, depthWrite: false });
+const sparks = new THREE.Points(sparkGeo, sparkMat); scene.add(sparks);
+let sparkLife = 0;
+function burst(at) {
+  for (let i = 0; i < SPARK; i++) {
+    sparkPos[i * 3] = at.x; sparkPos[i * 3 + 1] = at.y; sparkPos[i * 3 + 2] = at.z;
+    const d = new THREE.Vector3().randomDirection().multiplyScalar(1.2 + Math.random() * 2.2);
+    sparkVel[i * 3] = d.x; sparkVel[i * 3 + 1] = d.y + 1; sparkVel[i * 3 + 2] = d.z;
+  }
+  sparkGeo.attributes.position.needsUpdate = true;
+  sparkLife = 1;
+  for (const p of petals) {
+    if (Math.random() < 0.5) { p.burst = 1; p.bx = (Math.random() * 2 - 1) * 2; p.bz = Math.random() * 1.5; }
+  }
+}
+
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeBack = (t) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+
+let state = 'idle', st = 0, pulls = 0, last = -1, result = null, prize = null;
+const vel = new THREE.Vector3();
+const prizeShadow = makeBlob(0.6); prizeShadow.visible = false; scene.add(prizeShadow);
+let fromPos, toPos, fromQ, toQ;
+
+function startSpin() {
+  if (state !== 'idle') return;
+  let i; do { i = Math.floor(Math.random() * RESULTS.length); } while (i === last);
+  last = i; result = RESULTS[i];
+  state = 'turn'; st = 0;
+  turnBtn.disabled = true; hint.textContent = 'Turning…';
+}
+
+function setState(s) { state = s; st = 0; }
+
+function showCard() {
+  pulls++; $('pulls').textContent = 'Pulls: ' + pulls;
+  $('r-kana').textContent = result.k;
+  $('r-phrase').textContent = result.p;
+  $('r-sub').textContent = result.s;
+  $('r-rarity').textContent = result.r;
+  $('r-photo').style.background = result.c;
+  overlay.hidden = false;
+  $('again').focus();
+}
+
+$('again').addEventListener('click', () => { overlay.hidden = true; setState('reset'); });
+turnBtn.addEventListener('click', startSpin);
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), pointer = new THREE.Vector2();
+renderer.domElement.addEventListener('pointermove', (e) => {
+  pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+});
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  if (ray.intersectObject(machine, true).length) startSpin();
+});
+
+function fit() {
+  const a = innerWidth / innerHeight;
+  camera.aspect = a;
+  baseZ = Math.max(6, 2.3 / (0.63 * a));
+  scene.fog.near = baseZ + 1; scene.fog.far = baseZ + 9;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fit); fit();
+
+const clock = new THREE.Clock();
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  st += dt;
+
+  camera.position.x += (pointer.x * 0.35 - camera.position.x) * 0.04;
+  camera.position.y += (1.9 + pointer.y * 0.2 - camera.position.y) * 0.04;
+  camera.position.z = baseZ;
+  camera.lookAt(lookAt);
+
+  machine.rotation.y = Math.sin(t * 0.4) * 0.06;
+  machine.position.x = 0;
+
+  if (state === 'turn') {
+    const p = Math.min(st / 1.1, 1);
+    handle.rotation.z = -ease(p) * Math.PI * 2;
+    machine.position.x = Math.sin(t * 55) * 0.012 * (1 - p);
+    inside.forEach((c, i) => {
+      c.position.y = c.userData.home.y + Math.abs(Math.sin(t * 22 + i)) * 0.05 * (1 - p);
+      c.rotation.z = c.userData.rot.z + Math.sin(t * 18 + i) * 0.4 * (1 - p);
+    });
+    if (p >= 1) {
+      prize = makeCapsule(0.2, result.c);
+      prize.position.set(0, 0.3, 0.6);
+      scene.add(prize);
+      vel.set((Math.random() * 2 - 1) * 0.4, 0.6, 2.1);
+      prizeShadow.visible = true;
+      setState('drop');
+    }
+  } else if (state === 'drop') {
+    vel.y -= 9.8 * dt;
+    prize.position.addScaledVector(vel, dt);
+    if (prize.position.y < 0.2) {
+      prize.position.y = 0.2;
+      if (Math.abs(vel.y) > 0.4) vel.y = -vel.y * 0.45; else vel.y = 0;
+      vel.x *= 0.92; vel.z *= 0.92;
+    }
+    if (prize.position.z > 1.9) { prize.position.z = 1.9; vel.z = -vel.z * 0.4; }
+    prize.rotation.x += vel.z * dt / 0.2;
+    prize.rotation.z -= vel.x * dt / 0.2;
+    prizeShadow.position.set(prize.position.x, 0.006, prize.position.z);
+    if (st > 1.5) {
+      fromPos = prize.position.clone();
+      toPos = camera.position.clone().lerp(lookAt, 0.62);
+      fromQ = prize.quaternion.clone();
+      toQ = camera.quaternion.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0.35, 0, 0)));
+      hint.textContent = 'Something came out…';
+      setState('present');
+    }
+  } else if (state === 'present') {
+    const p = ease(Math.min(st / 0.9, 1));
+    prize.position.lerpVectors(fromPos, toPos, p);
+    prize.position.y += Math.sin(p * Math.PI) * 0.4;
+    prize.quaternion.slerpQuaternions(fromQ, toQ, p);
+    prize.scale.setScalar(1 + p * 1.1);
+    prizeShadow.material.opacity = 1 - p;
+    if (st >= 0.9) { setState('wobble'); }
+  } else if (state === 'wobble') {
+    prize.rotation.z = Math.sin(st * 30) * 0.08 * (1 - st / 0.5);
+    if (st >= 0.5) { burst(prize.position); setState('open'); }
+  } else if (state === 'open') {
+    const p = Math.min(st / 0.6, 1);
+    prize.userData.pivot.rotation.x = -1.9 * easeBack(p);
+    if (st >= 0.35 && overlay.hidden && !prize.userData.shown) { prize.userData.shown = true; showCard(); }
+    if (p >= 1) setState('card');
+  } else if (state === 'reset') {
+    const p = Math.min(st / 0.4, 1);
+    prize.scale.setScalar(2.1 * (1 - ease(p)) + 0.001);
+    if (p >= 1) {
+      scene.remove(prize); prize = null;
+      prizeShadow.visible = false; prizeShadow.material.opacity = 1;
+      handle.rotation.z = 0;
+      inside.forEach((c) => { c.position.copy(c.userData.home); c.rotation.copy(c.userData.rot); });
+      turnBtn.disabled = false; hint.textContent = 'Tap the machine or press Turn';
+      setState('idle');
+    }
+  }
+
+  if (state === 'idle') {
+    inside.forEach((c, i) => { c.position.y = c.userData.home.y + Math.sin(t * 1.5 + i) * 0.006; });
+  }
+
+  if (sparkLife > 0) {
+    sparkLife -= dt * 0.8;
+    for (let i = 0; i < SPARK; i++) {
+      sparkVel[i * 3 + 1] -= 3.5 * dt;
+      sparkPos[i * 3] += sparkVel[i * 3] * dt;
+      sparkPos[i * 3 + 1] += sparkVel[i * 3 + 1] * dt;
+      sparkPos[i * 3 + 2] += sparkVel[i * 3 + 2] * dt;
+    }
+    sparkGeo.attributes.position.needsUpdate = true;
+    sparkMat.opacity = Math.max(sparkLife, 0);
+  }
+
+  for (let i = 0; i < PETALS; i++) {
+    const p = petals[i];
+    p.y -= p.v * dt;
+    p.x += Math.sin(t * 0.8 + p.ph) * 0.15 * dt;
+    if (p.burst > 0) {
+      p.x += p.bx * p.burst * dt; p.z += p.bz * p.burst * dt; p.y += 1.2 * p.burst * dt;
+      p.burst = Math.max(0, p.burst - dt * 0.7);
+    }
+    if (p.y < 0) { p.y = 5; p.x = (Math.random() * 2 - 1) * 4.5; p.z = -3 + Math.random() * 5; }
+    dummy.position.set(p.x, p.y, p.z);
+    dummy.rotation.set(t * p.rs + p.ph, t * p.rs * 0.7, p.ph);
+    dummy.scale.set(1, 0.7, 1);
+    dummy.updateMatrix();
+    petalMesh.setMatrixAt(i, dummy.matrix);
+  }
+  petalMesh.instanceMatrix.needsUpdate = true;
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+
+document.fonts.load("900 54px 'Zen Maru Gothic'").catch(() => {}).finally(() => {
+  label.material.map = labelTexture(); label.material.needsUpdate = true;
+});
+$('loading').remove();
+turnBtn.disabled = false;
+tick();
+</script>
+</body>
+</html>

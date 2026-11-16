@@ -1,0 +1,27 @@
+<!-- Plays one looping audio file while the reels section is on screen, after the visitor taps "Sound on".
+     Browsers block sound until the visitor taps/clicks, so the Sound on button is required. -->
+<section id="reels">
+  <button id="soundBtn">🔊 Sound on</button>
+  <!-- your 5 reel boxes here -->
+</section>
+
+<audio id="bgm" src="sashisuseso.mp3" loop preload="auto"></audio>
+
+<script>
+  const audio = document.getElementById('bgm');
+  const btn = document.getElementById('soundBtn');
+  audio.volume = 0.6;
+  let soundOn = false, inView = false;
+
+  btn.onclick = () => {
+    soundOn = !soundOn;
+    btn.textContent = soundOn ? '🔇 Sound off' : '🔊 Sound on';
+    soundOn && inView ? audio.play() : audio.pause();
+  };
+
+  new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting;
+    if (soundOn && inView) audio.play();
+    else audio.pause();
+  }, { threshold: 0.3 }).observe(document.getElementById('reels'));
+</script>

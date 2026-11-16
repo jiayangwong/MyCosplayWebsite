@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>さしすせそ original melody</title>
+<style>
+  body { margin: 0; padding: 24px; font-family: system-ui, sans-serif; background: #FFF1F5; color: #5A2A45; }
+  h1 { font-size: 20px; margin: 0 0 16px; }
+  #grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; max-width: 720px; }
+  .ph { background: #fff; border: 1px solid #e4c9d5; border-radius: 12px; padding: 12px; cursor: pointer; text-align: center; font: inherit; color: inherit; }
+  .ph.on { outline: 2px solid #5A2A45; }
+  .k { font-size: 28px; font-weight: 700; margin: 0; }
+  .syl { display: inline-block; padding: 2px 3px; border-radius: 4px; font-size: 15px; }
+  .syl.hit { background: #5A2A45; color: #FFF1F5; }
+  .nt { font-size: 11px; color: #8a6a7a; font-family: monospace; margin-top: 6px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 20px; }
+  label { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  button.main { font: inherit; padding: 8px 16px; border-radius: 999px; border: 1px solid #5A2A45; background: #fff; color: #5A2A45; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>さしすせそ original melody</h1>
+<div id="grid"></div>
+<div class="row">
+  <button class="main" id="all">Play all</button>
+  <label>Key <input type="range" id="key" min="-7" max="5" step="1" value="0"><span id="kv">0</span></label>
+  <label>Tempo <input type="range" id="tmp" min="80" max="160" step="1" value="126"><span id="tv">126</span></label>
+</div>
+<p style="font-size:13px">Lower the key if it's too high to sing. Try -5 for a lower voice.</p>
+<script>
+const P=[
+{k:'さ',s:[['さ','G4',.5],['す','A4',.5],['が〜','C5',1.5]]},
+{k:'し',s:[['し','E4',.5],['ら','G4',.5],['な','A4',.5],['かっ','C5',.75],['',null,.25],['た','A4',1]]},
+{k:'す',s:[['す','C5',.5],['ご','D5',.5],['い〜','E5',1.5]]},
+{k:'せ',s:[['セ','G4',.5],['ン','G4',.5],['ス','E4',.5],['い','C5',.5],['い','B4',.5],['ね','C5',1]]},
+{k:'そ',s:[['そ','E4',.5],['う','G4',.5],['な','F4',.5],['ん','D4',.5],['だ','C4',1.5]]}];
+const N={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const midi=n=>12*(+n.slice(-1)+1)+N[n[0]];
+const g=document.getElementById('grid');
+P.forEach((p,i)=>{const d=document.createElement('button');d.className='ph';d.id='p'+i;
+d.innerHTML='<p class="k">'+p.k+'</p><div>'+p.s.filter(x=>x[0]).map((x,j)=>'<span class="syl" data-j="'+j+'">'+x[0]+'</span>').join('')+'</div><div class="nt">'+p.s.filter(x=>x[1]).map(x=>x[1]).join(' ')+'</div>';
+d.onclick=()=>play([i]);g.appendChild(d)});
+let ctx,timers=[];
+const key=document.getElementById('key'),tmp=document.getElementById('tmp');
+key.oninput=()=>document.getElementById('kv').textContent=(key.value>0?'+':'')+key.value;
+tmp.oninput=()=>document.getElementById('tv').textContent=tmp.value;
+function tone(f,t,dur){const o=ctx.createOscillator(),o2=ctx.createOscillator(),gn=ctx.createGain(),v=ctx.createOscillator(),vg=ctx.createGain();
+o.type='triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2;
+v.frequency.value=5.5;vg.gain.value=dur>.5?f*.006:0;v.connect(vg);vg.connect(o.frequency);vg.connect(o2.frequency);
+const g2=ctx.createGain();g2.gain.value=.25;o.connect(gn);o2.connect(g2);g2.connect(gn);gn.connect(ctx.destination);
+gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(.32,t+.02);gn.gain.setValueAtTime(.28,t+dur*.6);gn.gain.linearRampToValueAtTime(0,t+dur*.95);
+[o,o2,v].forEach(x=>{x.start(t);x.stop(t+dur)})}
+function clear(){timers.forEach(clearTimeout);timers=[];document.querySelectorAll('.on,.hit').forEach(e=>e.classList.remove('on','hit'))}
+function play(list){ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();ctx.resume();clear();
+const beat=60/+tmp.value,sh=+key.value;let t=ctx.currentTime+.05,t0=t;
+list.forEach(i=>{const el=document.getElementById('p'+i);
+timers.push(setTimeout(()=>{document.querySelectorAll('.ph.on').forEach(e=>e.classList.remove('on'));el.classList.add('on')},(t-t0)*1000));
+P[i].s.forEach((x,j)=>{const d=x[2]*beat;
+if(x[1]){tone(440*Math.pow(2,(midi(x[1])+sh-69)/12),t,d);
+const sp=el.querySelector('[data-j="'+j+'"]');
+timers.push(setTimeout(()=>{el.querySelectorAll('.hit').forEach(e=>e.classList.remove('hit'));sp&&sp.classList.add('hit')},(t-t0)*1000));}
+t+=d});t+=beat*.75});
+timers.push(setTimeout(clear,(t-t0)*1000))}
+document.getElementById('all').onclick=()=>play([0,1,2,3,4]);
+</script>
+</body>
+</html>

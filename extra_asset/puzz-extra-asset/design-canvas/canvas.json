@@ -1,0 +1,19 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-11-16T08:00:00Z"},"title":"Puzz Kezz homepage concepts","launch":{"view":"canvas"},"pages":[],
+"boards":{
+"Main.dc.html":{"x":0,"y":260,"w":1280,"h":1400,"title":"1 Sweet and gothic switch · desktop"},
+"C1-phone.dc.html":{"x":1360,"y":260,"w":390,"h":1560,"title":"1 Sweet and gothic switch · phone"},
+"C2-desktop.dc.html":{"x":0,"y":2200,"w":1280,"h":1400,"title":"2 Lolita music box · desktop"},
+"C2-phone.dc.html":{"x":1360,"y":2200,"w":390,"h":1560,"title":"2 Lolita music box · phone"},
+"C3-desktop.dc.html":{"x":0,"y":4140,"w":1280,"h":1400,"title":"3 Convention sticker bomb · desktop"},
+"C3-phone.dc.html":{"x":1360,"y":4140,"w":390,"h":1560,"title":"3 Convention sticker bomb · phone"}
+},
+"order":["Main.dc.html","C1-phone.dc.html","C2-desktop.dc.html","C2-phone.dc.html","C3-desktop.dc.html","C3-phone.dc.html"],
+"notes":{
+"t1":{"x":0,"y":0,"text":"Concept 1 · Sweet and gothic switch (recommended)","kind":"title1","maxW":1750},
+"s1":{"x":1830,"y":260,"w":340,"fill":"pink","text":"Opening animation\n1. Pastel side: sakura petals drift down.\n2. Gothic side: black lace edges, small roses fade in and out.\n3. Tap the Sweet / Gothic switch, or scroll: the diagonal line sweeps across and the whole page flips day to night.\n4. Name fades up, then scroll cue bounces.\nCode-drawn, no images. Target under 60 KB."},
+"t2":{"x":0,"y":1940,"text":"Concept 2 · Lolita music box","kind":"title1","maxW":1750},
+"s2":{"x":1830,"y":2200,"w":340,"fill":"purple","text":"Opening animation\n1. Lace frame unfolds from the centre like a music box lid.\n2. 'Puzz Kezz' writes itself in, letter by letter.\n3. Petals and tiny sparkles fall slowly.\n4. Ribbon under the name gently swings.\nLightest option. Smooth on any phone."},
+"t3":{"x":0,"y":3880,"text":"Concept 3 · Convention sticker bomb","kind":"title1","maxW":1750},
+"s3":{"x":1830,"y":4140,"w":340,"fill":"orange","text":"Opening animation\n1. Polaroids of your cosplays drop in and land tilted, with a little bounce.\n2. Stickers pop on one by one.\n3. 'Breaking news from Puzz' ticker starts scrolling.\n4. Hover or tap a polaroid: it wiggles.\nMost playful. Closest to SleepyStella's energy, in your own colours."}
+},
+"designSystems":[]}
