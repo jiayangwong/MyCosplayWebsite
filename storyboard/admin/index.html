@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event manager - Storyboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="../style.css"><meta name="robots" content="noindex, nofollow"></head>
+<body class="admin">
+<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: ADMIN - Event manager (not in nav)</span> <span>TASK-6, TASK-7</span> <a href="../index.html">Back to site</a></div>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header"><div class="wrap hdr">
+<a class="logo" href="../index.html">PUZZ KEZZ</a>
+<nav class="tabs" aria-label="Main"><a href="../index.html">HOME</a><a href="../gallery.html">GALLERY</a><a href="../reels.html">REELS</a><a href="../events.html">EVENTS</a><a href="../about.html">ABOUT</a><a href="../contact.html">CONTACT</a></nav>
+<a class="btn btn-secondary ig" href="#" onclick="return false">Instagram</a>
+<button class="btn btn-secondary menu-btn" type="button" data-open-menu aria-expanded="false">&#9776; MENU</button>
+</div></header>
+<dialog class="menu" id="menu" aria-label="Menu"><div class="lace"></div>
+<button class="menu-close" type="button" data-close-menu>CLOSE &times;</button>
+<ul><li><a href="../index.html"><span><b>HOME</b><small>Walk the hall</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../gallery.html"><span><b>GALLERY</b><small>Cosplay photos</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../reels.html"><span><b>REELS</b><small>さしすせそ · sa shi su se so</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../events.html"><span><b>EVENTS</b><small>Meet me at the con</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../about.html"><span><b>ABOUT</b><small>Who is Puzz</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../contact.html"><span><b>CONTACT</b><small>Collabs & bookings</small></span><i aria-hidden="true">&rarr;</i></a></li></ul>
+<p class="menu-soc mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK<br>[social links from site-config]</p></dialog>
+<main id="main">
+<section class="wrap pg"><h1>EVENT MANAGER</h1>
+<p class="help"><b>Help.</b> Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.</p>
+<p class="mono">Source in use: [draft from localStorage / data/events.json]</p>
+<div class="bar"><button class="btn btn-accent" type="button">New event</button><button class="btn btn-secondary" type="button">Import events.json</button><button class="btn btn-primary" type="button">Export events.json</button><button class="btn btn-secondary" type="button">Discard draft</button></div>
+<div class="adm-grid"><div><h2>Events</h2><p class="mono">Move up/down only swaps events on the same date (disabled otherwise).</p><ul class="adm-list"><li class="adm-row"><span class="mono">14 Mar 2026</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">2 Feb 2026</span><b>AMG</b><span>Amg [Full Name Placeholder] <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">6 Dec 2025</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">9 Aug 2025</span><b>OMT</b><span>Omatsuri <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">3 May 2025</span><b>AMG</b><span>Amg [Full Name Placeholder] <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">7 Dec 2024</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">20 Jul 2024</span><b>OMT</b><span>Omatsuri <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li></ul></div>
+<form class="adm-form" onsubmit="return false"><h2>Event form</h2>
+<label>Date<input type="date" value="2026-03-14"></label>
+<label>Short form (1-12)<input type="text" value="CF"></label>
+<label>Full name<input type="text" value="Comic Fiesta"></label>
+<label>Venue / city (optional)<input type="text" aria-invalid="true" aria-describedby="e1"><span id="e1" class="err">&#9888; Example error: message shows under the field</span></label>
+<fieldset><legend class="mono">ACTIVITIES</legend><div class="act-row"><input type="text" aria-label="Activity 1" value="[cosplay character placeholder]"><button class="btn btn-secondary" type="button">Remove</button></div><div class="act-row"><input type="text" aria-label="Activity 2" value="Stage"><button class="btn btn-secondary" type="button">Remove</button></div><button class="btn btn-secondary" type="button">+ Add activity</button></fieldset>
+<label>Social link<input type="url" value="https://www.instagram.com/reel/XXXX/"></label>
+<div class="embed-prev"><div class="ph ph-43 sky" role="img" aria-label="Placeholder: Embed preview (YouTube / Instagram / TikTok) or photo + link fallback"><span>[Embed preview (YouTube / Instagram / TikTok) or photo + link fallback]</span></div></div>
+<label>Preview photo path<input type="text" value="media/events/2026-03-14-cf/cover-wm.webp"></label>
+<div class="bar"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-secondary" type="button">Cancel</button></div></form></div>
+<hr><h2>Media uploader</h2>
+<div class="up-grid"><div><div class="drop" tabindex="0"><b>Drop images here</b><span class="mono">or choose files (multiple, image/*)</span><button class="btn btn-secondary" type="button">Choose files</button></div>
+<div class="wm-ctl"><label>Watermark text<input type="text" value="PUZZ KEZZ · @puzzkezz"></label>
+<label>Position<select><option>Bottom-right</option><option>Bottom-left</option><option>Top-right</option><option>Top-left</option><option>Center</option></select></label>
+<label>Opacity: 60%<input type="range" min="10" max="100" value="60"></label>
+<label>Attach to event<select><option>CF 14 Mar 2026 (Sample)</option></select></label>
+<p class="mono small">Output: WebP, longest side max 2000px. Location and camera data are removed.</p></div></div>
+<div><div class="grid g2"><figure class="prev"><span class="tag mono">PREVIEW</span><div class="ph ph-45 lilac" role="img" aria-label="Sample image with watermark"><span>[Sample image 4:5]</span><em class="wmk">PUZZ KEZZ · @puzzkezz</em></div>
+<figcaption class="mono">sample-1-wm.webp<br>media/events/2026-03-14-cf/sample-1-wm.webp</figcaption><button class="btn btn-secondary" type="button">Download</button> <button class="btn btn-accent" type="button">Attach to selected event</button></figure>
+<figure class="prev"><span class="tag mono">PREVIEW</span><div class="ph ph-45 pink" role="img" aria-label="Sample image with watermark"><span>[Sample image 4:5]</span><em class="wmk">PUZZ KEZZ · @puzzkezz</em></div>
+<figcaption class="mono">sample-2-wm.webp</figcaption><button class="btn btn-secondary" type="button">Download</button></figure></div>
+<p><button class="btn btn-primary" type="button">Download all</button></p></div></div></section>
+</main>
+<footer class="site-footer"><div class="truss" aria-hidden="true"></div><div class="wrap">
+<p class="mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK [links]</p>
+<p class="mono">&copy; 2026 Puzz Kezz. Photos watermarked. Please ask before reposting.</p></div></footer>
+<script src="../app.js"></script>
+</body></html>

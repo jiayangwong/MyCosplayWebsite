@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home - Storyboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: HOME</span> <span>TASK-1, TASK-3, TASK-4</span> <a href="admin/index.html">Admin (storyboard link)</a></div>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header"><div class="wrap hdr">
+<a class="logo" href="index.html">PUZZ KEZZ</a>
+<nav class="tabs" aria-label="Main"><a href="index.html" aria-current="page">HOME</a><a href="gallery.html">GALLERY</a><a href="reels.html">REELS</a><a href="events.html">EVENTS</a><a href="about.html">ABOUT</a><a href="contact.html">CONTACT</a></nav>
+<a class="btn btn-secondary ig" href="#" onclick="return false">Instagram</a>
+<button class="btn btn-secondary menu-btn" type="button" data-open-menu aria-expanded="false">&#9776; MENU</button>
+</div></header>
+<dialog class="menu" id="menu" aria-label="Menu"><div class="lace"></div>
+<button class="menu-close" type="button" data-close-menu>CLOSE &times;</button>
+<ul><li><a href="index.html"><span><b>HOME</b><small>Walk the hall</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="gallery.html"><span><b>GALLERY</b><small>Cosplay photos</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="reels.html"><span><b>REELS</b><small>さしすせそ · sa shi su se so</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="events.html"><span><b>EVENTS</b><small>Meet me at the con</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="about.html"><span><b>ABOUT</b><small>Who is Puzz</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="contact.html"><span><b>CONTACT</b><small>Collabs & bookings</small></span><i aria-hidden="true">&rarr;</i></a></li></ul>
+<p class="menu-soc mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK<br>[social links from site-config]</p></dialog>
+<main id="main">
+<section class="intro"><div class="truss" aria-hidden="true"></div>
+<div class="wrap intro-grid">
+<div class="lanyard-wrap"><span class="lanyard" aria-hidden="true"></span>
+<article class="pass"><div class="lace"></div><div class="pass-head mono">GUEST PASS &middot; No. 001</div>
+<div class="ph ph-sq" role="img" aria-label="Placeholder: Portrait photo of Puzz Kezz"><span>[Portrait photo of Puzz Kezz]</span></div>
+<h1>PUZZ KEZZ</h1><p class="mono">COSPLAYER · LOLITA · MALAYSIA</p>
+<p>Not a beatboxer. Just here to cosplay.</p>
+<a class="btn btn-primary" href="#reels">Watch my reels</a>
+<span class="barcode" aria-hidden="true"></span></article></div>
+<div class="intro-text"><p class="mono">WALK THE HALL</p><h2>Scroll forward. Newest cons first.</h2><p>[Short intro line goes here]. Tap a polaroid to flip it and watch the reel.</p></div></div></section>
+<section class="hall" aria-label="Convention hall"><div class="wrap">
+<p class="note mono">[Built from data/events.json. Depth is simplified here: near = big, far = small. All events are Sample.]</p>
+<div class="year-sign" id="y2026"><span class="mono">YEAR</span><b>2026</b></div>
+<div class="hall-item near" id="ev1">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL A</span><b>COMIC FIESTA</b></div></div>
+<button class="polaroid pink" type="button" aria-pressed="false" aria-label="Comic Fiesta 2026 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq pink"><span>[Event photo 1:1 - CF]<br>Sample</span></span><span class="mono cap">14 Mar 2026 &middot; CF</span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">14 Mar 2026</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="hall-item mid" id="ev2">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL B</span><b>AMG [full name placeholder]</b></div></div>
+<button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2026 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq lilac"><span>[Event photo 1:1 - AMG]<br>Sample</span></span><span class="mono cap">2 Feb 2026 &middot; AMG</span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">2 Feb 2026</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="year-sign" id="y2025"><span class="mono">YEAR</span><b>2025</b></div>
+<div class="hall-item far" id="ev3">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL C</span><b>COMIC FIESTA</b></div></div>
+<button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2025 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq sky"><span>[Event photo 1:1 - CF]<br>Sample</span></span><span class="mono cap">6 Dec 2025 &middot; CF</span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">6 Dec 2025</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="hall-item near" id="ev4">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL D</span><b>OMATSURI</b></div></div>
+<button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2025 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq pink"><span>[Event photo 1:1 - OMT]<br>Sample</span></span><span class="mono cap">9 Aug 2025 &middot; OMT</span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">9 Aug 2025</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="hall-item mid" id="ev5">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL E</span><b>AMG [full name placeholder]</b></div></div>
+<button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2025 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq lilac"><span>[Event photo 1:1 - AMG]<br>Sample</span></span><span class="mono cap">3 May 2025 &middot; AMG</span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">3 May 2025</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="year-sign" id="y2024"><span class="mono">YEAR</span><b>2024</b></div>
+<div class="hall-item far" id="ev6">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL F</span><b>COMIC FIESTA</b></div></div>
+<button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2024 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq sky"><span>[Event photo 1:1 - CF]<br>Sample</span></span><span class="mono cap">7 Dec 2024 &middot; CF</span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">7 Dec 2024</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="hall-item near" id="ev7">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL G</span><b>OMATSURI</b></div></div>
+<button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2024 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq pink"><span>[Event photo 1:1 - OMT]<br>Sample</span></span><span class="mono cap">20 Jul 2024 &middot; OMT</span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">20 Jul 2024</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+</div></section>
+<div class="you-are-here" aria-label="Year timeline"><div class="wrap yah"><span class="mono yah-l">YOU ARE HERE</span>
+<div class="track"><span class="line"></span>
+<a class="year here" style="left:3%" href="#y2026"><i></i><span class="mono">2026</span></a>
+<a class="year" style="left:35%" href="#y2025"><i></i><span class="mono">2025</span></a>
+<a class="year" style="left:72%" href="#y2024"><i></i><span class="mono">2024</span></a><a class="tick" style="left:8%" href="#" aria-label="CF 14 Mar" onclick="return false"></a><a class="tick" style="left:14%" href="#" aria-label="AMG 2 Feb" onclick="return false"></a><a class="tick" style="left:20%" href="#" aria-label="event" onclick="return false"></a><a class="tick" style="left:30%" href="#" aria-label="CF 6 Dec" onclick="return false"></a><a class="tick" style="left:38%" href="#" aria-label="OMT 9 Aug" onclick="return false"></a><a class="tick" style="left:45%" href="#" aria-label="AMG 3 May" onclick="return false"></a><a class="tick" style="left:52%" href="#" aria-label="event" onclick="return false"></a><a class="tick" style="left:60%" href="#" aria-label="event" onclick="return false"></a><a class="tick" style="left:68%" href="#" aria-label="CF 7 Dec" onclick="return false"></a><a class="tick" style="left:77%" href="#" aria-label="OMT 20 Jul" onclick="return false"></a><a class="tick" style="left:86%" href="#" aria-label="event" onclick="return false"></a></div>
+<a class="btn btn-secondary skip-reels" href="#reels">Skip to reels</a></div></div>
+<div class="end-sign"><div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">END OF HALL</span><b>5 REELS</b></div></div></div>
+<section class="reels" id="reels" aria-labelledby="reels-h"><div class="wrap">
+<div class="reels-head"><h2 id="reels-h" lang="ja">さしすせそ</h2><p class="mono rom-head">sa &middot; shi &middot; su &middot; se &middot; so</p>
+<p>Five reels, five reactions. Tap one to watch on Instagram.</p>
+<button class="btn btn-accent" type="button">Sound on &middot; <span lang="ja">さしすせそ</span></button></div>
+<ul class="reel-row" data-carousel><li class="reel-card"><a class="reel-link" href="#" onclick="return false"><span class="badge mono"><span lang="ja">さ</span> sa</span>
+<div class="ph ph-tall" role="img" aria-label="Placeholder: reel thumbnail 9:16"><span>[Reel thumbnail 9:16]</span></div>
+<div class="pron"><p class="jp" lang="ja">さすが！</p><p class="rom mono">sa-su-ga!</p><p class="en">Impressive!</p></div>
+<p class="mono cat">Best cosplay</p><span class="mono soon">Opens Instagram (new tab). Empty URL = "Coming soon"</span></a>
+<button class="speaker" type="button" aria-label="Play pronunciation of sa-su-ga!">&#9654;</button></li><li class="reel-card"><a class="reel-link" href="#" onclick="return false"><span class="badge mono"><span lang="ja">し</span> shi</span>
+<div class="ph ph-tall" role="img" aria-label="Placeholder: reel thumbnail 9:16"><span>[Reel thumbnail 9:16]</span></div>
+<div class="pron"><p class="jp" lang="ja"><ruby>知<rt>し</rt></ruby>らなかった！</p><p class="rom mono">shi-ra-na-kat-ta!</p><p class="en">I didn't know that!</p></div>
+<p class="mono cat">Behind the scenes</p><span class="mono soon">Opens Instagram (new tab). Empty URL = "Coming soon"</span></a>
+<button class="speaker" type="button" aria-label="Play pronunciation of shi-ra-na-kat-ta!">&#9654;</button></li><li class="reel-card"><a class="reel-link" href="#" onclick="return false"><span class="badge mono"><span lang="ja">す</span> su</span>
+<div class="ph ph-tall" role="img" aria-label="Placeholder: reel thumbnail 9:16"><span>[Reel thumbnail 9:16]</span></div>
+<div class="pron"><p class="jp" lang="ja">すごい！</p><p class="rom mono">su-go-i!</p><p class="en">Amazing!</p></div>
+<p class="mono cat">Transformation</p><span class="mono soon">Opens Instagram (new tab). Empty URL = "Coming soon"</span></a>
+<button class="speaker" type="button" aria-label="Play pronunciation of su-go-i!">&#9654;</button></li><li class="reel-card"><a class="reel-link" href="#" onclick="return false"><span class="badge mono"><span lang="ja">せ</span> se</span>
+<div class="ph ph-tall" role="img" aria-label="Placeholder: reel thumbnail 9:16"><span>[Reel thumbnail 9:16]</span></div>
+<div class="pron"><p class="jp" lang="ja">センスいいね！</p><p class="rom mono">sen-su ii ne!</p><p class="en">Great taste!</p></div>
+<p class="mono cat">Outfit details</p><span class="mono soon">Opens Instagram (new tab). Empty URL = "Coming soon"</span></a>
+<button class="speaker" type="button" aria-label="Play pronunciation of sen-su ii ne!">&#9654;</button></li><li class="reel-card"><a class="reel-link" href="#" onclick="return false"><span class="badge mono"><span lang="ja">そ</span> so</span>
+<div class="ph ph-tall" role="img" aria-label="Placeholder: reel thumbnail 9:16"><span>[Reel thumbnail 9:16]</span></div>
+<div class="pron"><p class="jp" lang="ja">そうなんだ！</p><p class="rom mono">sō nan da!</p><p class="en">Oh, really? I see!</p></div>
+<p class="mono cat">Event vlogs</p><span class="mono soon">Opens Instagram (new tab). Empty URL = "Coming soon"</span></a>
+<button class="speaker" type="button" aria-label="Play pronunciation of sō nan da!">&#9654;</button></li></ul>
+<div class="dots" aria-label="Reel pages"><button type="button" class="dot" aria-label="Go to reel 1" aria-current="true"></button><button type="button" class="dot" aria-label="Go to reel 2"></button><button type="button" class="dot" aria-label="Go to reel 3"></button><button type="button" class="dot" aria-label="Go to reel 4"></button><button type="button" class="dot" aria-label="Go to reel 5"></button></div></div></section>
+</main>
+<footer class="site-footer"><div class="truss" aria-hidden="true"></div><div class="wrap">
+<p class="mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK [links]</p>
+<p class="mono">&copy; 2026 Puzz Kezz. Photos watermarked. Please ask before reposting.</p></div></footer>
+<script src="app.js"></script>
+</body></html>
