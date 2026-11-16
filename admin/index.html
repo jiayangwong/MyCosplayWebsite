@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Event manager · Puzz Kezz</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="wordmark" href="../index.html">PUZZ KEZZ <span class="admin-badge">EVENT MANAGER</span></a>
+      <a class="btn btn-secondary btn-sm" href="../index.html">View site</a>
+    </div>
+  </header>
+
+  <main id="main" class="container admin">
+    <div class="page-head">
+      <p class="eyebrow">Private · not linked from the site</p>
+      <h1>Event manager</h1>
+    </div>
+
+    <aside class="help-box" aria-label="How publishing works">
+      <p><strong>How it works.</strong> Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.</p>
+      <p>Photos: use the media uploader below. It adds your watermark, then save the files into the repo at the path it shows.</p>
+    </aside>
+
+    <p class="source-banner" id="source-banner" role="status"></p>
+
+    <div class="toolbar" role="toolbar" aria-label="Event file actions">
+      <button type="button" class="btn btn-primary btn-sm" id="new-event">New event</button>
+      <label class="btn btn-secondary btn-sm file-button" for="import-file">Import events.json</label>
+      <input type="file" id="import-file" accept=".json,application/json" class="visually-hidden">
+      <button type="button" class="btn btn-accent btn-sm" id="export-events">Export events.json</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="discard-draft">Discard draft</button>
+    </div>
+    <p class="field-error" id="import-error" role="alert" hidden></p>
+
+    <div class="admin-grid">
+      <section class="panel" aria-labelledby="list-title">
+        <h2 id="list-title" class="panel-title">Events <span class="panel-count" id="event-count"></span></h2>
+        <p class="panel-hint">Newest first. Move up/down only changes the order of events on the same date.</p>
+        <ol class="event-list" id="event-list"></ol>
+      </section>
+
+      <section class="panel" aria-labelledby="form-title">
+        <h2 id="form-title" class="panel-title">New event</h2>
+        <form id="event-form" novalidate>
+          <div class="field">
+            <label for="f-date">When (date)</label>
+            <input type="date" id="f-date" name="date" required aria-describedby="err-date">
+            <p class="field-error" id="err-date" hidden></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="f-short">Event short form</label>
+              <input type="text" id="f-short" name="short" maxlength="12" placeholder="CF" required aria-describedby="err-short">
+              <p class="field-error" id="err-short" hidden></p>
+            </div>
+            <div class="field field-grow">
+              <label for="f-name">Event full name</label>
+              <input type="text" id="f-name" name="name" placeholder="Comic Fiesta" required aria-describedby="err-name">
+              <p class="field-error" id="err-name" hidden></p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-venue">Venue / city (optional)</label>
+            <input type="text" id="f-venue" name="venue" placeholder="Kuala Lumpur">
+          </div>
+          <fieldset class="field">
+            <legend>Activities</legend>
+            <p class="panel-hint">One per row: cosplay characters, stage, booth, panel...</p>
+            <ol class="activity-list" id="activity-list"></ol>
+            <button type="button" class="btn btn-secondary btn-sm" id="add-activity">Add activity</button>
+            <p class="field-error" id="err-activities" hidden></p>
+          </fieldset>
+          <div class="field">
+            <label for="f-link">Social media link (for embedded video)</label>
+            <input type="url" id="f-link" name="link" placeholder="https://www.instagram.com/reel/..." aria-describedby="err-link link-help">
+            <p class="panel-hint" id="link-help">Instagram, TikTok or YouTube links become an embedded player. Other links show the preview photo and a link.</p>
+            <p class="field-error" id="err-link" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-photo">Preview photo path</label>
+            <input type="text" id="f-photo" name="photo" placeholder="media/events/2025-12-13-cf/cover-wm.webp" aria-describedby="err-photo">
+            <p class="field-error" id="err-photo" hidden></p>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="save-event">Save event</button>
+            <button type="button" class="btn btn-secondary" id="cancel-edit">Clear form</button>
+          </div>
+          <p class="save-status" id="save-status" role="status"></p>
+        </form>
+        <div class="preview-block">
+          <h3 class="panel-subtitle">Embed preview</h3>
+          <div id="embed-preview" class="embed-preview"></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel uploader" aria-labelledby="wm-title">
+      <h2 id="wm-title" class="panel-title">Media uploader · automatic watermark</h2>
+      <p class="panel-hint">Everything happens in this browser. Nothing is uploaded anywhere. The output removes the photo's location and camera data (EXIF).</p>
+
+      <label class="drop-zone" id="drop-zone" for="wm-files">
+        <span class="drop-zone-title">Drop photos here or choose files</span>
+        <span class="panel-hint">JPG, PNG, WebP, HEIC (if your browser can open it). Resized to max 2000px, saved as WebP.</span>
+      </label>
+      <input type="file" id="wm-files" accept="image/*" multiple class="visually-hidden">
+
+      <div class="wm-controls">
+        <div class="field field-grow">
+          <label for="wm-text">Watermark text</label>
+          <input type="text" id="wm-text">
+        </div>
+        <div class="field">
+          <label for="wm-pos">Position</label>
+          <select id="wm-pos">
+            <option value="br">Bottom right</option>
+            <option value="bl">Bottom left</option>
+            <option value="tr">Top right</option>
+            <option value="tl">Top left</option>
+            <option value="c">Center</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wm-opacity">Opacity <output id="wm-opacity-out" for="wm-opacity">60%</output></label>
+          <input type="range" id="wm-opacity" min="10" max="100" step="5" value="60">
+        </div>
+      </div>
+
+      <div class="wm-target">
+        <p>Files will be saved for event: <strong id="wm-event-id">(fill in date + short form, or edit an event)</strong></p>
+        <button type="button" class="btn btn-accent btn-sm" id="wm-download-all" disabled>Download all</button>
+      </div>
+      <ul class="wm-grid" id="wm-previews"></ul>
+    </section>
+  </main>
+
+  <script type="module" src="../js/admin/manager.js"></script>
+  <script type="module" src="../js/admin/watermark.js"></script>
+</body>
+</html>

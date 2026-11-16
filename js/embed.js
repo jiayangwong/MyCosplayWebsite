@@ -66,6 +66,8 @@ function photoOrPlaceholder({ photo, alt, placeholder }) {
     img.alt = alt || '';
     img.loading = 'lazy';
     img.decoding = 'async';
+    // A photo path that is not in the repo yet shows the placeholder instead of a broken image.
+    img.addEventListener('error', () => img.replaceWith(placeholderBox(placeholder || 'Photo coming soon')), { once: true });
     return img;
   }
   return placeholderBox(placeholder || 'Photo coming soon');
