@@ -1,0 +1,122 @@
+/* Events, Gallery, About, Contact, 404. */
+
+/* ---------- Events ---------- */
+.year-jump { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-8); }
+
+.year-group { margin-bottom: var(--space-12); scroll-margin-top: calc(var(--header-h) + var(--space-4)); }
+
+.year-heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-6);
+  border-bottom: var(--outline);
+}
+
+.year-heading-num { font-family: var(--font-mono); font-size: clamp(2rem, 1.6rem + 1.6vw, 3rem); }
+.year-heading-count { font-family: var(--font-mono); font-size: 0.875rem; color: var(--color-muted); letter-spacing: 0; }
+
+.event-grid { display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--outline);
+  border-radius: var(--radius-card);
+  scroll-margin-top: calc(var(--header-h) + var(--space-4));
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.event-card:hover { transform: translateY(-2px); box-shadow: 4px 4px 0 var(--color-ink); }
+.event-card:target { box-shadow: 0 0 0 4px var(--color-pink); }
+.event-body { display: flex; flex-direction: column; gap: var(--space-2); }
+.event-tags { display: flex; gap: var(--space-2); }
+.tag-short { background: var(--color-ink); color: var(--color-on-dark); }
+.event-name { font-size: var(--fs-h3); overflow-wrap: anywhere; }
+.event-meta { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--color-text-2); }
+.event-activities { margin: 0; padding-left: var(--space-6); color: var(--color-text-2); }
+
+/* ---------- Gallery ---------- */
+.gallery-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+}
+
+.gallery-tile {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: var(--outline);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--color-ink);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gallery-tile img { aspect-ratio: 4 / 5; width: 100%; object-fit: cover; border: 1px solid var(--color-ink); }
+.gallery-tile:hover { box-shadow: var(--shadow-hover); }
+.gallery-caption { font-size: 0.875rem; }
+
+.lightbox {
+  max-width: min(92vw, 1000px);
+  max-height: 92vh;
+  padding: var(--space-4);
+  border: var(--outline);
+  border-radius: var(--radius-card);
+  background: var(--color-dark-card);
+  color: var(--color-on-dark);
+}
+
+.lightbox::backdrop { background: var(--color-scrim); }
+.lightbox-img { max-height: 75vh; margin: var(--space-3) auto; object-fit: contain; }
+.lightbox-caption { font-family: var(--font-mono); font-size: 0.875rem; }
+
+/* ---------- About / Contact ---------- */
+.about-grid { display: grid; gap: var(--space-8); align-items: start; }
+
+@media (min-width: 768px) {
+  .about-grid { grid-template-columns: 320px 1fr; }
+}
+
+.portrait {
+  aspect-ratio: 4 / 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--outline);
+  border-radius: var(--radius-card);
+  background: var(--ph-lilac);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+.prose { display: flex; flex-direction: column; gap: var(--space-4); max-width: 65ch; }
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 640px;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: var(--outline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pass);
+}
+
+.contact-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+
+/* ---------- 404 ---------- */
+.lost { padding: var(--space-16) 0; display: flex; flex-direction: column; gap: var(--space-4); align-items: flex-start; }

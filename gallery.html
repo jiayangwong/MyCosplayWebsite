@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery · Puzz Kezz</title>
+  <meta name="description" content="Cosplay photos by Puzz Kezz from conventions in Malaysia, newest first.">
+  <meta property="og:title" content="Gallery · Puzz Kezz">
+  <meta property="og:description" content="Cosplay photos, newest first.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="og-image.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+  <main id="main" class="container">
+    <div class="page-head">
+      <p class="eyebrow">Cosplay photos</p>
+      <h1>Gallery</h1>
+      <p>Photos from each con, newest first. All photos are watermarked.</p>
+    </div>
+    <div id="gallery-root"></div>
+  </main>
+  <script type="module">
+    import { mountChrome } from './js/nav.js';
+    import { mountGallery } from './js/gallery.js';
+    mountChrome('gallery');
+    mountGallery(document.getElementById('gallery-root'));
+  </script>
+</body>
+</html>

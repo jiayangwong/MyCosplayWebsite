@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reels · さしすせそ · Puzz Kezz</title>
+  <meta name="description" content="Five reels, five Japanese reactions: さしすせそ (sa · shi · su · se · so), with romaji, meaning and pronunciation.">
+  <meta property="og:title" content="さしすせそ reels · Puzz Kezz">
+  <meta property="og:description" content="Five reels, five reactions, with pronunciation for every word.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="og-image.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/reels.css">
+</head>
+<body>
+  <main id="main">
+    <div class="container page-head">
+      <p class="eyebrow">Reels</p>
+      <h1>Five reels, five reactions</h1>
+      <p>Each reel is named after one of the five classic Japanese compliments. Tap the speaker to hear how each word sounds.</p>
+    </div>
+    <section class="reels-section" aria-label="さしすせそ reels">
+      <div class="container" id="reels-mount"></div>
+    </section>
+  </main>
+  <script type="module">
+    import { mountChrome } from './js/nav.js';
+    import { mountReels } from './js/reels.js';
+    mountChrome('reels');
+    mountReels(document.getElementById('reels-mount'));
+  </script>
+</body>
+</html>

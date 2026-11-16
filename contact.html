@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact · Puzz Kezz</title>
+  <meta name="description" content="Collabs and bookings with Puzz Kezz, cosplayer.">
+  <meta property="og:title" content="Contact · Puzz Kezz">
+  <meta property="og:description" content="Collabs & bookings.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="og-image.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+  <main id="main" class="container">
+    <div class="page-head">
+      <p class="eyebrow">Contact</p>
+      <h1>Collabs &amp; bookings</h1>
+    </div>
+    <div class="contact-card">
+      <p class="placeholder-text">[Placeholder: what you are open to (collabs, photoshoots, event guest bookings) and how fast you usually reply.]</p>
+      <div class="contact-row">
+        <a class="btn btn-primary" id="contact-email" href="#">Email</a>
+        <span class="placeholder-text" id="contact-email-note"></span>
+      </div>
+      <h2 class="eyebrow">Find me on</h2>
+      <div class="contact-row" id="contact-socials"></div>
+    </div>
+  </main>
+  <script type="module">
+    import { mountChrome } from './js/nav.js';
+    import { SITE } from './js/site-config.js';
+    mountChrome('contact');
+    const email = document.getElementById('contact-email');
+    email.href = `mailto:${SITE.email}`;
+    email.textContent = SITE.emailIsPlaceholder ? 'Email [email placeholder]' : `Email ${SITE.email}`;
+    if (SITE.emailIsPlaceholder) document.getElementById('contact-email-note').textContent = 'Real address coming soon.';
+    const socials = document.getElementById('contact-socials');
+    for (const s of SITE.socials) {
+      const a = document.createElement('a');
+      a.className = 'btn btn-secondary btn-sm';
+      a.href = s.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = s.label;
+      socials.append(a);
+    }
+  </script>
+</body>
+</html>

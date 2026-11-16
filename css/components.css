@@ -4,7 +4,7 @@
 .pron { display: flex; flex-direction: column; gap: 2px; }
 .pron-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .pron-jp { font-weight: 900; font-size: 1.125rem; line-height: var(--lh-ja); margin: 0; letter-spacing: 0; }
-.pron-jp rt { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 400; color: var(--color-purple-deep); }
+.pron-jp rt { font-family: var(--font-body); font-size: 0.625rem; font-weight: 700; color: var(--color-purple-deep); }
 .pron-romaji { font-family: var(--font-mono); font-size: var(--fs-romaji); color: var(--color-purple-deep); }
 .pron-en { font-size: 0.875rem; color: var(--color-text-2); }
 
