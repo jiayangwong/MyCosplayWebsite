@@ -21,6 +21,9 @@ test('404 page links back home', async ({ page }) => {
 });
 
 test('no images without alt, no unnamed buttons, no skipped heading levels', async ({ page }) => {
+  test.setTimeout(120000); // visits 8 pages; slow on the phone project
+  // Google Fonts can hang on a slow connection and block 'networkidle'; fonts don't affect this check.
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort());
   for (const p of [...PAGES, 'admin/index.html']) {
     await page.goto(p);
     await page.waitForLoadState('networkidle');

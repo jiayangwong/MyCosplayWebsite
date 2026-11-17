@@ -129,7 +129,7 @@ This machine runs Ubuntu 26.04, which Playwright doesn't support yet. To run the
 ## 9. Not done yet / decisions for Puzz
 - **Approvals:** the plan, style guide and storyboard need your OK. Under CLAUDE.md's rules, the reviewer and QA agents can't run until `docs/approval.md` says `STORYBOARD APPROVED`, so the code has not had the formal agent review yet. It was tested with the automated suite.
 - **Placeholders:**
-  - Instagram is set to `@notpuzzkezz`. Facebook ("Puzz Kezz") links to a Facebook search until you paste the exact page link. Your email goes in `js/site-config.js`.
+  - Instagram is set to `@notpuzzkezz`. Facebook links to your profile (Puzz Kezz). Your email goes in `js/site-config.js`.
   - The reel URLs go in `data/reels.json`.
   - The bio and contact text are still `[placeholder]`.
   - The AMG full name is unknown.

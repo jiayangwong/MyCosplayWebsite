@@ -12,8 +12,7 @@ export const SITE = {
   instagram: 'https://www.instagram.com/notpuzzkezz/',
   socials: [
     { label: 'Instagram', url: 'https://www.instagram.com/notpuzzkezz/' },
-    // PLACEHOLDER URL: the page is named "Puzz Kezz"; replace with its exact link (https://www.facebook.com/<page>).
-    { label: 'Facebook', url: 'https://www.facebook.com/search/top?q=Puzz%20Kezz' },
+    { label: 'Facebook', url: 'https://www.facebook.com/share/151mR7L9az9/' },
   ],
   watermark: 'PUZZ KEZZ · @notpuzzkezz',
 };
