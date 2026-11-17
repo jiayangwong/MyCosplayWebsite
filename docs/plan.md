@@ -283,7 +283,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - has a longest side of at most 2000px, keeping the aspect ratio (images that are already smaller are not enlarged)
     - is WebP (`image/webp`, quality about 0.85)
     - is named `<original-name-slug>-wm.webp`
-  - The watermark text defaults to `PUZZ KEZZ · @puzzkezz` and can be edited. The default position is bottom-right, and the choices are bottom-right, bottom-left, top-right, top-left, and center. The default opacity is 60%, adjustable from 10 to 100%.
+  - The watermark text defaults to `PUZZ KEZZ · @notpuzzkezz` and can be edited. The default position is bottom-right, and the choices are bottom-right, bottom-left, top-right, top-left, and center. The default opacity is 60%, adjustable from 10 to 100%.
   - The font size scales with the image (about 3.5% of the shorter side, never below 14px). There is a thin dark outline or shadow, so the text can be read on both light and dark photos.
   - Changing the text, position, or opacity re-renders all previews.
   - Test: upload a test image from `tests/fixtures/`, then read pixels from the output canvas. The bottom-right area differs from the source, the top-left area matches it (within tolerance), and the output size is at most 2000px.
@@ -339,4 +339,4 @@ Suggested build order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9. TASK-6 and TAS
 9. **Facebook links.** Facebook links show the preview photo + "Open on Facebook" instead of an embedded player. That avoids loading Facebook's script.
 10. **Gallery source.** In v1 the gallery shows only the event preview photos. A separate, bigger photo collection per event (several photos per event) would be a later idea.
 11. **About / Contact text.** It is all `[placeholder]`. Please send a short bio, the things you are open to (collabs, bookings, photoshoots?), and your preferred contact method.
-12. **Photo rights.** Before publishing con photos taken by photographers, please make sure you have their permission. The watermark can also include a credit, for example "PUZZ KEZZ · @puzzkezz · ph: @name".
+12. **Photo rights.** Before publishing con photos taken by photographers, please make sure you have their permission. The watermark can also include a credit, for example "PUZZ KEZZ · @notpuzzkezz · ph: @name".

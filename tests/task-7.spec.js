@@ -44,7 +44,7 @@ test('watermarks, resizes to max 2000px and stays in the browser', async ({ page
 });
 
 test('controls re-render, download works, path and attach use the selected event', async ({ page }) => {
-  await expect(page.locator('#wm-text')).toHaveValue('PUZZ KEZZ · @puzzkezz');
+  await expect(page.locator('#wm-text')).toHaveValue('PUZZ KEZZ · @notpuzzkezz');
   await expect(page.locator('#wm-pos')).toHaveValue('br');
   await expect(page.locator('#wm-opacity')).toHaveValue('60');
   await page.setInputFiles('#wm-files', FIXTURE);

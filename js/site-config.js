@@ -1,17 +1,19 @@
 // Site-wide settings. Edit this file to change the name, handle, social links and contact email.
-// Values marked PLACEHOLDER are guesses until Puzz sends the real ones (see docs/plan.md, open question 1).
+// Values marked PLACEHOLDER are still waiting for the real ones from Puzz.
 
 export const SITE = {
   name: 'Puzz Kezz',
   wordmark: 'PUZZ KEZZ',
-  handle: '@puzzkezz', // PLACEHOLDER: assumed Instagram handle
+  handle: '@notpuzzkezz',
   tagline: 'Not a beatboxer. Just here to cosplay.',
   subtitle: 'COSPLAYER · LOLITA · MALAYSIA',
   email: 'hello@example.com', // PLACEHOLDER: real contact email not provided yet
   emailIsPlaceholder: true,
-  instagram: 'https://www.instagram.com/puzzkezz/', // PLACEHOLDER URL
+  instagram: 'https://www.instagram.com/notpuzzkezz/',
   socials: [
-    { label: 'Instagram', url: 'https://www.instagram.com/puzzkezz/' }, // PLACEHOLDER URL
+    { label: 'Instagram', url: 'https://www.instagram.com/notpuzzkezz/' },
+    // PLACEHOLDER URL: the page is named "Puzz Kezz"; replace with its exact link (https://www.facebook.com/<page>).
+    { label: 'Facebook', url: 'https://www.facebook.com/search/top?q=Puzz%20Kezz' },
   ],
-  watermark: 'PUZZ KEZZ · @puzzkezz',
+  watermark: 'PUZZ KEZZ · @notpuzzkezz',
 };

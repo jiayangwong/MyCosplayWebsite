@@ -71,7 +71,7 @@ What the manager can do:
 What the **media uploader** does:
 - You pick or drop one or many photos.
 - Each photo is resized to at most 2000px on its longest side and saved as **WebP** (quality 0.85).
-- The **watermark** is drawn automatically: default text `PUZZ KEZZ · @puzzkezz`, bottom-right, 60% opacity, white text with a dark outline sized to the photo. You can change the text, position (5 choices) and opacity, and every preview re-renders.
+- The **watermark** is drawn automatically: default text `PUZZ KEZZ · @notpuzzkezz`, bottom-right, 60% opacity, white text with a dark outline sized to the photo. You can change the text, position (5 choices) and opacity, and every preview re-renders.
 - Location and camera (EXIF) data are stripped. Nothing is uploaded anywhere.
 - Each file shows its repo path: `media/events/<event-id>/<name>-wm.webp`.
 - Use **Download** or **Download all**, then **Attach to selected event** to put the path in the event.
@@ -129,7 +129,7 @@ This machine runs Ubuntu 26.04, which Playwright doesn't support yet. To run the
 ## 9. Not done yet / decisions for Puzz
 - **Approvals:** the plan, style guide and storyboard need your OK. Under CLAUDE.md's rules, the reviewer and QA agents can't run until `docs/approval.md` says `STORYBOARD APPROVED`, so the code has not had the formal agent review yet. It was tested with the automated suite.
 - **Placeholders:**
-  - Your real Instagram URL/handle, other socials and email go in `js/site-config.js`.
+  - Instagram is set to `@notpuzzkezz`. Facebook ("Puzz Kezz") links to a Facebook search until you paste the exact page link. Your email goes in `js/site-config.js`.
   - The reel URLs go in `data/reels.json`.
   - The bio and contact text are still `[placeholder]`.
   - The AMG full name is unknown.
