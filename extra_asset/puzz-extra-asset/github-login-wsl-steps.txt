@@ -1,0 +1,46 @@
+GITHUB LOGIN FROM WSL (BROWSER SIGN-IN) - MyCosplayWebsite
+=========================================================
+The source code lives in WSL Ubuntu, so git in WSL needs its own GitHub login.
+This only changes WSL. Your Windows GitHub / Git settings are not touched.
+
+Tools used
+- GitHub CLI "gh", installed in your WSL home (~/.local/bin/gh). No sudo needed.
+- Login type: "device code" in the browser. No password or token is typed into the terminal.
+
+ONE-TIME SETUP (run in the WSL Ubuntu terminal)
+-----------------------------------------------
+1. Install gh (skip if `~/.local/bin/gh --version` already works):
+     V=$(curl -s https://api.github.com/repos/cli/cli/releases/latest | grep -o '"tag_name": *"v[^"]*"' | grep -o 'v[0-9.]*')
+     curl -sL "https://github.com/cli/cli/releases/download/$V/gh_${V#v}_linux_amd64.tar.gz" -o /tmp/gh.tgz
+     tar -xzf /tmp/gh.tgz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/gh_*/bin/gh ~/.local/bin/gh
+
+2. Start the browser login:
+     ~/.local/bin/gh auth login --hostname github.com --git-protocol https --web --skip-ssh-key
+   It prints a one-time code, e.g. "First copy your one-time code: ABCD-1234".
+
+3. In any browser (Windows, or even your phone), open https://github.com/login/device
+   - sign in as jiayangwong if asked
+   - type the code, click Continue, then "Authorize github"
+   The terminal then says "Logged in as jiayangwong".
+
+4. Let git use this login (so `git push` works without asking for a password):
+     ~/.local/bin/gh auth setup-git
+
+5. Check:
+     ~/.local/bin/gh auth status
+
+PUSH THE WEBSITE
+----------------
+   cd ~/created_project/MyCosplayWebsite        (or the worktree folder)
+   git remote add origin https://github.com/jiayangwong/MyCosplayWebsite.git
+       (if it says "remote origin already exists", use: git remote set-url origin https://github.com/jiayangwong/MyCosplayWebsite.git)
+   git push -u origin site-v1
+
+Later pushes: just `git push`.
+
+WHERE THE LOGIN IS STORED / HOW TO UNDO
+---------------------------------------
+- Login token: ~/.config/gh/hosts.yml (WSL only)
+- Git helper line added by step 4: in ~/.gitconfig ([credential "https://github.com"] -> gh auth git-credential)
+- To sign out:  ~/.local/bin/gh auth logout --hostname github.com
+- To revoke on GitHub: github.com -> Settings -> Applications -> Authorized OAuth Apps -> "GitHub CLI" -> Revoke
