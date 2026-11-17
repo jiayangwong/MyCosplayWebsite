@@ -12,7 +12,7 @@ export const SITE = {
   instagram: 'https://www.instagram.com/notpuzzkezz/',
   socials: [
     { label: 'Instagram', url: 'https://www.instagram.com/notpuzzkezz/' },
-    { label: 'Facebook', url: 'https://www.facebook.com/share/151mR7L9az9/' },
+    { label: 'Facebook', url: 'https://www.facebook.com/felix.jiang.376' },
   ],
   watermark: 'PUZZ KEZZ · @notpuzzkezz',
 };
