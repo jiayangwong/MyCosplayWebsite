@@ -54,12 +54,14 @@ function hasValue(value) {
 }
 
 /** Checks an optional photo path (photo / photoFull). Returns an error text, or '' when fine.
- *  Allowed: missing or empty, or a relative path. Refused: not a string, leading "/", "://" or "..". */
+ *  Allowed: missing or empty, or a relative path. Refused: not a string, leading "/", a backslash,
+ *  "://" or any "scheme:" prefix (data:, javascript:, http:, ...), or "..". */
 export function photoPathError(value) {
   if (value === undefined || value === '') return '';
   if (typeof value !== 'string') return 'must be a file path.';
   if (value.startsWith('/')) return 'must be a relative path (no leading /).';
-  if (value.includes('://')) return 'must be a path in this site, not a web address.';
+  if (value.includes('\\')) return 'must use / between folders, not \\.';
+  if (value.includes('://') || /^[a-z][a-z0-9+.-]*:/i.test(value)) return 'must be a path in this site, not a web address.';
   if (value.includes('..')) return 'must not contain "..".';
   return '';
 }

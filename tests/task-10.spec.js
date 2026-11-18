@@ -51,6 +51,13 @@ test('validateEvent accepts photo pairs and refuses bad paths', async ({ page })
       urlFull: v({ photo: 'a.webp', photoFull: 'https://x/y.webp' }),
       dotsFull: v({ photo: 'a.webp', photoFull: '../x.webp' }),
       notString: v({ photo: 'a.webp', photoFull: 42 }),
+      backslashPhoto: v({ photo: 'https:\\\\evil.com\\x.webp' }),
+      backslashFull: v({ photo: 'a.webp', photoFull: 'media\\events\\a.webp' }),
+      dataPhoto: v({ photo: 'data:image/png;base64,AAAA' }),
+      jsPhoto: v({ photo: 'javascript:alert(1)' }),
+      httpNoSlashes: v({ photo: 'http:evil.com/x.webp' }),
+      schemeFull: v({ photo: 'a.webp', photoFull: 'data:image/webp;base64,AAAA' }),
+      colonLater: v({ photo: 'media/events/a/b:c.webp' }),
     };
   });
   expect(r.both).toEqual([]);
@@ -64,10 +71,19 @@ test('validateEvent accepts photo pairs and refuses bad paths', async ({ page })
   expect(r.urlFull).toEqual(['photoFull']);
   expect(r.dotsFull).toEqual(['photoFull']);
   expect(r.notString).toEqual(['photoFull']);
+  expect(r.backslashPhoto).toEqual(['photo']);
+  expect(r.backslashFull).toEqual(['photoFull']);
+  expect(r.dataPhoto).toEqual(['photo']);
+  expect(r.jsPhoto).toEqual(['photo']);
+  expect(r.httpNoSlashes).toEqual(['photo']);
+  expect(r.schemeFull).toEqual(['photoFull']);
+  expect(r.colonLater).toEqual([]);
 });
 
 test('Home, Events and Gallery tiles never request photoFull before the viewer opens', async ({ page }) => {
   test.setTimeout(60000);
+  // Google Fonts can hang on a slow connection and block 'networkidle'; fonts don't matter here.
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort());
   await mockEvents(page, EVENTS);
   await routePhotos(page);
   const urls = logRequests(page);
@@ -143,6 +159,37 @@ test('if photoFull fails to load, the display copy stays', async ({ page }) => {
   await expect(dialog.locator('.vtag')).toHaveText('Preview');
   await expect(dialog.locator('[role="alert"]')).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test('keyboard: focus stays in the viewer when Next/Previous hides at the ends', async ({ page }) => {
+  await mockEvents(page, EVENTS);
+  const { release } = await routePhotos(page);
+  release();
+  await page.goto('gallery.html');
+  await page.locator('.gallery-tile').first().click();
+  const dialog = page.locator('dialog.viewer');
+  const img = dialog.locator('img.v-img:not(.v-full)');
+  const nextBtn = dialog.getByRole('button', { name: 'Next photo' });
+  const prevBtn = dialog.getByRole('button', { name: 'Previous photo' });
+  await expect(dialog.getByRole('button', { name: 'Close photo' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(nextBtn).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(img).toHaveAttribute('alt', 'Comic Fiesta 2025');
+  await expect(nextBtn).toBeHidden();
+  // Focus moved to Previous (still inside the dialog), so the arrow keys keep working.
+  await expect(prevBtn).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(img).toHaveAttribute('alt', 'Anime Matsuri 2026');
+  // Same at the other end: Enter on Previous on the 2nd photo -> first photo, focus goes to Next.
+  await page.keyboard.press('ArrowRight');
+  await expect(img).toHaveAttribute('alt', 'Comic Fiesta 2025');
+  await prevBtn.focus();
+  await page.keyboard.press('Enter');
+  await expect(img).toHaveAttribute('alt', 'Anime Matsuri 2026');
+  await expect(nextBtn).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(img).toHaveAttribute('alt', 'Comic Fiesta 2025');
 });
 
 test('the footer watermark note stays', async ({ page }) => {

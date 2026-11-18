@@ -71,8 +71,14 @@ function buildViewer(items) {
     disp.src = item.photo;
     disp.alt = item.alt;
     capText.textContent = `${item.caption} `;
+    // If the focused nav button is about to hide, keep focus inside the viewer.
+    const focused = document.activeElement;
     prev.hidden = index === 0;
     next.hidden = index === items.length - 1;
+    if ((focused === prev && prev.hidden) || (focused === next && next.hidden)) {
+      const other = focused === prev ? next : prev;
+      (other.hidden ? close : other).focus();
+    }
     full.onload = null;
     full.onerror = null;
     full.removeAttribute('src');

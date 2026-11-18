@@ -459,7 +459,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Opening a Gallery tile requests the `photoFull` path, and after load the dialog image `src` ends with it.
     - With `photoFull` routed to a 404, the dialog image keeps the `photo` source.
     - Admin: fill both fields, Save, reload: both values are in the draft and in the exported file.
-- Status: in-progress, ready for review (built 2026-11-18 by the programmer on branch `task-10-photo-viewer`, not merged; tests/task-10.spec.js 12/12 passing, full suite 92 passed + 2 project skips, PC + phone)
+- Status: in-progress, ready for review (built 2026-11-18 by the programmer on branch `task-10-photo-viewer`, not merged; tests/task-10.spec.js 14/14 passing, full suite 94 passed + 2 project skips; round-1 review fixes applied, PC + phone)
 - Review: changes requested (2026-11-18, round 1: 2 must-fix, see docs/reviews.md)
 - QA: pending
 
