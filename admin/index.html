@@ -89,9 +89,16 @@
             <p class="field-error" id="err-link" hidden></p>
           </div>
           <div class="field">
-            <label for="f-photo">Preview photo path</label>
-            <input type="text" id="f-photo" name="photo" placeholder="media/events/2025-12-13-cf/cover-wm.webp" aria-describedby="err-photo">
+            <label for="f-photo">Display photo</label>
+            <input type="text" id="f-photo" name="photo" placeholder="media/events/2025-12-13-cf/cover.webp" aria-describedby="photo-help err-photo">
+            <p class="panel-hint" id="photo-help">The 1200px watermarked copy. Used on Home, Events and the Gallery tiles.</p>
             <p class="field-error" id="err-photo" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-photo-full">Full-size photo</label>
+            <input type="text" id="f-photo-full" name="photoFull" placeholder="media/events/2025-12-13-cf/cover-full.webp" aria-describedby="photo-full-help err-photoFull">
+            <p class="panel-hint" id="photo-full-help">Optional. The full-resolution watermarked master, opened in the Gallery viewer. Needs a Display photo.</p>
+            <p class="field-error" id="err-photoFull" hidden></p>
           </div>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" id="save-event">Save event</button>

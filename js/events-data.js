@@ -1,5 +1,6 @@
 // Event data: load data/events.json, sort newest first, group by year, validate, and make ids.
-// Format (see docs/plan.md section 4): { version: 1, events: [{ id, date, short, name, venue?, activities?, link?, photo?, sample? }] }
+// Format (see docs/plan.md section 4): { version: 1, events: [{ id, date, short, name, venue?, activities?, link?, photo?, photoFull?, sample? }] }
+// photo = watermarked display copy (1200px), photoFull = watermarked full-size master (Gallery viewer only).
 
 export const EVENTS_URL = new URL('../data/events.json', import.meta.url).href;
 
@@ -48,6 +49,21 @@ export function groupByYear(events) {
   return groups.sort((a, b) => b.year - a.year);
 }
 
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
+/** Checks an optional photo path (photo / photoFull). Returns an error text, or '' when fine.
+ *  Allowed: missing or empty, or a relative path. Refused: not a string, leading "/", "://" or "..". */
+export function photoPathError(value) {
+  if (value === undefined || value === '') return '';
+  if (typeof value !== 'string') return 'must be a file path.';
+  if (value.startsWith('/')) return 'must be a relative path (no leading /).';
+  if (value.includes('://')) return 'must be a path in this site, not a web address.';
+  if (value.includes('..')) return 'must not contain "..".';
+  return '';
+}
+
 /** Returns a list of { field, message } errors. An empty list means the event is valid. */
 export function validateEvent(event) {
   const errors = [];
@@ -67,8 +83,12 @@ export function validateEvent(event) {
   if (e.activities !== undefined && !(Array.isArray(e.activities) && e.activities.every((a) => typeof a === 'string'))) {
     errors.push({ field: 'activities', message: 'Activities must be a list of names.' });
   }
-  if (e.photo !== undefined && e.photo !== '' && typeof e.photo !== 'string') {
-    errors.push({ field: 'photo', message: 'Photo must be a file path.' });
+  const photoError = photoPathError(e.photo);
+  if (photoError) errors.push({ field: 'photo', message: `Display photo ${photoError}` });
+  const fullError = photoPathError(e.photoFull);
+  if (fullError) errors.push({ field: 'photoFull', message: `Full-size photo ${fullError}` });
+  else if (hasValue(e.photoFull) && !hasValue(e.photo)) {
+    errors.push({ field: 'photoFull', message: 'Full-size photo needs a Display photo too.' });
   }
   return errors;
 }

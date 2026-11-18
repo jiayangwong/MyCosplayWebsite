@@ -69,19 +69,122 @@
 .gallery-tile:hover { box-shadow: var(--shadow-hover); }
 .gallery-caption { font-size: 0.875rem; }
 
-.lightbox {
-  max-width: min(92vw, 1000px);
-  max-height: 92vh;
-  padding: var(--space-4);
-  border: var(--outline);
-  border-radius: var(--radius-card);
-  background: var(--color-dark-card);
-  color: var(--color-on-dark);
-}
+.lightbox-caption { font-family: var(--font-mono); }
 
-.lightbox::backdrop { background: var(--color-scrim); }
-.lightbox-img { max-height: 75vh; margin: var(--space-3) auto; object-fit: contain; }
-.lightbox-caption { font-family: var(--font-mono); font-size: 0.875rem; }
+/* ---------- Gallery photo viewer (TASK-10, style guide v2) ---------- */
+html.viewer-open { overflow: hidden; }
+
+dialog.viewer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-8) var(--space-4) var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--color-on-dark);
+  overflow: auto;
+}
+dialog.viewer[open] { display: flex; align-items: center; justify-content: center; }
+dialog.viewer::backdrop { background: var(--color-scrim); }
+.viewer :focus-visible { outline: var(--focus-ring-on-dark); outline-offset: 2px; }
+
+.vbox { display: flex; flex-direction: column; align-items: center; max-width: 100%; }
+.vstage { position: relative; line-height: 0; border-radius: var(--radius-sm); overflow: hidden; }
+.vstage .v-img {
+  display: block;
+  max-width: 96vw;
+  max-height: calc(88vh - 64px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  margin: 0;
+}
+.vstage .v-full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease;
+  pointer-events: none;
+}
+.vstage.is-full .v-full { opacity: 1; }
+
+.vbar {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: rgba(207, 200, 218, 0.3); /* --color-line at 30% */
+  overflow: hidden;
+  z-index: 3;
+}
+.vbar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  background: var(--color-pink);
+  animation: vslide 1.1s linear infinite;
+}
+@keyframes vslide { from { left: -35%; } to { left: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .vbar::after { animation: none; left: 0; width: 100%; }
+}
+.vlabel, .vfail {
+  display: none;
+  position: absolute;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 3;
+  margin: 0;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font: 700 11px/1.4 var(--font-mono);
+  text-transform: uppercase;
+  background: rgba(29, 26, 36, 0.85); /* --color-ink */
+}
+.vlabel { color: var(--color-on-dark-muted); }
+.vfail { color: var(--color-pink); }
+.vstage.is-loading .vbar, .vstage.is-loading .vlabel, .vstage.is-failed .vfail { display: block; }
+
+.vcap { margin: var(--space-3) var(--space-2) 0; font-size: var(--fs-small); color: var(--color-on-dark); text-align: center; line-height: 1.6; }
+.vtag { border: 1px solid var(--color-on-dark); padding: 0 6px; border-radius: var(--radius-sm); margin-left: 6px; white-space: nowrap; }
+
+.v-close, .vnav button {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  font: 700 20px/1 var(--font-body);
+  cursor: pointer;
+  padding: 0;
+}
+.v-close { position: fixed; top: var(--space-4); right: var(--space-4); font-size: 24px; z-index: 5; }
+.v-close:hover, .vnav button:hover { border-color: var(--color-pink); }
+.vnav { position: fixed; top: 50%; left: var(--space-4); right: var(--space-4); display: flex; justify-content: space-between; pointer-events: none; z-index: 4; }
+.vnav button { pointer-events: auto; }
+.vnav button[hidden] { display: inline-block; visibility: hidden; }
+
+@media (max-width: 767px) {
+  dialog.viewer { padding: 72px 0 var(--space-4); }
+  dialog.viewer[open] { align-items: flex-start; }
+  .vbox { width: 100%; }
+  .vstage { width: 100%; border-radius: 0; }
+  .vstage .v-img:not(.v-full) { width: 100%; max-width: 100%; max-height: none; }
+  .vnav { position: static; margin-top: var(--space-4); justify-content: center; gap: var(--space-6); }
+}
 
 /* ---------- About / Contact ---------- */
 .about-grid { display: grid; gap: var(--space-8); align-items: start; }

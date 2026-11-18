@@ -61,6 +61,8 @@
   --dur-fast: 180ms;
   --dur-slow: 600ms;
   --header-h: 72px;
+  /* v2 (style guide): focus ring on the dark viewer scrim */
+  --focus-ring-on-dark: 3px solid #FFFFFF;
 }
 
 @media (min-width: 768px) {
