@@ -1,10 +1,19 @@
+PLAN APPROVED: 2026-11-18
+
 # Plan - Puzz Kezz website, version 1
 
 - Written: 2026-11-17 by the planner
 - Source: docs/ideas.md (GLOBAL NOTES + IDEA-3, IDEA-5, IDEA-6, IDEA-7, all `ready-for-planning`)
+- Revised: 2026-11-18 by the planner for IDEA-8 (Publish to GitHub from /admin/) and IDEA-9 (full-resolution master + display copy, tiled watermark). Changed: goal, sitemap admin row, footer note, F8/F9 (+ new F11), the Event manager / Media rows and a new Publishing row in Tech choices, the `photo` / `photoFull` data fields, TASK-7 (reopened, rewritten). New: TASK-10 to TASK-13. New open questions: 13-14.
+- Revised again: 2026-11-18 by the planner after the user answered questions 13 and 14. Display copy is now **1200px** on the longest side (was 1600px): TASK-7, the data notes, the Media row and the size estimates were updated. Publish now **deletes old, unused photo files** under `media/events/` in the same commit, after a confirmation step: F8/F9, the Publishing row, the security rules, the limits and TASK-13 were updated (TASK-12's call list gets one extra read call, see TASK-13). Both questions moved to "Already decided".
+- Revised: 2026-11-18 by the planner (user-requested design change): new watermark style, a white dashed ±45 degree lattice with hearts at the crossings and `@notpuzzkezz` along the up-right lines (replaces the -30 degree tiled text rows). Changed: goal, F9, the Media row, TASK-7 criteria and tests. Spec matches docs/style-guide.md; reference drawing is storyboard/wm.js. Plan stays approved.
+- Revised: 2026-11-18 by the planner (user-requested tweak): the lattice watermark is kept (hearts, up-right text direction confirmed) but made about 3 times as dense. Only the size rule changed: `f` = round(shorter side / 120), min 8px (was 2.5% of the shorter side, min 12px); everything else stays relative to `f`. Changed: F9, the Media row, TASK-7 criteria, note and test numbers. On the 1200px display copy the name is about 8px tall (a texture); it is readable on the full-size master (user informed). Spec matches docs/style-guide.md and storyboard/wm.js. Plan stays approved.
+- Revised: 2026-11-18 by the planner for IDEA-10 (every photo of Puzz is watermarked, everywhere). New: section "IDEA-10 addition" (sitemap/flow additions, `data/site.json`, the watermark marker, the honest limit), TASK-14 (Site photos: portrait, reel covers, share image), TASK-15 (watermark marker + Publish check + repo guard test), open questions 15-18, and a new build-order line. Changed: the Media row and F9 now say the density is OPEN (2x or 3x); TASK-7 gets a density note and one-constant rule. The IDEA-10 part was approved by the user on 2026-11-18 (see the next line).
+- Revised: 2026-11-18 by the planner after the user answered questions 15-18 and wrote "Plan approved and storyboard approved". Density is **2x**: `WM_DIVISOR` = 80, so `f` = round(shorter side / 80), min 8px. Changed: F9, the Media row, TASK-7 criteria, note and test numbers, the build-order lines. Share image: the site screenshot stays until a photo is uploaded. Portrait and reel covers: one 1200px file each. GitHub Action check on every push: out of scope (future idea). Questions 15-18 moved to "Already decided". TASK-14 and TASK-15 are approved. Review/QA lines no longer wait for STORYBOARD APPROVED (docs/approval.md now contains it).
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
+- Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
-- Status: draft. Waiting for the user to review. The user was asleep when this was written, so the planner made the decisions itself. Every assumption is listed under "Open questions".
+- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density).
 
 ### Branch note (this job only)
 The integration branch is **`site-v1`**. It takes the place of `main`, because the real `main` is checked out somewhere else. Each task branch (for example `task-3-home-hall`) is created from `site-v1` and merged back into `site-v1`. Wherever CLAUDE.md says "main", read `site-v1`.
@@ -13,7 +22,7 @@ The integration branch is **`site-v1`**. It takes the place of `main`, because t
 
 ## 1. Goal
 
-Build a fast static portfolio site for Puzz Kezz, a Malaysian cosplayer who crossplays female characters and likes Lolita. It should feel like his own space, not like SleepyStella's. The visual tone is about 3-4 on the 1 (feminine) to 10 (masculine) scale: bold gothic sans, mono labels, ink outlines, square-ish corners, and baby pink and purple only as accents. The home page is a convention-hall walk-through (Concept 6B). Visitors scroll past hanging hall signs and polaroids of his cosplays. A "YOU ARE HERE" strip runs along the bottom of the hall as a newest-first timeline that shows years only. The hall ends at the さしすせそ reel section, which is there to get people watching his reels. Every Japanese word on the site shows how to say it: furigana over kanji, then romaji, then English, plus a speaker button. Events are not hard-coded. Puzz enters them on a private, browser-only event manager page, along with photos that get a watermark automatically. Because there is no database, the content lives in JSON files committed to the repo.
+Build a fast static portfolio site for Puzz Kezz, a Malaysian cosplayer who crossplays female characters and likes Lolita. It should feel like his own space, not like SleepyStella's. The visual tone is about 3-4 on the 1 (feminine) to 10 (masculine) scale: bold gothic sans, mono labels, ink outlines, square-ish corners, and baby pink and purple only as accents. The home page is a convention-hall walk-through (Concept 6B). Visitors scroll past hanging hall signs and polaroids of his cosplays. A "YOU ARE HERE" strip runs along the bottom of the hall as a newest-first timeline that shows years only. The hall ends at the さしすせそ reel section, which is there to get people watching his reels. Every Japanese word on the site shows how to say it: furigana over kanji, then romaji, then English, plus a speaker button. Events are not hard-coded. Puzz enters them on a private, browser-only event manager page, along with photos. Each photo is turned into two watermarked files (a full-resolution master for the photo viewer and a display copy of 1200px on the longest side for page layouts), both with a white dashed diagonal lattice watermark (hearts at the crossings, `@notpuzzkezz` along the lines). Because there is no database, the content lives in JSON files committed to the repo. Puzz publishes his changes from the event manager with one button ("Publish to GitHub"), which makes a single commit through the GitHub API using a token that only lives in his own browser. The same commit removes old photo files that no event uses any more, after he confirms the list. Export/Import of `events.json` stays as a backup.
 
 ---
 
@@ -24,12 +33,12 @@ Public tabs, in this order: HOME · GALLERY · REELS · EVENTS · ABOUT · CONTA
 | Path | Screen | Contents |
 |---|---|---|
 | `/index.html` | HOME | Header. Hero hall walk-through: a steel truss across the top, a hanging hall sign for each event (`HALL A · COMIC FIESTA`), and event polaroids at different depths (near = big, far = small). Polaroids flip to a dark "Watch reel" card. Year marker signs appear wherever the year changes. Intro: a con **GUEST PASS** on a lanyard reading `PUZZ KEZZ` / `COSPLAYER · LOLITA · MALAYSIA` / "Not a beatboxer. Just here to cosplay.", a "Watch my reels" button, and one subtle lace edge. A sticky **YOU ARE HERE** strip at the bottom of the hall works as a descending year timeline (year labels only, small ticks for events). A persistent "Skip to reels" button. The hall ends at the `END OF HALL · 5 REELS` sign, followed by the さしすせそ reel section. Footer. |
-| `/gallery.html` | GALLERY | Grid of the event preview photos from `data/events.json`, newest first. Each caption shows the event short form, the full name, and the year. Clicking a photo opens a larger view. If there are no photos yet, an empty-state message shows. |
+| `/gallery.html` | GALLERY | Grid of the event display photos (`photo`) from `data/events.json`, newest first. Each caption shows the event short form, the full name, and the year. Clicking a photo opens a viewer that shows the display copy at once and then swaps in the full-resolution master (`photoFull`) when it has loaded. If there are no photos yet, an empty-state message shows. |
 | `/reels.html` | REELS | The full さしすせそ section: header with pronunciation, the "Sound on" button, and 5 reel cards. Five in a row on PC, a swipe carousel on phone. |
 | `/events.html` | EVENTS | Events grouped by year (newest year first), with a jump row for the years. Each event card shows the date, short form, full name, venue (if set), the activities list, and media (click-to-load embed, preview photo, or placeholder). Each card can be linked to as `events.html#<event-id>`. |
 | `/about.html` | ABOUT | Simple v1 page: heading, a portrait placeholder, and bio text marked `[placeholder]`. No invented facts. |
 | `/contact.html` | CONTACT | Simple v1 page: "Collabs & bookings" text `[placeholder]`, a mailto link `[email placeholder]`, and social links. No form (there is no backend). |
-| `/admin/index.html` | Event manager (not public) | Not in the nav. Has `noindex`. Event list (edit / delete / move up / move down), event form, validation, localStorage draft, Import / Export `events.json`, embed preview, and the media uploader with automatic watermark. |
+| `/admin/index.html` | Event manager (not public) | Not in the nav. Has `noindex`. Event list (edit / delete / move up / move down), event form (incl. display photo + full-size photo paths), validation, localStorage draft, Import / Export `events.json` (backup), embed preview, the media uploader (two watermarked files per photo: full-res master + display copy), a **GitHub** panel (paste token / Test connection / Forget token), and a **Publish to GitHub** button with a list of pending changes, progress, and the result (commit link or a clear error). |
 
 Shared on every public page:
 - **Header (PC, width 900px or more):** the PUZZ KEZZ wordmark linking to Home, the 6 tabs with an underline under the active tab (`aria-current="page"`), and an Instagram button.
@@ -70,10 +79,17 @@ EVENTS tab -> pick a year in the jump row -> read an event card -> click the vid
 Any page -> MENU -> the full-screen list appears -> tap EVENTS -> the Events page opens with the menu closed.
 
 **F8 - Puzz adds a new event (admin)**
-Go to `/admin/` (typed URL or bookmark) -> the published events load (from the draft if one exists, otherwise from `data/events.json`) -> "New event" -> fill in the date, short form, full name, venue, activities, and social link -> the embed preview appears -> Save (the draft goes to localStorage) -> "Export events.json" -> the file downloads -> he replaces `data/events.json` in the repo and commits/pushes -> GitHub Pages updates -> the new event appears in the hall, the timeline, the Events page, and the Gallery.
+Go to `/admin/` (typed URL or bookmark) -> the published events load (from the draft if one exists, otherwise from `data/events.json`) -> "New event" -> fill in the date, short form, full name, venue, activities, and social link -> the embed preview appears -> Save (the draft goes to localStorage) -> the Publish panel lists "data/events.json changed" -> "Publish to GitHub" -> if the change leaves old photo files unused (for example he deleted an event that had photos), a confirmation lists them ("These N old files will be removed") -> he confirms (or cancels, and nothing is changed) -> progress shows -> success message with a link to the commit and "The site updates in about 1-2 minutes" -> GitHub Pages redeploys -> the new event appears in the hall, the timeline, the Events page, and the Gallery.
+- Backup path (no token, or GitHub is down): "Export events.json" -> the file downloads -> he replaces `data/events.json` in the repo and commits/pushes by hand.
+- Stale path: if the repo changed since the draft was started (another device, a hand commit), Publish refuses with "The site changed since you started editing. Export a backup, then reload." -> he exports, reloads, and redoes or imports his changes.
 
 **F9 - Puzz adds watermarked photos (admin)**
-Admin -> Media uploader -> pick one or many images -> watermarked WebP previews appear (he can change the text, position, and opacity) -> download each file, or download all -> choose "Attach to event" for one of them -> the event's `photo` becomes `media/events/<event-id>/<file>.webp` -> Export events.json -> he commits the JSON and the image files at that path.
+Admin (best on a desktop browser) -> select an event -> Media uploader -> pick one or many images -> for each photo two WebP files are made, both with the white dashed diagonal lattice watermark (±45 degree lines, a small heart at every crossing, `@notpuzzkezz` along the up-right lines; size unit `f` = round(shorter side / 80), min 8px (2x density, user decision 2026-11-18): on a 1200 x 800 display copy the name is about 10px tall, on the master it is clearly readable) at 40% opacity (text and opacity can be changed): a full-resolution master and a display copy (longest side 1200px) -> previews show both sizes and file sizes -> "Attach to selected event" -> the event's `photo` becomes `media/events/<event-id>/<name>.webp` and `photoFull` becomes `media/events/<event-id>/<name>-full.webp` -> the pair is listed as pending in the Publish panel -> "Publish to GitHub" -> if the event had an older photo pair that nothing uses any more, a confirmation shows "These 2 old files will be removed" with the paths -> Confirm (or Cancel: nothing is sent, the pending pair stays) -> one commit adds the JSON and both new image files and removes the old files.
+- Backup path: "Download" / "Download all" saves both files of each pair -> he commits them by hand at the shown paths together with the exported events.json.
+- Too-large path: if a photo is too big for the browser (for example on iPhone), that photo shows "Too large for this browser. Please use a desktop browser (Chrome, Edge or Firefox)." and the other photos still work.
+
+**F11 - First-time GitHub setup (admin, once per browser)**
+Admin -> GitHub panel -> "How to get a token" help (create a fine-grained personal access token on github.com: only the repo `jiayangwong/MyCosplayWebsite`, permission Contents: Read and write, with an expiry date) -> paste the token -> "Save token" -> "Test connection" -> "Connected to jiayangwong/MyCosplayWebsite (main). Write access is checked when you publish." -> later, "Forget token" removes it from this browser.
 
 **F10 - Reduced motion**
 A visitor has `prefers-reduced-motion: reduce` -> Home shows the hall as a normal stacked list (signs and polaroids in date order, no camera movement or parallax). Everything else works the same.
@@ -89,8 +105,9 @@ The user said "u decide languages, skip db for now". The main session decided th
 | Site type | Static site: HTML5 + CSS (custom properties) + vanilla JavaScript ES modules. No framework, no build step. | Small site. Nothing to compile, fast on phones, and easy for any agent (or Puzz) to edit. |
 | Hosting | GitHub Pages, with a custom domain from the existing `CNAME` (`puzzkezz-testing.loc.cc`). | Free, HTTPS, and it deploys on push. |
 | Data | No database. `data/events.json`, `data/reels.json`, and `js/site-config.js` (name, handle, social URLs) are committed to the repo. | Fits "skip db". Version-controlled, and it can move to a real CMS or database later without changing the page code much. |
-| Event manager | `/admin/` runs 100% in the browser. Drafts are kept in `localStorage`. Export/Import `events.json`. | No server or login needed. The page cannot change the live site by itself: changes only go live when Puzz commits the exported file, so a public `/admin/` URL is harmless. |
-| Media | Canvas watermark, resize to a longest side of at most 2000px, WebP output, in the browser. | No server and no upload service. Redrawing on a canvas also removes EXIF data, including GPS location, which helps privacy. |
+| Event manager | `/admin/` runs 100% in the browser. Drafts are kept in `localStorage`. Changes go live through "Publish to GitHub" (see Publishing). Export/Import `events.json` stays as a backup. | No server needed. The page is public but harmless without a token: anyone can open it, but only a browser that holds Puzz's token can publish, because GitHub rejects everyone else. |
+| Publishing (IDEA-8) | GitHub REST API, Git Data endpoints, called with `fetch` from `/admin/` to `https://api.github.com` only. Target: repo `jiayangwong/MyCosplayWebsite`, branch `main` (set in `js/admin/github-config.js`, not in the token). One publish = one commit: create blobs -> create tree (`base_tree` = current tree; old unused photo files are removed in this same tree with `sha: null` entries, see TASK-13) -> create commit (parent = current head) -> update `refs/heads/main` with `force: false`. Auth: a **fine-grained personal access token** limited to this one repo with **Contents: Read and write** only, pasted once by Puzz and stored only in that browser's `localStorage` (key `puzzkezz.github.token`), with a "Forget token" button. | No server, no OAuth app (Decap CMS needs an external OAuth server, rejected in IDEA-8). One atomic commit means the site never shows half an update, and `force: false` plus a stale check means a publish can never overwrite someone else's push. See the security notes below. |
+| Media (IDEA-9) | Canvas in the browser. Per photo, two WebP files, **both watermarked** (user decision 2026-11-18): **master** at the original pixel size (quality 0.95) and **display copy** with a longest side of 1200px (quality 0.85, never enlarged; user decision 2026-11-18). Watermark: a white dashed diagonal lattice (lines at +45 and -45 degrees) over the whole image, a small upright heart at every crossing, and `@notpuzzkezz` written along the up-right lines between crossings (the line is broken around the text); the whole layer at 40% opacity. All sizes come from `f` = round(shorter side / 80), min 8px (**2x density**, user decision 2026-11-18, question 15; the divisor is the one constant `WM_DIVISOR` = 80), so the pattern has the same proportions on both files. On a 1200 x 800 display copy `f` = 10, so the name is about 10px tall (small, but more readable than a texture); on a 6000 x 4000 master `f` = 50 and it is clearly readable. Spec in docs/style-guide.md; reference drawing storyboard/wm.js. | No upload service. Redrawing on a canvas removes EXIF data, including GPS location. Unwatermarked originals never leave the browser. 1200px keeps pages fast (about 100-300 KB per photo). Layout slots are at most about 800 CSS px wide, so 1200px is sharp on normal screens and phones and only slightly soft on the biggest slots of high-resolution screens; the full-size master in the viewer covers close-up looks. |
 | Embeds | The platform is detected from the URL. YouTube -> `youtube-nocookie.com/embed/<id>`. Instagram post/reel -> `instagram.com/(p\|reel)/<id>/embed`. TikTok -> `tiktok.com/embed/v2/<id>`. Anything else (Facebook and others) -> preview photo + external link (`target="_blank" rel="noopener"`). Every iframe sits behind a click-to-load facade. | No third-party scripts or cookies until the visitor asks, and a fast first load. Facebook embeds need their SDK, so they are skipped in v1. |
 | Pronunciation audio | Web Speech API (`speechSynthesis`, `lang="ja-JP"`). The speaker button is hidden if the browser does not support it. | No audio files to record or host. |
 | Fonts | Zen Kaku Gothic New (headings and body, covers Japanese) + Space Mono (labels), from Google Fonts with `display=swap`. | Matches 6B. Free, and one font covers both Latin and Japanese. |
@@ -105,10 +122,31 @@ css/tokens.css  css/base.css  css/<page>.css
 js/site-config.js  js/nav.js  js/events-data.js  js/embed.js
 js/pronounce.js  js/hall.js  js/reels.js  js/events-page.js  js/gallery.js
 js/admin/manager.js  js/admin/watermark.js
+js/admin/github-config.js  js/admin/github-token.js  js/admin/publish.js
 data/events.json  data/reels.json
-media/events/<event-id>/*.webp   media/placeholder/*.svg
-robots.txt   tests/task-<n>.spec.js
+media/events/<event-id>/<name>.webp        (display copy, watermarked)
+media/events/<event-id>/<name>-full.webp   (full-res master, watermarked)
+media/placeholder/*.svg
+robots.txt   tests/task-<n>.spec.js   tests/github-mock.js
 ```
+
+### Security rules for publishing (IDEA-8) - apply to TASK-11, 12, 13
+- The token is a **fine-grained** personal access token: only the repo `jiayangwong/MyCosplayWebsite`, only **Contents: Read and write**, with an expiry date. Classic tokens (`ghp_...`) are refused.
+- The token is stored only in `localStorage` key `puzzkezz.github.token` on Puzz's browser. It is never written to the draft, to `events.json`, to any committed file, to the URL, or to the console. The token input is `type="password"` with `autocomplete="off"`, and after saving it is cleared from the input (the page only shows "Token saved, ends in ...xxxx").
+- The token is sent only as an `Authorization: Bearer` header to `https://api.github.com`. The admin page sets a Content-Security-Policy meta tag with `connect-src 'self' https://api.github.com`, so the browser blocks any other destination, and `<meta name="referrer" content="no-referrer">`.
+- XSS would expose the token, because `/admin/` shares an origin with the public site. So: no third-party `<script>` on any page of the site, and all event text in the admin is rendered with `textContent`, never `innerHTML`.
+- Only these paths may be in a publish commit: `data/events.json` and files under `media/events/<event-id>/`. The original uploaded file bytes are never committed, only the two generated, watermarked WebP files. (IDEA-10, approved 2026-11-18: TASK-14 adds exactly `data/site.json`, `data/reels.json`, `media/site/portrait.webp`, `media/reels/<reel-id>.webp` and `og-image.png`, and TASK-15 makes Publish refuse any image file without the watermark marker.)
+- Deletions (`sha: null` tree entries) are only allowed for paths that start with `media/events/`, end in `.webp`, and are not referenced by any event's `photo` or `photoFull` in the `events.json` being committed. They are shown to Puzz for confirmation first and go in the same tree as the new files, so the whole publish is one commit or nothing. Deleted files disappear from the live site, but **git history still keeps the old versions** (the repo is public, so they can still be found in its history, and they still count towards the repo's total size).
+- Tests mock `api.github.com` with Playwright `page.route` (shared helper `tests/github-mock.js`, an in-memory fake repo). Tests use an obviously fake token such as `github_pat_TESTONLY_not_a_real_token`, never a real one, and never read a token from environment variables. Any request to `api.github.com` that the mock does not handle fails the test, so no test can reach the real GitHub.
+
+### GitHub and Pages limits (planning numbers)
+- The Git blob API accepts blobs up to 100 MB. Blobs are sent as base64 (about 33% larger), so the admin refuses any single generated file over **25 MB** and asks for a smaller original. Typical masters are 3-8 MB.
+- GitHub has a secondary rate limit of about 80 content-creating requests per minute. One publish allows at most **20 photos** (40 image blobs + events.json blob + tree + commit + ref update, well under 80). More photos are published in batches.
+- Blobs are uploaded one at a time, with a progress bar. A `403` or `429` with rate-limit headers stops the publish and shows "GitHub is busy. Wait N minutes and try again." The ref is not touched, so nothing half-published goes live.
+- Base64 encoding of big files uses `FileReader.readAsDataURL` (or chunked encoding), not `btoa` on one huge string, to avoid freezing or crashing the tab.
+- GitHub Pages sites should stay under 1 GB. With masters at 3-8 MB (plus display copies of about 100-300 KB) that is roughly 150-300 photos. The Publish panel shows the size of the files being added. Because Publish deletes unused photos, replaced photos no longer count towards the published site's size; they do stay in git history, so the repo itself still grows (GitHub recommends repos under about 1 GB too).
+- Deleting files needs no blob uploads (only extra entries in the one tree), so it does not count towards the 20-photo / rate-limit budget. A later move to external storage (for example Cloudflare R2) is a future idea, not in this plan.
+- iOS Safari limits a canvas to about 16.7 million pixels, and some browsers cannot encode WebP. Full-res processing is meant for desktop; on failure the uploader shows a clear message per photo (TASK-7).
 
 ### Data formats (contract for all tasks)
 
@@ -126,12 +164,16 @@ robots.txt   tests/task-<n>.spec.js
       "activities": ["[cosplay character placeholder]", "Stage"],
       "link": "https://www.instagram.com/reel/XXXX/",
       "photo": "media/events/2025-12-06-cf/cover.webp",
+      "photoFull": "media/events/2025-12-06-cf/cover-full.webp",
       "sample": true
     }
   ]
 }
 ```
-- Required fields: `id`, `date` (a real calendar date in `YYYY-MM-DD`), `short` (1-12 characters), `name`. Optional: `venue`, `activities` (array of strings, may be empty), `link` (http/https URL), `photo` (relative path), `sample` (boolean).
+- Required fields: `id`, `date` (a real calendar date in `YYYY-MM-DD`), `short` (1-12 characters), `name`. Optional: `venue`, `activities` (array of strings, may be empty), `link` (http/https URL), `photo` (relative path), `photoFull` (relative path), `sample` (boolean).
+- `photo` = the **display copy** (watermarked, longest side 1200px). Used everywhere a photo sits in a layout: hall polaroids, Events cards and facades, Gallery tiles. The meaning is unchanged from v1, so older data keeps working.
+- `photoFull` = the **full-resolution master** (watermarked). Used only when a visitor opens a photo in the viewer (Gallery). If it is missing, the viewer uses `photo`. `photoFull` is only allowed when `photo` is also set.
+- Both paths must be relative (no leading `/`, no `://`, no `..`).
 - `id` is generated as `<date>-<slug(short)>`. If that id is already taken, `-2`, `-3`, and so on is added.
 - **Display order:** date descending. Events on the same date keep their order in the array, so the admin "move up/down" decides ties. Export writes the events already sorted this way.
 
@@ -146,6 +188,45 @@ robots.txt   tests/task-<n>.spec.js
 ```
 - `jp` uses `{kanji|reading}` for furigana. For example, `{知|し}らなかった！` renders as `<ruby>知<rt>し</rt></ruby>らなかった！`.
 - If `url` is empty, the card shows "Coming soon" and is not a link.
+- `thumb` (IDEA-10, approved 2026-11-18) = the reel cover, always `media/reels/<reel-id>.webp` made by the uploader, or `""` for none.
+
+### IDEA-10 addition: every photo of Puzz is watermarked, everywhere - APPROVED 2026-11-18
+
+Rule: every photo image of Puzz that is committed to the public repo or shown on the site already carries the lattice watermark (the IDEA-9 design) **and** a hidden "made by the uploader" marker. This covers event photos (display copy + master, already planned), the portrait (Home guest pass + About), the 5 reel covers, and the social share image. Unwatermarked originals never leave Puzz's browser.
+
+Sitemap additions:
+- `/index.html` HOME: the guest-pass photo slot (`.pass-photo`) shows the portrait from `data/site.json` when set; otherwise the current `[Portrait]` placeholder.
+- `/about.html` ABOUT: the portrait slot (`.portrait`) shows the same portrait; otherwise the current placeholder.
+- REELS section (Home `#reels` and `reels.html`): each card shows its cover (`thumb`) when set.
+- Every page's share preview (`og:image`) stays `og-image.png`. Today it is a site screenshot with no photo of Puzz, and it stays as the share image until Puzz uploads a photo (user answer to question 16). If Puzz uploads a Share image, the uploader writes a watermarked photo to that same path, so no HTML changes are needed.
+- `/admin/`: a new **Site photos** panel next to "Attach to selected event", with the targets Portrait, Reel cover (さ / し / す / せ / そ), and Share image.
+
+**F12 - Puzz adds a site photo (admin)**
+Admin -> Site photos -> pick a target (for example "Reel cover: す su") -> pick one image -> the uploader makes one watermarked file (same lattice, same `watermarkLayout`, plus the hidden marker) and shows a preview with size -> "Use for Reel cover す" -> the site draft is updated and the file is listed as pending in the Publish panel -> "Publish to GitHub" -> one commit with the changed JSON (`data/reels.json` or `data/site.json`) and the image -> the cover shows on Home and the Reels page after GitHub Pages redeploys (about 1-2 minutes, plus up to about 10 minutes of browser cache because the file name stays the same).
+
+Site photo files (fixed names, one file each, a new upload replaces the old file in place, so nothing is left unused):
+
+| Target | File | Size | Format | Referenced by |
+|---|---|---|---|---|
+| Portrait | `media/site/portrait.webp` | longest side 1200px, not cropped, never enlarged | WebP q0.85 | `data/site.json` `portrait` |
+| Reel cover (x5) | `media/reels/<reel-id>.webp` | longest side 1200px (a 9:16 video still gives 675 x 1200), not cropped | WebP q0.85 | `data/reels.json` `thumb` |
+| Share image | `og-image.png` (repo root) | exactly 1200 x 630, centre-cropped to fill | PNG (best support in chat apps and social sites) | `og:image` on every page |
+
+No full-size master is made for site photos, because no page opens them in a viewer. One 1200px file is enough (user answer to question 17).
+
+`data/site.json` (new)
+```json
+{ "version": 1, "portrait": "media/site/portrait.webp" }
+```
+- `portrait` is `"media/site/portrait.webp"` or `null` (placeholder shows). If the file fails to load, pages show the placeholder and do not crash.
+
+**Watermark marker (for TASK-15).** The uploader adds a small hidden label to every file it makes, after the watermark is drawn. Text (ASCII JSON): `{"wm":"puzzkezz-lattice","v":1,"f":<f>,"div":<divisor>}`.
+- WebP: an extra RIFF chunk named `PZWM`. The file is written as a spec-valid extended WebP (with a `VP8X` header) so browsers accept the unknown chunk, and the RIFF size is updated.
+- PNG (share image only): a `tEXt` chunk with the keyword `puzzkezz-wm`, placed before the first `IDAT`, with a correct CRC.
+- One pure module, `js/admin/wm-marker.js`, exports `addWatermarkMarker(bytes, info)` and `readWatermarkMarker(bytes)` (returns the parsed object or `null`). It uses no DOM, so both the admin page and the Node-side repo test can import it.
+- What the marker is for: it catches mistakes (an original committed by hand, a wrong file attached). It is not a lock. Anyone who knows the format could copy it onto another file.
+
+**Honest limit (the user has been told, IDEA-10).** A watermark deters casual reposting and helps prove that a photo is Puzz's. It **cannot** stop screenshots, and a determined person can crop, paint over, or AI-edit the watermark out. The goal of IDEA-10 is that no clean, unwatermarked photo is ever downloadable from the site or the repo, not that copying becomes impossible. Old file versions also stay in git history (see TASK-13), so photos must be watermarked **before** their first commit; a later fix cannot remove an unwatermarked file from history without rewriting it.
 
 ---
 
@@ -169,7 +250,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - All interactive elements can be reached with Tab and have a visible focus style.
   - `robots.txt` exists and disallows `/admin/`.
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-2: Data layer - events.json schema, sample events, loader (sort + group by year)
@@ -188,7 +269,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - If the JSON fails to load, the loader returns an empty list and logs one console warning. Pages show an "Events coming soon" message instead of crashing.
   - A Playwright test runs these functions in the page with `page.evaluate` and import, covering all the cases above.
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-3: Home - guest pass intro + hall walk-through + descending year timeline strip
@@ -208,7 +289,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - Only the first 2 polaroid images load eagerly. The rest use `loading="lazy"`.
   - Works at 360px wide on phone. On phone, polaroids are larger and fewer appear per screen.
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-4: Pronunciation component + さしすせそ reels (Home section + Reels page)
@@ -231,7 +312,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - The same component is used on Home (`#reels`, under the `END OF HALL · 5 REELS` sign) and on `reels.html`.
   - Every other Japanese text on the site follows the full pattern too. Exception: the MENU subtitle "さしすせそ · sa shi su se so" shows Japanese + romaji only (see Open questions).
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-5: Events page - grouped by year, event cards, click-to-load embeds
@@ -252,7 +333,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - Sample events (`"sample": true`) show a small "Sample" tag, so nobody mistakes them for real history.
   - Works at 360px wide with no horizontal scrolling.
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-6: Admin event manager (`/admin/`)
@@ -269,32 +350,69 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - Saving or editing an event removes `"sample": true` from that event.
   - "Import" accepts a `.json` file. An invalid file (bad JSON, or events that fail validation) shows an error, and the current draft stays unchanged.
   - "Discard draft" (asks for confirmation) clears localStorage and reloads from `data/events.json`.
-  - A short help box on the page says: "Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push."
+  - A short help box on the page says: "Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push." (Text replaced by TASK-12.)
   - The page uses the site tokens and is usable at phone width.
+- Note 2026-11-18: the photo fields are extended by TASK-10 (Display photo + Full-size photo), and the help box text is changed by TASK-12. Export / Import / Discard draft stay as they are and their tests must keep passing.
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
-### TASK-7: Media uploader with automatic watermark (on `/admin/`)
-- Linked idea(s): IDEA-7
+### TASK-7: Media uploader - full-res master + display copy, diagonal lattice watermark (on `/admin/`) - REVISED 2026-11-18
+- Linked idea(s): IDEA-7, IDEA-9
+- Depends on: TASK-10 (the `photoFull` field)
+- History: first built 2026-11-17 (one file per photo, max 2000px, corner watermark). Reopened for IDEA-9. The old corner-watermark / 2000px criteria are replaced by the ones below, and `tests/task-7.spec.js` is rewritten to match.
 - Acceptance criteria:
-  - A file input accepts multiple images (`accept="image/*"`, `multiple`). Choosing files shows one preview per file.
-  - Each output image:
-    - has a longest side of at most 2000px, keeping the aspect ratio (images that are already smaller are not enlarged)
-    - is WebP (`image/webp`, quality about 0.85)
-    - is named `<original-name-slug>-wm.webp`
-  - The watermark text defaults to `PUZZ KEZZ · @notpuzzkezz` and can be edited. The default position is bottom-right, and the choices are bottom-right, bottom-left, top-right, top-left, and center. The default opacity is 60%, adjustable from 10 to 100%.
-  - The font size scales with the image (about 3.5% of the shorter side, never below 14px). There is a thin dark outline or shadow, so the text can be read on both light and dark photos.
-  - Changing the text, position, or opacity re-renders all previews.
-  - Test: upload a test image from `tests/fixtures/`, then read pixels from the output canvas. The bottom-right area differs from the source, the top-left area matches it (within tolerance), and the output size is at most 2000px.
-  - Each preview has a "Download" button and there is a "Download all" button. Downloads are tested with the Playwright download event and the `.webp` filename.
-  - Each preview shows its suggested repo path `media/events/<event-id>/<file>.webp` for the selected event.
-  - "Attach to selected event" puts that path in the event's photo field (TASK-6 form) and saves the draft.
-  - Processing happens only in the browser. No network requests are made with the image (checked in the test by watching `page.on('request')`).
-  - A note on the page says the output removes the photo's location and camera data.
-- Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
-- QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
+  - A file input accepts multiple images (`accept="image/*"`, `multiple`). Files are processed one at a time (not all in parallel), and each file gets one preview card.
+  - For each photo, two files are made, **both watermarked**:
+    - **Master:** the original pixel width and height (not resized; the only exception is a side over 16383px, the WebP limit, which is scaled down to 16383), WebP at quality 0.95, named `<original-name-slug>-full.webp`.
+    - **Display copy:** longest side 1200px keeping the aspect ratio (smaller images are not enlarged), WebP at quality 0.85, named `<original-name-slug>.webp`.
+  - The watermark matches docs/style-guide.md and the reference drawing `storyboard/wm.js`. It is all white (`#FFFFFF`) and covers the **whole** image:
+    - a dashed diagonal lattice: one set of lines at +45 degrees (rising left to right) and one at -45 degrees;
+    - a small upright heart at every crossing;
+    - the text `@notpuzzkezz` written along the up-right (+45 degree) lines, centred between two crossings, with the line broken around the text (a gap at each end of the text);
+    - the whole layer is drawn at 40% opacity by default (one layer opacity, so overlapping parts are not brighter).
+  - The watermark layout comes from one exported pure function, `watermarkLayout(width, height)` in `js/admin/watermark.js`, which returns `{ f, cell, lineWidth, dash, gap, heart }`:
+    - `f` = round(shorter side / `WM_DIVISOR`), never below 8px (`Math.max(8, Math.round(Math.min(width, height) / WM_DIVISOR))`), with `WM_DIVISOR` = 80 (2x density);
+    - `cell` = 14 x `f` (distance from one crossing to the next along a line);
+    - `lineWidth` = max(1, 0.1 x `f`);
+    - `dash` = `[0.5 x f, 0.35 x f]` (on, off);
+    - `gap` = 0.5 x `f` (space between the text and the broken line, at each end);
+    - `heart` = 0.3 x `f` (heart scale).
+    So the pattern has the same proportions on the master and the display copy (`cell / f` = 14 on both). Because of rounding and the 8px floor, the cell count across the image is close to, but not exactly, the same on both files.
+  - **Density (user decision 2026-11-18, question 15): 2x.** The divisor is one exported constant, `WM_DIVISOR` = 80, in `js/admin/watermark.js`; nothing else in the code or the storyboard repeats the number. The 8px minimum and all ratios to `f` stay as above.
+  - Note: on a 1200 x 800 display copy `f` = 10, so `@notpuzzkezz` is about 10px tall (small but more readable than a texture). Very wide or small images (for example a 1200 x 630 share image or a 675 x 1200 reel cover) hit the 8px floor. The name is clearly readable on the full-size master (for example `f` = 50 on a 6000 x 4000 photo).
+  - The text (default `@notpuzzkezz`) and the opacity (default 40%, slider from 10 to 100%) can be changed. Changing either re-renders all previews. There are no position choices any more.
+  - Each preview card shows both images' pixel sizes and file sizes (for example "Master 6000 x 4000 · 5.4 MB" and "Display 1200 x 800 · 180 KB").
+  - Each card shows both suggested repo paths for the selected event: `media/events/<event-id>/<slug>.webp` and `media/events/<event-id>/<slug>-full.webp`. If a pair with that name is already attached or pending for the event, `-2`, `-3`, and so on is added to both names.
+  - "Attach to selected event" fills the form's **Display photo** field (`photo`) and **Full-size photo** field (`photoFull`), saves the draft, and adds the pair to the in-memory list of pending files used by Publish (TASK-13). The page warns before closing or reloading (`beforeunload`) while there are pending files that are not published or downloaded.
+  - Each card has "Download display" and "Download full size" buttons, and a "Download all" button saves both files of every card (backup path).
+  - **Limits and errors (per photo, the other photos still work):**
+    - If the image has more than 16,777,216 pixels and the browser is iOS/iPadOS Safari, or the canvas cannot be created, or `toBlob` returns nothing: the card shows "Too large for this browser. Please use a desktop browser (Chrome, Edge or Firefox)."
+    - If the browser returns a type other than `image/webp`: the card shows "This browser can't make WebP files. Please use Chrome, Edge or Firefox."
+    - If a generated file is over 25 MB: the card shows "This photo is too big to publish (over 25 MB). Please use a smaller original." and "Attach" is disabled for it.
+  - Processing happens only in the browser. No network request carries image data.
+  - A note on the page says the output removes the photo's location and camera data, and that full-size photos are best processed on a computer.
+  - **Automated tests (`tests/task-7.spec.js`, desktop + phone):**
+    - Upload `tests/fixtures/flat-2400x1600.png` (a flat single-colour image). Read the output pixels:
+      - master is exactly 2400 x 1600, display is exactly 1200 x 800
+      - a second fixture smaller than the limit (for example `tests/fixtures/flat-800x600.png`) gives a display copy of exactly 800 x 600 (not enlarged)
+      - split each output into a 3 x 3 grid: every cell has some pixels brighter than the source colour (lattice coverage across the whole image), on both files
+      - the brightest watermark pixels match `src + 0.40 * (255 - src)` per channel within a tolerance of 12 (40% white, and overlaps of line, heart and text are not brighter than that)
+      - both files are `image/webp` (the first bytes are `RIFF....WEBP`)
+    - `WM_DIVISOR` is exported and equals 80.
+    - `watermarkLayout(1200, 800)` gives `f` = 10 and `cell` = 140 (800 / 80 = 10; also `lineWidth` = 1, `dash` = [5, 3.5], `gap` = 5, `heart` = 3, each within 0.01).
+    - `watermarkLayout(2400, 1600)` gives `f` = 20 and `cell` = 280 (`cell / f` = 14, same proportions as the display copy).
+    - `watermarkLayout(6000, 4000)` gives `f` = 50 and `cell` = 700.
+    - Minimum size: a small image, for example `watermarkLayout(400, 300)`, gives `f` = 8 (300 / 80 = 3.75 rounds to 4, so the 8px floor applies) and `lineWidth` = 1 (never below 1).
+    - Changing the opacity slider to 80% re-renders, and the brightest pixels move to about `src + 0.80 * (255 - src)`.
+    - Stub `HTMLCanvasElement.prototype.toBlob` (in `addInitScript`) to return `null` for one file: that card shows the "Too large for this browser" message, and a second file in the same batch still succeeds.
+    - Stub `toBlob` to return an `image/png` blob: the "can't make WebP files" message shows.
+    - Download buttons: the Playwright download event gives `flat-2400x1600.webp` and `flat-2400x1600-full.webp`.
+    - Attach: `#f-photo` = `media/events/<id>/flat-2400x1600.webp`, `#f-photo-full` = `media/events/<id>/flat-2400x1600-full.webp`, and both are in the localStorage draft.
+    - `page.on('request')` records no request other than same-origin page assets during processing.
+- Status: todo
+- Review: pending
+- QA: pending
 
 ### TASK-8: Gallery, About, Contact (simple v1 pages)
 - Linked idea(s): GLOBAL NOTES (tabs), IDEA-7 (photos feed the gallery)
@@ -305,8 +423,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - **Contact** has the heading "Collabs & bookings", a `[placeholder]` text, a `mailto:` link using the email from `js/site-config.js` (a placeholder until the user provides one), and social links (new tab, `rel="noopener"`).
   - Contact has no form.
   - On all three pages the correct tab is active (`aria-current="page"`). No horizontal scrolling at 360px.
+- Note 2026-11-18: the Gallery viewer is changed by TASK-10 to load the full-resolution master (`photoFull`).
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
 ### TASK-9: Polish pass - meta tags, 404, accessibility and performance check
@@ -319,24 +438,243 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - Text colour contrast against its background is at least 4.5:1 for body text, using the token pairs in the style guide.
   - All earlier `tests/task-*.spec.js` pass in both projects.
 - Status: done (built 2026-11-17 by the main session on site-v1)
-- Review: pending (reviewer agent can only run after the user writes STORYBOARD APPROVED)
+- Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
 
+### TASK-10: Data model for photo pairs (`photo` + `photoFull`) and the full-size Gallery viewer
+- Linked idea(s): IDEA-9
+- Acceptance criteria:
+  - `validateEvent(e)` in `js/events-data.js` accepts an optional `photoFull` string and rejects:
+    - a `photo` or `photoFull` that is not a string, starts with `/`, contains `://`, or contains `..`
+    - a `photoFull` without a `photo`
+  - Existing events with only `photo` still validate and render exactly as before (TASK-2/3/5/8 tests still pass).
+  - The admin form (TASK-6) has two labelled fields: **Display photo** (`#f-photo`, saved as `photo`) and **Full-size photo** (`#f-photo-full`, saved as `photoFull`). Both can be typed or filled by TASK-7. Empty fields are left out of the saved event (no empty strings in the JSON).
+  - Export writes `photoFull` right after `photo` for each event. Import accepts files with or without `photoFull`.
+  - Hall polaroids, Events cards / facades, and Gallery tiles keep using `photo` (the display copy) only. They never request `photoFull`.
+  - Gallery viewer (`<dialog>`): on open, it shows `photo` at once, then loads `photoFull` (if set) and swaps it in when loaded, with a visible "Loading full size..." label while waiting. If `photoFull` fails to load, the display copy stays and no error is shown to the visitor. Alt text stays `<full name> <year>`.
+  - The footer note "Photos watermarked. Please ask before reposting." stays (both files are now watermarked).
+  - **Automated tests (`tests/task-10.spec.js`):**
+    - `validateEvent` cases: valid with both paths; valid with only `photo`; error for `photoFull` without `photo`; errors for `/abs.webp`, `https://x/y.webp`, `../x.webp`.
+    - With mocked `data/events.json` (both fields set), a `page.on('request')` log shows no request for the `photoFull` path on Home, Events, or Gallery before the viewer is opened.
+    - Opening a Gallery tile requests the `photoFull` path, and after load the dialog image `src` ends with it.
+    - With `photoFull` routed to a 404, the dialog image keeps the `photo` source.
+    - Admin: fill both fields, Save, reload: both values are in the draft and in the exported file.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-11: GitHub connection panel in `/admin/` (token save / test / forget)
+- Linked idea(s): IDEA-8
+- Acceptance criteria:
+  - `js/admin/github-config.js` holds `owner: "jiayangwong"`, `repo: "MyCosplayWebsite"`, `branch: "main"`, `apiBase: "https://api.github.com"`. No token or secret is in any file in the repo.
+  - A **GitHub** panel has: a short "How to get a token" help (fine-grained token, only this repo, Contents: Read and write, set an expiry date), a labelled token input (`type="password"`, `autocomplete="off"`), "Save token", "Test connection", and "Forget token".
+  - "Save token" stores the token in `localStorage` key `puzzkezz.github.token`, clears the input, and shows "Token saved, ends in ...<last 4 characters>". The full token is never shown again.
+  - A token that starts with `ghp_` (classic) is refused with "This is a classic token that can reach all your repos. Please make a fine-grained token for this repo only." and is not saved. Empty input is refused.
+  - "Test connection" calls `GET https://api.github.com/repos/jiayangwong/MyCosplayWebsite` with `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`, and `X-GitHub-Api-Version` headers. Results:
+    - 200: "Connected to jiayangwong/MyCosplayWebsite (main). Write access is checked when you publish."
+    - 401: "This token is wrong or has expired."
+    - 403 or 404: "This token can't see the repo. Check that it is for jiayangwong/MyCosplayWebsite."
+    - network error: "Can't reach GitHub. Check your internet connection."
+  - "Forget token" (asks for confirmation) removes the localStorage key, and the panel returns to the "no token" state. Without a token, the Publish button (TASK-12) is disabled with the hint "Add a GitHub token to publish".
+  - `admin/index.html` has `<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://api.github.com">` (other directives may be added for embeds and fonts, but `connect-src` stays this strict) and `<meta name="referrer" content="no-referrer">`.
+  - The token is never put in a URL, the draft, an exported file, or a console message.
+  - **Automated tests (`tests/task-11.spec.js`, mock via `tests/github-mock.js`, fake token only):**
+    - Save stores the fake token, clears the input, and shows the last 4 characters. Reload: the token is still there.
+    - Classic `ghp_TESTONLY` is refused and not stored.
+    - Test connection with the mock returning 200 / 401 / 404 / network abort shows each message. The mocked request has the Bearer header and goes to `api.github.com`.
+    - Forget token removes the key, and the Publish button becomes disabled.
+    - Across the whole test, every request is logged: the token string appears only in the `Authorization` header of requests to `https://api.github.com`, never in any URL, never in a request to another host, and never in any console message (`page.on('console')`).
+    - The draft in localStorage and an exported `events.json` do not contain the token string.
+    - The CSP meta tag is present with the `connect-src` value above. A `fetch` from the admin page to another origin (for example `https://example.com`) is blocked.
+    - A scan of every non-test file in the repo (`*.html`, `*.js`, `*.json`) finds no string matching `ghp_[A-Za-z0-9]{20,}` or `github_pat_[A-Za-z0-9_]{20,}`.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-12: Publish events.json to GitHub in one atomic commit (with stale check)
+- Linked idea(s): IDEA-8
+- Depends on: TASK-11
+- Acceptance criteria:
+  - A **Publish** panel lists pending changes ("data/events.json changed", plus photo pairs from TASK-13). If the draft equals the published file and nothing is pending, the button reads "Nothing to publish" and is disabled.
+  - The draft remembers the git blob SHA of the `data/events.json` it started from (`baseEventsSha`, computed in the browser from the loaded file as git does: SHA-1 of `blob <length>\0<content>`, or taken from the API after a publish).
+  - "Publish to GitHub" does, in order, all with the token and `api.github.com` only:
+    1. `GET /repos/{owner}/{repo}/git/ref/heads/main` -> head commit SHA
+    2. `GET /repos/{owner}/{repo}/git/commits/{head}` -> base tree SHA
+    3. `GET /repos/{owner}/{repo}/contents/data/events.json?ref={head}` -> current blob SHA. If it is not `baseEventsSha`, stop (stale, see below).
+    4. `POST .../git/blobs` for `data/events.json` (the same text Export makes: sorted, 2-space indent, trailing newline)
+    5. `POST .../git/trees` with `base_tree` = base tree SHA and only the changed paths (mode `100644`, type `blob`)
+    6. `POST .../git/commits` with the new tree, `parents: [head]`, and the message `Update events from /admin/ (<n> events, <m> photos)`
+    7. `PATCH .../git/refs/heads/main` with `{ "sha": <new commit>, "force": false }`
+  - **Stale check:** if step 3 finds a different SHA, or step 7 returns 409 or 422 (the branch moved), nothing goes live and the page says: "The site changed since you started editing (maybe from another device). Export a backup, then reload this page." with "Export backup" and "Reload" buttons.
+  - On success: "Published. The site updates in about 1-2 minutes." with a link to `https://github.com/jiayangwong/MyCosplayWebsite/commit/<sha>`. `baseEventsSha` is updated to the new blob SHA, so the next publish works without a reload.
+  - On any failure before step 7 the ref is never updated. The draft is kept, and a clear message shows:
+    - 401: token expired
+    - 403/404 on a write: "This token can't write to the repo. It needs Contents: Read and write."
+    - rate limit: "GitHub is busy. Wait N minutes and try again."
+    - network error
+    - A "Try again" button repeats the whole publish from step 1.
+  - While publishing, the Publish, Import, Discard and Forget token buttons are disabled, so a double click cannot make two commits.
+  - The TASK-6 help box now says: "Changes stay on this browser until you press Publish to GitHub. Export events.json is a backup you can commit by hand."
+  - Export / Import still work exactly as in TASK-6.
+  - Note: TASK-13 adds one read call (list the repo tree) between steps 3 and 4, plus the removal of unused old photos with a confirmation step. When TASK-13 is built, the happy-path test below is updated to expect that extra call (8 calls). With no unused photos, no confirmation shows and the tree is unchanged (only `data/events.json`).
+  - **Automated tests (`tests/task-12.spec.js`, using the in-memory fake repo in `tests/github-mock.js`, fake token only):**
+    - Happy path: edit an event, Publish. The mock gets exactly the 7 calls in order. The tree contains only `data/events.json`. The decoded blob equals the Export output. The commit has `parents: [head]`. The PATCH body has `force: false`. The success message and the commit link show.
+    - With no changes the button is disabled ("Nothing to publish").
+    - Stale (blob): the mock's `events.json` SHA differs from the draft's base -> stale message, and no POST/PATCH calls are made.
+    - Stale (ref): the PATCH returns 422 -> stale message, and the fake repo's head is unchanged.
+    - 401, 403-on-blob, 429 with `retry-after`, and a network abort each show their message, and the fake repo's head is unchanged.
+    - A second Publish right after a success works without a reload (uses the updated `baseEventsSha`).
+    - Double-clicking Publish makes only one commit.
+    - Every request with the token goes to `https://api.github.com`. Unhandled `api.github.com` routes fail the test.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-13: Publish photo pairs (master + display copy) and remove unused old photos, in the same commit
+- Linked idea(s): IDEA-8, IDEA-9
+- Depends on: TASK-7, TASK-12
+- Acceptance criteria:
+  - Each pending pair from TASK-7 shows in the Publish panel with both paths and sizes, plus a total ("Adds 2 photos, 4 files, 11.2 MB").
+  - The publish from TASK-12 adds one blob per file (base64, built with `FileReader.readAsDataURL` or chunked, not one huge `btoa` string), and puts every image path and `data/events.json` in the **same** tree and commit. One publish = one commit.
+  - Blobs are uploaded one at a time, with a progress bar ("Uploading file 3 of 9").
+  - Only pairs whose paths are still used by an event in the draft are published. Pairs from a deleted event, or replaced by another attach, are dropped from the list.
+  - Allowed paths only: `data/events.json` and `media/events/<event-id>/<name>.webp` / `<name>-full.webp`, where `<event-id>` is an event in the draft. Anything else is refused before any request. (Removals follow their own stricter rules below.)
+  - The original uploaded file is never sent. Only the two generated WebP files are.
+  - Limits: more than 20 pending photos -> "Publish at most 20 photos at a time" and the button is disabled until some are removed (each pending pair has a "Remove from publish" button). Any file over 25 MB is refused (see TASK-7).
+  - After success, the published pairs are cleared from the pending list, and the `beforeunload` warning stops.
+  - On failure, the pending pairs stay in memory so "Try again" works without re-processing.
+  - **Removing old, unused photos (user decision 2026-11-18):**
+    - After step 3 of TASK-12 (and before any write), Publish reads the current tree with `GET /repos/{owner}/{repo}/git/trees/{baseTree}?recursive=1`.
+    - The files to remove are every path in that tree that (a) starts with `media/events/`, (b) ends in `.webp` (exact, lowercase), and (c) is **not** used as `photo` or `photoFull` by any event in the `events.json` about to be committed. Exact string match; a file used by any event (even a different event) is never removed. New files in this publish are never removed.
+    - Nothing else is ever removed: no path outside `media/events/`, no file with another extension (for example `.jpg`, `.png`, `.txt`), and never `data/events.json`. The code checks every removal path against these rules again right before building the tree, and refuses the whole publish (no writes) if one fails.
+    - If the list is not empty, a confirmation dialog shows **before any write**: the heading "These N old files will be removed" (N = the count; "This 1 old file will be removed" for one), the full list of paths, the note "Old versions stay in the GitHub history.", and the buttons "Remove and publish" and "Cancel". Cancel stops the publish: no blob, tree, commit or ref call is made, the draft and pending pairs stay, and the page says "Publish cancelled. Nothing was changed."
+    - If the list is empty, no dialog shows and the publish goes on as in TASK-12.
+    - The removals are `{ "path": ..., "mode": "100644", "type": "blob", "sha": null }` entries in the **same** `POST .../git/trees` request as `data/events.json` and the new images. One publish = one commit; if any step fails, nothing is added and nothing is removed.
+    - If GitHub returns `truncated: true` for the tree, no files are removed this time, and the result says "Could not list all old photos, so none were removed this time." The rest of the publish still works.
+    - The commit message becomes `Update events from /admin/ (<n> events, <m> photos, <k> old files removed)` when k > 0 (unchanged from TASK-12 when k = 0). The success message adds "Removed N old files."
+    - The Publish panel help text says: "Publish also removes photo files that no event uses any more. Old versions stay in the GitHub history."
+  - **Automated tests (`tests/task-13.spec.js`, fake repo + fake token):**
+    - `tests/github-mock.js` is extended: `GET .../git/trees/{sha}?recursive=1` lists the fake repo's files (with an option to return `truncated: true`), and `POST .../git/trees` applies `sha: null` entries as deletions.
+    - Replace: the fake repo has event X with `photo`/`photoFull` = `media/events/X/old.webp` / `old-full.webp`. Attach a new pair to X, Publish. The dialog says "These 2 old files will be removed" and lists exactly those 2 paths. Confirm: one `POST .../git/trees` whose entries are `data/events.json`, the 2 new images, and exactly 2 `sha: null` entries for the old files. The ref is updated once, the fake repo has exactly one new commit, the old files are gone from its tree, and the new ones are present.
+    - Cancel: same setup, press Cancel. No `POST`/`PATCH` request is made, the fake repo head and files are unchanged, the pending pair is still listed, and "Publish cancelled. Nothing was changed." shows.
+    - Delete event: delete an event that has a photo pair (no new photos), Publish. The dialog lists its 2 files; after confirming, the tree has `data/events.json` + 2 `sha: null` entries and no image blobs are uploaded.
+    - Shared file: events X and Y both use `media/events/X/shared.webp`. Change X's photo. `shared.webp` is not in the dialog and not in any `sha: null` entry.
+    - Untouchable files: the fake repo also contains `media/events/X/notes.txt`, `media/events/X/photo.jpg`, `media/other/a.webp`, `img/logo.webp`, and an unreferenced `media/events/X/stray.webp`. Only `stray.webp` is listed and removed; the other four are never listed and never in a `sha: null` entry.
+    - Nothing unused: the TASK-12 happy path shows no dialog and has no `sha: null` entry.
+    - Truncated tree: the mock returns `truncated: true`. No dialog, no `sha: null` entries, the "Could not list all old photos" note shows, and the publish succeeds.
+    - Failure after confirm: the blob POST for a new image fails (500). The ref is not updated, the old files are still in the fake repo, and "Try again" shows the dialog again and then succeeds with one commit.
+    - Guard: a removal path that breaks the rules (injected into the list in the test, for example `data/events.json` or `media/events/X/a.jpg`) makes the publish stop with an error before any write request.
+    - Every test: every `sha: null` path starts with `media/events/`, ends in `.webp`, and is not used by any event in the committed `events.json` blob.
+    - Upload the fixture, attach to an event that has no photo yet, Publish. No removal dialog shows. The tree has exactly 3 entries: `data/events.json`, `media/events/<id>/flat-2400x1600.webp`, and `.../flat-2400x1600-full.webp`. The `ref` is updated once, and the fake repo has exactly one new commit.
+    - The decoded image blobs start with `RIFF....WEBP` and are byte-for-byte equal to what the Download buttons give. Neither equals the fixture PNG bytes.
+    - The progress text reaches "Uploading file 3 of 3".
+    - The blob POST for the second image fails (500): the ref is not updated, the pending pair is still listed, and "Try again" then succeeds with one commit.
+    - Removing an event after attaching its pair removes the pair from the publish list.
+    - 21 pending pairs (made with a small fixture) -> the limit message, and the button is disabled.
+    - A path outside the allowed patterns (injected into the draft) is refused with no network call.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-15: Watermark marker in every uploader file + Publish check + repo guard test - APPROVED 2026-11-18
+- Linked idea(s): IDEA-10 (with IDEA-9, IDEA-8)
+- Depends on: TASK-7 (the pipeline, `WM_DIVISOR` = 80), TASK-13 (publishing photo files).
+- Acceptance criteria:
+  - `js/admin/wm-marker.js` exports `addWatermarkMarker(bytes, info)` and `readWatermarkMarker(bytes)` as described in "Watermark marker" (section 4). It has no DOM code and can be imported in the browser and in Node.
+  - `readWatermarkMarker` returns `{ wm: "puzzkezz-lattice", v: 1, f, div }` for a marked WebP or PNG, and `null` for an unmarked WebP, PNG, JPEG, a truncated file, or random bytes (it never throws).
+  - Every file the uploader makes (TASK-7 master and display copy, and every TASK-14 site photo) is marked **after** the watermark is drawn and **before** it is previewed, downloaded, attached, or added to the pending list. So the Download buttons (backup path) also give marked files. The marker's `f` equals `watermarkLayout(width, height).f` of that file, and `div` equals `WM_DIVISOR`.
+  - A marked WebP still opens normally: it decodes with `createImageBitmap` to the same width and height, and its pixels equal the unmarked encoder output (the marker changes only metadata).
+  - **Publish check:** right before any write request, Publish runs `readWatermarkMarker` on every image file it is about to send (any path ending in `.webp`, `.png`, `.jpg`, `.jpeg`). If one returns `null`, the whole publish stops with no write and shows "This file is not a watermarked file from the uploader: <path>. Please process it again with the uploader." The check also runs on "Try again".
+  - **Repo guard test** (`tests/task-15.spec.js`, part of the normal test run, so every later task's QA run also catches an unwatermarked photo):
+    - It scans every file in the repo ending in `.webp`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.avif`, `.heic` (case-insensitive), skipping only `.git/`, `node_modules/`, `.claude/`, `test-results/`, and `playwright-report/`. `storyboard/` is scanned too (it is public).
+    - Each file must carry the marker, **or** be listed in `tests/wm-allowlist.json` with its exact path, its SHA-256 hash, and a reason (for example `og-image.png`: "site screenshot, no photo of Puzz"). If an allowlisted file changes, its hash no longer matches and the test fails, so a photo cannot slip in under an old allowlist entry.
+    - Files under `tests/fixtures/` must either carry the marker or be synthetic: decoded in the browser, they have at most 16 distinct colours (flat test images, not photos).
+    - Every image path referenced by the site carries the marker (or is allowlisted) and exists: `photo` and `photoFull` in `data/events.json`, `thumb` in `data/reels.json`, `portrait` in `data/site.json`, and every `<img src>` and `og:image` in the public `*.html` pages. SVG files (for example `favicon.svg`, placeholders) are not photos and are not checked.
+    - Each failure message names the file, so it is clear what to fix.
+  - Hand commits (the Export / Download backup path) skip the Publish check. They are still caught by the repo guard test the next time the tests run. The admin help box adds: "Only commit photo files that came out of the uploader."
+  - **Automated tests (`tests/task-15.spec.js`, desktop + phone; fake repo + fake token):**
+    - Round trip: `readWatermarkMarker(addWatermarkMarker(x, info))` returns `info` for a WebP made by the uploader and for a PNG; `null` for `tests/fixtures/flat-2400x1600.png` and for 100 random bytes.
+    - Upload the fixture: both Download files and both files in the pending list carry the marker, with `f` equal to `watermarkLayout(w, h).f` for that file's size and `div` equal to `WM_DIVISOR`. The test reads the expected numbers from `watermarkLayout` and `WM_DIVISOR` (80), not from hard-coded values.
+    - The marked display copy decodes with `createImageBitmap` to the same size as before marking.
+    - Publish check: inject an unmarked WebP into the pending list. Publish shows the "not a watermarked file" message naming that path, and the mock records no `POST` or `PATCH`.
+    - Guard self-test: the guard logic, run on a temporary folder (not the repo) containing an unmarked `media/events/x/a.webp`, a marked one, an allowlisted file with a wrong hash, and a JSON reference to a missing file, reports exactly the 3 bad ones.
+    - The real repo scan passes (with today's repo: only `og-image.png` is allowlisted).
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-14: Site photos - portrait (Home + About), reel covers, share image, via the uploader and Publish - APPROVED 2026-11-18
+- Linked idea(s): IDEA-10 (with IDEA-5, IDEA-8, IDEA-9)
+- Depends on: TASK-7, TASK-13, TASK-15 (every site photo must carry the marker)
+- Acceptance criteria:
+  - **Data:** `data/site.json` exists as in section 4 with `"portrait": null`. `data/reels.json` keeps its format; `thumb` may now be `media/reels/<reel-id>.webp`.
+  - **Admin Site photos panel:** a labelled target picker with exactly these 7 choices: "Portrait", "Reel cover: さ sa", "Reel cover: し shi", "Reel cover: す su", "Reel cover: せ se", "Reel cover: そ so", "Share image". It takes one image at a time and uses the same watermark pipeline as TASK-7: the same `watermarkLayout` (no second copy of the size rule), the same text and opacity controls, all white, the whole image covered, then the marker from TASK-15.
+  - Output per target (see the table in section 4):
+    - Portrait and Reel cover: one WebP (q0.85), longest side 1200px, aspect ratio kept, smaller images not enlarged.
+    - Share image: one PNG, exactly 1200 x 630, centre-cropped to fill (no stretching), the watermark drawn **after** cropping so it covers the whole 1200 x 630 image. Larger than 5 MB -> "This share image is too big (over 5 MB). Try another photo." and it cannot be used.
+  - The preview shows the picture, its pixel size, file size, and target path, plus a "Download" button (backup path) and a "Use for <target>" button.
+  - "Use for Portrait" sets `portrait` in the site draft (localStorage key `puzzkezz.site.draft`); "Use for Reel cover X" sets that reel's `thumb`; "Use for Share image" only adds the file. Each adds the file to the pending list of the Publish panel (it counts towards the 20-photo limit), and the `beforeunload` warning covers it. A "Clear portrait" / "Clear cover" button sets the value back to `null` / `""`; the old file stays in the repo (it is watermarked, so that is harmless).
+  - The admin never changes any other reel field (`url`, text) or any other part of `data/reels.json`.
+  - **Publish (extends TASK-12/13):** the same single commit can also contain `data/site.json`, `data/reels.json`, `media/site/portrait.webp`, `media/reels/<reel-id>.webp` (only ids that exist in `data/reels.json`), and `og-image.png`. Any other new path is still refused before any request. The removal rules of TASK-13 are unchanged (only unused `.webp` under `media/events/`); site photos are replaced in place and never removed.
+  - The stale check of TASK-12 also covers `data/site.json` and `data/reels.json`: each changed JSON keeps its own base SHA, and a different SHA on GitHub stops the publish with the stale message.
+  - The pending list shows site photos as, for example, "Reel cover す -> media/reels/sugoi.webp (210 KB)". The commit message counts them as photos.
+  - **Public pages:**
+    - Home guest pass `.pass-photo` and About `.portrait` show `<img src="media/site/portrait.webp" alt="Portrait of Puzz Kezz">` when `portrait` is set. The About image loads eagerly; the guest-pass image is the first image on Home and loads eagerly too.
+    - With `portrait: null`, a missing `data/site.json`, or a portrait file that fails to load, both slots show today's placeholder (same `aria-label`) and the page does not crash (TASK-3 and TASK-8 tests still pass).
+    - Reel cards (Home `#reels` and `reels.html`) show the `thumb` image (`loading="lazy"`, alt "<English> reel cover", for example "Amazing! reel cover") when set, and the current placeholder when empty.
+    - `og:image` stays `og-image.png` on every page (no HTML change).
+  - **Automated tests (`tests/task-14.spec.js`, desktop + phone; fake repo + fake token):**
+    - Portrait: upload `tests/fixtures/flat-2400x1600.png` to "Portrait". The output is `image/webp`, exactly 1200 x 800, carries the marker with `f` = `watermarkLayout(1200, 800).f`, and in a 3 x 3 grid every cell has pixels brighter than the source colour.
+    - Reel cover: upload a 9:16 fixture (for example `tests/fixtures/flat-1080x1920.png`) to "Reel cover: す su". The output is 675 x 1200, the draft's `sugoi` reel has `thumb` = `media/reels/sugoi.webp`, and no other field of `data/reels.json` changed.
+    - Share image: upload the 2400 x 1600 fixture. The output starts with the PNG signature, is exactly 1200 x 630, carries the `puzzkezz-wm` marker, and every cell of a 3 x 3 grid is watermarked.
+    - Publish all three: one `POST .../git/trees` with exactly `data/site.json`, `data/reels.json`, `media/site/portrait.webp`, `media/reels/sugoi.webp`, `og-image.png`; no `sha: null` entries; the ref is updated once (one commit). Decoded blobs equal the Download files byte for byte and are not the fixture bytes.
+    - Path guard: an injected `media/reels/not-a-reel.webp` or `media/site/other.webp` is refused with no network call.
+    - Stale: the mock's `data/reels.json` SHA differs from the draft's base -> stale message, no `POST`/`PATCH`.
+    - Public pages with mocked `data/site.json` and `data/reels.json`: the portrait `<img>` with the right alt shows on Home and About; a reel card shows its cover; routing the portrait to 404 shows the placeholder; `portrait: null` shows the placeholder.
+    - After the publish test, the TASK-15 repo guard logic run on the fake repo's files reports no problems.
+- Status: todo
+- Review: pending
+- QA: pending
+
 Suggested build order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9. TASK-6 and TASK-7 only depend on 1 and 2.
+Build order for the 2026-11-18 additions: TASK-10 -> TASK-7 (revised) -> TASK-11 -> TASK-12 -> TASK-13. TASK-11 can be built in parallel with TASK-10 and TASK-7. The shared mock `tests/github-mock.js` is created in TASK-11 and extended in TASK-12 and TASK-13.
+Build order including IDEA-10 (approved 2026-11-18): TASK-10 -> TASK-7 (revised, `WM_DIVISOR` = 80) -> TASK-11 -> TASK-12 -> TASK-13 -> **TASK-15** -> **TASK-14**. TASK-15 comes before TASK-14 because every site photo needs the marker. If the user wants the marker earlier, the marker part of TASK-15 (`wm-marker.js` + marking in the uploader) can be built right after TASK-7; the Publish check still waits for TASK-13.
 
 ---
 
 ## 6. Open questions (for Puzz to review - the planner's assumptions)
 
-1. **Social handle and links.** The plan assumes the handle `@puzzkezz` for the Instagram button and the default watermark. The real Instagram, TikTok, YouTube, and Facebook URLs and the contact email are unknown, so they are placeholders in `js/site-config.js`. Please send the real ones.
+1. **Social handle and links.** (Partly answered: Instagram is `@notpuzzkezz` and Facebook is "Puzz Kezz".) Originally the plan assumed the handle `@puzzkezz` for the Instagram button and the default watermark. The real Instagram, TikTok, YouTube, and Facebook URLs and the contact email are unknown, so they are placeholders in `js/site-config.js`. Please send the real ones.
 2. **Reel links.** The 5 さしすせそ reels have no URLs yet, so the cards show "Coming soon" until `data/reels.json` gets the Instagram reel URLs.
 3. **Sample events.** The sample events use the con names CF, AMG, and Omatsuri for 2024-2026, with made-up dates. They are marked "Sample" and their activities are `[placeholder]`. Replace them through `/admin/` with your real history.
 4. **Long hall.** You go to many cons a year. In v1, Home shows **every** event in the hall. If the list grows long (for example more than 15), should Home show only the most recent N, with "See all events" linking to the Events page?
 5. **"Sound on" button.** In v1 it reads "さしすせそ" aloud once. Sound never plays automatically. Did you mean something else, like background music?
 6. **Pronunciation in the MENU.** The phone menu subtitle "さしすせそ · sa shi su se so" shows Japanese + romaji only (no English line or speaker), to keep the menu clean. Is that OK?
 7. **Speech voice.** The browser's built-in Japanese voice is used. It differs by device, and some phones or browsers have none, in which case the speaker button is hidden. Would you prefer recorded audio files (your own voice?) later?
-8. **Admin is public but harmless.** `/admin/` has no password. It can't change the live site, because only the exported file you commit does that. It is hidden from search engines and the nav. OK, or do you want it kept out of the deployed site completely?
+8. **Admin is public but harmless.** `/admin/` has no password. It is hidden from search engines and the nav. Since IDEA-8 it can publish, but only in a browser that holds your GitHub token; for anyone else GitHub refuses. OK, or do you want it kept out of the deployed site completely?
 9. **Facebook links.** Facebook links show the preview photo + "Open on Facebook" instead of an embedded player. That avoids loading Facebook's script.
 10. **Gallery source.** In v1 the gallery shows only the event preview photos. A separate, bigger photo collection per event (several photos per event) would be a later idea.
 11. **About / Contact text.** It is all `[placeholder]`. Please send a short bio, the things you are open to (collabs, bookings, photoshoots?), and your preferred contact method.
-12. **Photo rights.** Before publishing con photos taken by photographers, please make sure you have their permission. The watermark can also include a credit, for example "PUZZ KEZZ · @notpuzzkezz · ph: @name".
+12. **Photo rights.** Before publishing con photos taken by photographers, please make sure you have their permission. The watermark text can be edited per batch, so a credit can be added when needed, for example "@notpuzzkezz · ph: @name".
+
+### New questions for IDEA-8 / IDEA-9 (2026-11-18)
+
+Already decided by you (2026-11-18), no need to answer:
+- The watermark text is exactly `@notpuzzkezz`.
+- "40%" means 40% opacity (the text is 40% visible), as the default and still adjustable.
+- **Both** the full-size photo and the display copy get the same watermark (since the 2026-11-18 style change: the white dashed diagonal lattice with hearts and `@notpuzzkezz`, see TASK-7).
+- The repo stays public.
+- (Was question 13) **Display copy size: 1200px** on the longest side (about 100-300 KB per photo), instead of the proposed 1600px. See TASK-7.
+- (Was question 14) **Old photos are deleted on Publish.** Any `.webp` file under `media/events/` that no event uses as `photo` or `photoFull` any more is removed in the same single commit, after a confirmation that lists the files ("These N old files will be removed", with Cancel). Files still used by any event are never removed, and nothing outside `media/events/` or with another extension is touched. Git history still keeps the old versions. See TASK-13.
+
+No open questions remain for IDEA-8 / IDEA-9.
+
+### Questions for IDEA-10 (2026-11-18)
+
+Already decided by you (2026-11-18, with "Plan approved and storyboard approved"), no need to answer:
+- (Was question 15) **Watermark density: 2x.** `WM_DIVISOR` = 80, so `f` = round(shorter side / 80), min 8px, for every photo (events, portrait, reel covers, share image). On a 1200 x 800 display copy the name is about 10px tall; on a 6000 x 4000 master `f` = 50. See TASK-7.
+- (Was question 16) **Share image:** keep the current site screenshot `og-image.png` until you upload a Share image photo. See TASK-14.
+- (Was question 17) **Portrait and reel covers:** one 1200px watermarked file each, no full-size copy. See TASK-14.
+- (Was question 18) **Hand commits:** an automatic GitHub Action that runs the watermark guard on every push is a later idea, out of scope for this plan. Until then, hand-committed files are caught when the tests run (TASK-15).
+
+No open questions remain for IDEA-10.

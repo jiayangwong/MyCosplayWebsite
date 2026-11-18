@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="../style.css"><meta name="robots" content="noindex, nofollow"></head>
 <body class="admin">
-<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: ADMIN - Event manager (not in nav)</span> <span>TASK-6, TASK-7</span> <a href="../index.html">Back to site</a></div>
+<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: ADMIN - Event manager (not in nav)</span> <span>TASK-6, TASK-7, TASK-11, TASK-12, TASK-13</span> <a href="../index.html">Back to site</a></div>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap hdr">
 <a class="logo" href="../index.html">PUZZ KEZZ</a>
@@ -39,21 +39,94 @@
 <div class="embed-prev"><div class="ph ph-43 sky" role="img" aria-label="Placeholder: Embed preview (YouTube / Instagram / TikTok) or photo + link fallback"><span>[Embed preview (YouTube / Instagram / TikTok) or photo + link fallback]</span></div></div>
 <label>Preview photo path<input type="text" value="media/events/2026-03-14-cf/cover-wm.webp"></label>
 <div class="bar"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-secondary" type="button">Cancel</button></div></form></div>
+<section class="panel" id="gh" aria-labelledby="ghh"><h2 id="ghh">GitHub</h2>
+<p class="muted">The token stays in this browser only.</p>
+<label class="field">Token<input type="password" id="tok" autocomplete="off" placeholder="paste token (storyboard: nothing is sent)"></label>
+<p class="mono muted">Fine-grained token, Contents: read and write, this repository only.</p>
+<p class="mono" id="tokSaved" hidden></p>
+<div class="bar"><button class="btn btn-primary" type="button" id="ghSave">Save</button><button class="btn btn-secondary" type="button" id="ghTest">Test connection</button><button class="btn btn-secondary is-danger" type="button" id="ghForget">Forget token</button></div>
+<div class="msg none" data-gh="none" role="status"><span class="ic" aria-hidden="true">&ndash;</span><p>No token saved. Paste one above.</p></div>
+<div class="msg" data-gh="testing" role="status" hidden><span class="ic" aria-hidden="true">...</span><div><p class="mono">Testing...</p><div class="ibar"></div></div></div>
+<div class="msg ok" data-gh="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p>Connected to jiayangwong/MyCosplayWebsite (branch main).</p></div>
+<div class="msg err" data-gh="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><p><b>GitHub said no (401). Check the token and try again.</b></p></div>
+</section>
+<section class="panel" id="pub" aria-labelledby="pubh"><h2 id="pubh">Publish</h2>
+<ul class="pend" aria-label="Pending changes"><li><b>+</b> media/events/2026-03-14-cf/sample-1.webp</li><li><b>+</b> media/events/2026-03-14-cf/sample-1-full.webp</li><li><b>~</b> data/events.json</li><li><b>-</b> media/events/2025-08-09-omt/old-cover.webp</li><li><b>-</b> media/events/2025-08-09-omt/old-cover-full.webp</li><li><b>-</b> media/events/2025-05-03-amg/old-cover.webp</li></ul>
+<button class="btn btn-accent" type="button" id="pubBtn">Publish to GitHub</button>
+<p class="mono muted small" id="pubWhy">Needs a saved token (see above).</p>
+<div id="pprog" hidden><p class="mono" id="ptxt">Uploading 0 of 5 files</p><div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Publish progress"><i id="pfill"></i></div></div>
+<div class="msg ok" data-pub="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p><b>Published.</b> <a href="#" onclick="return false"><u>View commit</u></a></p></div>
+<div class="msg err" data-pub="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>Could not upload file 3 of 5 (network error).</b></p><p class="next">Nothing was changed on GitHub. Check your connection and try again.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
+<div class="msg err" data-pub="stale" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>The site changed on GitHub while you were publishing.</b></p><p class="next">Nothing was changed. Try again to use the newest version.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
+</section>
+<dialog class="confirm" id="cfm" aria-labelledby="cfmh"><h3 id="cfmh">These 3 old files will be removed</h3><p class="muted">Old versions stay in the GitHub history.</p>
+<ul><li>&minus; media/events/2025-08-09-omt/old-cover.webp</li><li>&minus; media/events/2025-08-09-omt/old-cover-full.webp</li><li>&minus; media/events/2025-05-03-amg/old-cover.webp</li></ul>
+<div class="acts"><button class="btn btn-secondary" type="button" id="cfmNo" autofocus>Cancel</button><button class="btn btn-primary" type="button" id="cfmYes">Remove and publish</button></div></dialog>
+<div class="sb-switch" role="group" aria-label="Storyboard: show state"><span>Storyboard: show state</span>
+<label>GitHub <select id="swGh"><option value="none">Not connected</option><option value="testing">Testing</option><option value="ok">Connected</option><option value="err">Error</option></select></label>
+<label>Publish <select id="swPub"><option value="idle">Idle</option><option value="confirm">Confirm dialog</option><option value="busy">Publishing</option><option value="ok">Success</option><option value="err">Error</option><option value="stale">Stale ref</option></select></label></div>
+<script>
+(function () {
+  var $ = function (i) { return document.getElementById(i); }, ghState = 'none', timer;
+  function gh(s, last) {
+    ghState = s;
+    document.querySelectorAll('[data-gh]').forEach(function (m) { m.hidden = m.getAttribute('data-gh') !== s; });
+    $('swGh').value = s;
+    var saved = s === 'ok' || s === 'err' || s === 'testing';
+    var ts = $('tokSaved'); ts.hidden = !saved; ts.textContent = 'Token saved (ends in ...' + (last || 'x7Kq') + ')';
+    $('ghForget').disabled = !saved; $('ghTest').disabled = !saved; $('ghSave').disabled = false;
+    $('pubBtn').disabled = s !== 'ok' || $('pubBtn').dataset.busy === '1';
+    $('pubWhy').hidden = s === 'ok';
+  }
+  function pubMsg(k) { document.querySelectorAll('[data-pub]').forEach(function (m) { m.hidden = m.getAttribute('data-pub') !== k; }); }
+  function pub(s) {
+    clearTimeout(timer); var b = $('pubBtn'); b.dataset.busy = '0'; b.textContent = 'Publish to GitHub';
+    $('pprog').hidden = true; pubMsg(''); $('swPub').value = s;
+    if (s === 'confirm') { if (ghState !== 'ok') gh('ok'); $('cfm').showModal(); return; }
+    if ($('cfm').open) $('cfm').close();
+    if (s === 'busy') {
+      if (ghState !== 'ok') gh('ok');
+      b.dataset.busy = '1'; b.disabled = true; b.textContent = 'Publishing...'; $('pprog').hidden = false;
+      var n = 0; (function tick() { n++; var pc = n * 20; $('pfill').style.width = pc + '%'; $('pprog').querySelector('[role=progressbar]').setAttribute('aria-valuenow', pc); $('ptxt').textContent = 'Uploading ' + n + ' of 5 files';
+        if (n < 5) timer = setTimeout(tick, 600); else timer = setTimeout(function () { pub('ok'); }, 600); })();
+      return;
+    }
+    if (s === 'ok' || s === 'err' || s === 'stale') { if (ghState !== 'ok') gh('ok'); pubMsg(s); }
+    gh(ghState);
+  }
+  $('ghSave').addEventListener('click', function () { var v = $('tok').value; gh('ok', v.length >= 4 ? v.slice(-4) : 'x7Kq'); $('tok').value = ''; });
+  $('ghTest').addEventListener('click', function () { gh('testing'); timer = setTimeout(function () { gh('ok'); }, 1200); });
+  $('ghForget').addEventListener('click', function () { gh('none'); });
+  $('pubBtn').addEventListener('click', function () { pub('confirm'); });
+  $('cfmNo').addEventListener('click', function () { pub('idle'); });
+  $('cfm').addEventListener('cancel', function () { $('swPub').value = 'idle'; });
+  $('cfmYes').addEventListener('click', function () { pub('busy'); });
+  document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', function () { pub('busy'); }); });
+  $('swGh').addEventListener('change', function (e) { gh(e.target.value); });
+  $('swPub').addEventListener('change', function (e) { pub(e.target.value); });
+  gh('none');
+})();
+</script>
 <hr><h2>Media uploader</h2>
 <div class="up-grid"><div><div class="drop" tabindex="0"><b>Drop images here</b><span class="mono">or choose files (multiple, image/*)</span><button class="btn btn-secondary" type="button">Choose files</button></div>
-<div class="wm-ctl"><label>Watermark text<input type="text" value="PUZZ KEZZ · @notpuzzkezz"></label>
-<label>Position<select><option>Bottom-right</option><option>Bottom-left</option><option>Top-right</option><option>Top-left</option><option>Center</option></select></label>
-<label>Opacity: 60%<input type="range" min="10" max="100" value="60"></label>
+<div class="wm-ctl"><label>Watermark text (along the diagonal lattice)<input type="text" value="@notpuzzkezz"></label>
+<label>Opacity: 40%<input type="range" min="10" max="100" value="40"></label>
 <label>Attach to event<select><option>CF 14 Mar 2026 (Sample)</option></select></label>
-<p class="mono small">Output: WebP, longest side max 2000px. Location and camera data are removed.</p></div></div>
-<div><div class="grid g2"><figure class="prev"><span class="tag mono">PREVIEW</span><div class="ph ph-45 lilac" role="img" aria-label="Sample image with watermark"><span>[Sample image 4:5]</span><em class="wmk">PUZZ KEZZ · @notpuzzkezz</em></div>
-<figcaption class="mono">sample-1-wm.webp<br>media/events/2026-03-14-cf/sample-1-wm.webp</figcaption><button class="btn btn-secondary" type="button">Download</button> <button class="btn btn-accent" type="button">Attach to selected event</button></figure>
-<figure class="prev"><span class="tag mono">PREVIEW</span><div class="ph ph-45 pink" role="img" aria-label="Sample image with watermark"><span>[Sample image 4:5]</span><em class="wmk">PUZZ KEZZ · @notpuzzkezz</em></div>
-<figcaption class="mono">sample-2-wm.webp</figcaption><button class="btn btn-secondary" type="button">Download</button></figure></div>
-<p><button class="btn btn-primary" type="button">Download all</button></p></div></div></section>
+<p class="mono small">Each photo makes two files: MASTER (original size, nothing shrunk) and DISPLAY (1200px longest side). Both get the watermark. Location and camera data are removed.</p></div></div>
+<div id="cards">
+<div class="pcard"><div class="pair"><figure><div class="ph ph-sq pink" data-wm="2400x2400" role="img" aria-label="Master thumbnail with tiled watermark"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>2400 x 2400 - 1.8 MB</figcaption></figure>
+<figure><div class="ph ph-sq pink" data-wm="1200x1200" role="img" aria-label="Display thumbnail with tiled watermark"><span>[DISPLAY thumb]</span></div><figcaption class="mono"><span class="chip d">DISPLAY</span><br>1200 x 1200 - 180 KB</figcaption></figure></div>
+<p class="fn">sample-1.jpg <span class="mono">&#10003; Ready</span></p><p class="mono muted small">media/events/2026-03-14-cf/sample-1-full.webp<br>media/events/2026-03-14-cf/sample-1.webp</p></div>
+<div class="pcard"><div class="pair"><figure><div class="ph ph-sq lilac" role="img" aria-label="Processing"><span>[processing...]</span></div></figure></div><p class="fn">sample-2.jpg</p><p class="mono" role="status">Processing...</p><div class="ibar"></div></div>
+<div class="pcard is-err"><div class="pair"><figure><div class="ph ph-sq" role="img" aria-label="No thumbnail, file failed"><span>[no thumbnail]</span></div></figure></div><p class="fn">notes.heic</p><p class="err" role="alert">&#9888; Could not read this file. Is it a JPG, PNG or WebP?</p><button class="btn btn-secondary" type="button">Remove</button></div>
+<div class="pcard is-err"><div class="pair"><figure><div class="ph ph-sq sky" data-wm="2400x2400" role="img" aria-label="Master thumbnail"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>6000 x 6000 - 26.4 MB</figcaption></figure>
+<figure><div class="ph ph-sq sky" data-wm="1200x1200" role="img" aria-label="Display thumbnail"><span>[DISPLAY thumb]</span></div><figcaption class="mono"><span class="chip d">DISPLAY</span><br>1200 x 1200 - 452 KB</figcaption></figure></div><p class="fn">sample-3.png</p><p class="err" role="alert">&#9888; This photo is too big to publish (over 25 MB). Please use a smaller original.</p><button class="btn btn-secondary" type="button">Remove</button></div>
+<p><button class="btn btn-primary" type="button">Download all</button> <button class="btn btn-accent" type="button">Add ready photos to pending changes</button></p></div></div>
+</section>
 </main>
 <footer class="site-footer"><div class="truss" aria-hidden="true"></div><div class="wrap">
 <p class="mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK [links]</p>
 <p class="mono">&copy; 2026 Puzz Kezz. Photos watermarked. Please ask before reposting.</p></div></footer>
 <script src="../app.js"></script>
+<script src="../wm.js"></script>
 </body></html>

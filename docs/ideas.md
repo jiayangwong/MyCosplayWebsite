@@ -249,6 +249,83 @@ Mobile:
 - References: user message 2026-11-17
 - Priority (user's view): must-have
 
+## IDEA-8: Publish to GitHub directly from /admin/
+- Date: 2026-11-18
+- Status: ready-for-planning
+- Summary: Add a "Publish to GitHub" action in /admin/ that commits data/events.json and the watermarked images straight to the repo on main, so GitHub Pages redeploys with no manual git steps.
+- Details:
+  - User's words: "make admin save directly to github".
+  - Today (see docs/plan.md TASK-6, TASK-7 and the hosting/event-manager rows near line 90): /admin/ (admin/index.html, js/admin/manager.js, js/admin/watermark.js) keeps drafts in localStorage, exports events.json as a download, and watermarked photos are downloads; the user then commits by hand.
+  - Wanted: commit data/events.json and the watermarked images (media/events/<event-id>/...webp) to repo jiayangwong/MyCosplayWebsite on main via the GitHub REST API.
+  - Constraints: the site is static (GitHub Pages, public repo), no server.
+  - Suggested approach: a fine-grained personal access token limited to ONLY this repo with Contents: read & write. The owner pastes it into /admin/ once; it is kept only in that browser (localStorage), with a "Forget token" button. The token must never be committed, put in the site code, or sent anywhere but api.github.com.
+  - Visitors without the token can open /admin/ but cannot publish anything (the API rejects them).
+  - Commit all changed files in ONE commit (Git Data API: blobs -> tree -> commit -> update ref). Show success or failure. If someone else pushed first (ref moved), refuse and ask the user to reload.
+  - Keep Export/Import as a backup.
+  - Alternative considered: Decap CMS / OAuth. Needs an external OAuth server and is more complex; not preferred.
+  - Only watermarked images may ever be committed, never originals.
+  - It must also publish the new image pair from IDEA-9 (full-resolution watermarked master + display copy, which is also watermarked since the user decision of 2026-11-18) per photo.
+- Decision (user, 2026-11-18): KEEP THE REPO PUBLIC. (Consequence: anyone can see all committed files and history; see the trade-off in IDEA-9.)
+- Decision (user, 2026-11-18, answer to plan question 14): DELETE OLD PHOTOS ON PUBLISH. In the same atomic commit, remove image files under media/events/ that no event's photo or photoFull references after the change. Safety rules: only delete paths under media/events/ ending in .webp; never delete a file still referenced by any event; show a confirmation listing the files first ("These N old files will be removed") so the user can cancel; deletions go in the same tree as the new files (sha: null entries), so it is one commit or nothing. Git history still keeps the old versions. No open questions remain.
+- References: none (user message 2026-11-18)
+- Priority (user's view): must-have
+
+## IDEA-9: Full-resolution media + display copy, new watermark style
+- Date: 2026-11-18
+- Status: ready-for-planning
+- Summary: Change the uploader so it keeps the original pixel resolution and produces two files per photo: a full-resolution watermarked master and a smaller unwatermarked display copy. Watermark becomes a diagonal tiled white text pattern.
+- Details:
+  - Changes the current TASK-7 (js/admin/watermark.js resizes to max 2000px, WebP q0.85, one file per photo).
+  - No downscale of the original: the uploader keeps the ORIGINAL pixel resolution for the master.
+  - File a) Full-resolution master WITH watermark, high quality (~0.95). Opened when a visitor taps/clicks a photo (lightbox/viewer).
+  - File b) Display copy for page layouts, smaller (planner chooses the size, e.g. longest side ~1600-2000px), with NO watermark (the user's explicit choice).
+  - Watermark style: diagonal, tiled repeating lines of WHITE text across the whole image, transparency 40%, text = the Instagram name (@notpuzzkezz, per the repo; confirm the exact text with the user).
+  - To confirm with the user (planner): does "transparency 40%" mean opacity 40% or opacity 60%? Keep it adjustable in the uploader, with this as the default.
+  - Notes: canvas re-encoding strips EXIF/GPS (good). iOS Safari has a ~16.7MP canvas limit, so full-res processing should be done on desktop, or the uploader should warn and fail gracefully.
+  - Repo size: full-res files are ~3-8 MB each, so ~150-300 photos fit in GitHub's 1 GB Pages limit. A future move to external storage (e.g. Cloudflare R2) may be needed.
+  - Unwatermarked originals are never committed.
+  - Known trade-off (the user has been told): the display copy has no watermark and the repo is public, so anyone can download the unwatermarked display-size photos.
+  - Related: IDEA-8 must publish both files of each pair.
+- Decisions (user, 2026-11-18, after planning started):
+  - Watermark text is exactly "@notpuzzkezz".
+  - "40%" means OPACITY 40% (the text is 40% visible). Default 40%, still adjustable.
+  - CHANGE: the display copy is NOW WATERMARKED TOO. Both the full-resolution master and the display copy get the same diagonal tiled white @notpuzzkezz watermark at 40% opacity, with tile size and spacing scaled to each image's dimensions so it looks the same on both. This replaces "File b) ... with NO watermark" and the "Known trade-off" note above.
+  - Display copy size: longest side 1200px (user answer to plan question 13, 2026-11-18; replaces the proposed 1600px).
+  - No open questions remain.
+- Design change (user, 2026-11-18, later): NEW WATERMARK STYLE. Replaces "diagonal, tiled repeating lines of WHITE text" above.
+  - A white dashed diagonal lattice in both directions (+45 and -45 degrees), with a small upright heart at every crossing.
+  - "@notpuzzkezz" is written along the up-right lines, centred between crossings, with the line broken around the text.
+  - The whole layer is at 40% opacity (still the default, still adjustable).
+  - Sizes: f = 2.5% of the shorter side (min 12px); cell (crossing to crossing) = 14f; line width = max(1, 0.1f); dashes 0.5f on / 0.35f off; gap around the text 0.5f at each end; heart scale 0.3f.
+  - `watermarkLayout(w,h)` returns {f, cell, lineWidth, dash, gap, heart}. Same spec in docs/style-guide.md; reference drawing: storyboard/wm.js. Plan TASK-7 updated.
+- Tweak (user, 2026-11-18, later still): keep the lattice, the hearts and the up-right text direction, but make the diamonds repeat about 3 times as densely. Only the size rule changes: f = round(shorter side / 120), min 8px (replaces "2.5% of the shorter side (min 12px)" above). Everything else stays relative to f (cell 14f, line max(1, 0.1f), dashes 0.5f / 0.35f, gap 0.5f, heart 0.3f). Examples: 1200x800 -> f 8 (floor), cell 112; 2400x1600 -> f 13, cell 182; 6000x4000 -> f 33, cell 462. The user has been told that on the 1200px display copy the name is only about 8px tall (a texture); it is clearly readable on the full-size master. Plan TASK-7 and the style guide updated.
+- Final density (user, 2026-11-18, plan question 15): **2x**. f = round(shorter side / 80), min 8px (replaces the /120 tweak above). Everything else stays relative to f. Examples: 1200x800 -> f 10, cell 140; 2400x1600 -> f 20, cell 280; 6000x4000 -> f 50, cell 700; small images floor at f 8. On a 1200x800 display copy the name is about 10px tall. Plan TASK-7 and the style guide updated.
+- References: user message 2026-11-18; IDEA-7, IDEA-8
+- Priority (user's view): must-have
+
+## IDEA-10: Every photo of Puzz is watermarked, everywhere
+- Date: 2026-11-18
+- Status: ready-for-planning
+- Summary: Every photo image of the user that is committed to the public repo or shown on the site must already carry the lattice watermark, so nobody can steal an unwatermarked photo from the website or from the repo source folder.
+- Details:
+  - User (paraphrased): "The portrait also needs a watermark. I need to stop anyone from stealing my photos. Whether they download from the website or take the files from my source folder (the repo), every photo already has the watermark on it."
+  - Scope: EVERY photo image file of the user committed to the public repo or shown on the site carries the lattice watermark (see the IDEA-9 design change):
+    - event photos, both the display copy and the full-size master (already planned)
+    - the portrait on Home (guest pass) and About (today a placeholder in about.html and index.html)
+    - the reel cover thumbnails (data/reels.json `thumb`, empty today)
+    - the social share picture og-image.png, if it ever shows a photo of him
+  - The admin uploader must be able to produce these too: a "Site photos" target (Portrait, Reel cover 1-5, Share image) as well as "Attach to event". These use the same two-file or single-file watermark pipeline, and Publish commits them.
+  - Enforcement ideas for the planner:
+    - Publish only accepts image files the uploader generated. The uploader embeds a marker, e.g. a custom WebP RIFF chunk or a name pattern.
+    - A repo test fails if any .jpg/.png/.webp under media/ or referenced by data/*.json or the HTML lacks the marker. Decorative non-photo images (favicon.svg) are excluded.
+    - Never commit an unwatermarked original.
+  - Honest limit (the user should know): a watermark deters theft and proves ownership. It cannot stop screenshots or someone editing the watermark out.
+  - DECIDED (user, 2026-11-18, plan question 15): watermark density **2x**. f = round(shorter side / 80), min 8px, for every photo (events, portrait, reel covers, share image). Examples: 1200x800 -> f 10, cell 140; 6000x4000 -> f 50, cell 700. Compared on the 6B canvas board "Watermark density: 2x vs 3x + portrait".
+  - Other decisions (user, 2026-11-18, plan questions 16-18): keep the current site screenshot og-image.png until a share photo is uploaded; one 1200px file each for the portrait and reel covers (no full-size copy); a GitHub Action that checks the watermark on every push is a later idea (out of scope for now).
+  - Plan approved by the user on 2026-11-18 (TASK-14, TASK-15).
+- References: IDEA-7, IDEA-8, IDEA-9; canvas board "Watermark density: 2x vs 3x + portrait"
+- Priority (user's view): must-have
+
 ## Comparison and recommendation (for the user to decide)
 - UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
 

@@ -1,6 +1,6 @@
 # Style guide - Puzz Kezz website ("Concept 6B")
 
-Status: awaiting user approval (the main session records approval).
+STYLE APPROVED: 2026-11-18 (by the user, including the v2 additions for IDEA-8 / IDEA-9).
 
 ## Mood
 A convention-hall zine: cool grey-lilac paper, hard ink outlines, mono labels, steel trusses and hall signs. Tone 3-4 of 10 (less feminine). Baby pink and purple are accents only. Lolita appears as a hint (one lace edge on the guest pass and the phone menu). No script or italic display fonts, petals, gradient washes or emoji.
@@ -68,6 +68,51 @@ Short and subtle: 150-250ms for hover, 600ms for swing and flip. `@media (prefer
 - Don't exceed two fonts or round corners above 10px (except circular icon buttons).
 - Don't remove focus outlines or rely on colour alone.
 
+## v2 additions (IDEA-8, IDEA-9): approved 2026-11-18
+Adds rules only for the new UI. Nothing above changes. No new colours: every state uses existing tokens. Status is never colour alone (icon + text). Admin stays plain and functional; the public photo viewer is the only new visitor-facing UI.
+
+### Lattice watermark (canvas, TASK-7)
+Changed at the user's request on 2026-11-18 (reference image: white dashed diagonal lattice, small hearts at the crossings, name along the lines). Replaces the old -30deg tiled rows. The guide stays approved. Reference implementation: `storyboard/wm.js`.
+- Unit `f` = round(shorter side / 80), minimum 8px (**2x density**, user decision 2026-11-18; was 2.5% / min 12px, then briefly /120 for 3x). The divisor is the one constant `WM_DIVISOR` = 80. Examples: 1200 x 800 -> f 10, cell 140; 2400 x 1600 -> f 20, cell 280; 6000 x 4000 -> f 50, cell 700; small images (for example 400 x 300) floor at f 8. On a 1200 x 800 display copy the name is about 10px tall; on the full-size master it is clearly readable. Font: **Space Mono 700**, canvas string `700 ${f}px "Space Mono", ui-monospace, monospace`. Before drawing, `await document.fonts.load('700 20px "Space Mono"')`, otherwise canvas silently uses the fallback.
+- Lattice: white dashed lines in BOTH diagonal directions (+45 and -45 degrees). Line width = max(1px, 0.1f). Dashes 0.5f on, 0.35f off. One cell (crossing to crossing along a line) = 14f.
+- Hearts: a small solid white heart at every crossing, upright, about 1f wide (heart scale s = 0.3f).
+- Name: `@notpuzzkezz` is written ALONG the up-right lines, rotated -45deg so it reads bottom-left to top-right. It is centred between two crossings, and the line is broken around the text with a 0.5f gap at each end.
+- Opacity: the whole layer is drawn at 40% (default, adjustable). The optional soft ink shadow still applies: `--color-ink` at 35%, offset 0.05f, blur 0.08f, no stroke; keep it off if the 40% white pixel test fails.
+- Same rule for the master and the display copy, so the proportions are the same at both sizes (`cell` = 14f on both; rounding and the 8px floor make the cell count close to, not exactly, equal). Production `watermarkLayout(w,h)` returns `{ f, cell, lineWidth, dash, gap, heart }` (as in plan TASK-7).
+- The preview in the uploader shows the real output (not a CSS overlay).
+
+### Gallery photo viewer (TASK-10, public)
+- Overlay: `--color-scrim` (ink 72%) full screen; photo centred, `object-fit: contain`, max 96vw x 88vh, `--radius-sm`, no border or shadow. Caption below in mono 12px `--color-on-dark`, with the event name and "Full size" / "Preview" tag.
+- Loading: shows the 1200px display copy at once. The master loads in the background. While loading, a 3px indeterminate bar (pink on `--color-line` at 30%) sits at the top edge of the photo and a mono label "LOADING FULL SIZE" bottom-left in `--color-on-dark-muted`. When the master is decoded, swap with a 180ms cross-fade (instant under reduced motion), bar and label disappear, no layout jump (keep the display copy's box size until swap). If the master fails: keep the display copy, show mono "Full size unavailable" with an alert icon in pink; no error pop-up.
+- Close button: top right, 44x44px, ink circle, white X icon, 2px white ring for contrast on the scrim, `aria-label="Close photo"`. Hover: ring turns pink. Focus: the usual 3px ring but in white (deep purple fails on the dark scrim), 2px offset.
+- Keyboard and focus: `role="dialog" aria-modal="true"` with the caption as its label. Opening moves focus to the Close button; Tab stays inside (Close, Previous, Next); Esc closes; Left/Right arrows go to the previous/next photo; closing returns focus to the tile that opened it. Page behind gets `inert` and no scroll. Previous/Next are 44px ink circles with white arrows, hidden on the first/last photo.
+- Phone (375px): photo fills the width edge to edge, Close fixed top right with 16px margin, caption under the photo, Previous/Next as a bottom bar of two 44px buttons (not on top of the photo), swipe left/right is a bonus. Pinch zoom stays enabled.
+
+### Admin: GitHub panel (TASK-11)
+Reuses `.panel`, `.field`, buttons. Order inside the panel: title "GitHub", help text (muted: "The token stays in this browser only."), then:
+- **Token field**: label "TOKEN" (mono 12px uppercase), `type="password"`, `autocomplete="off"`, white input, 2px ink border, 44px high. Helper line (muted): "Fine-grained token, Contents: read and write, this repository only."
+- **Buttons row**: Save (primary), Test connection (secondary), Forget token (secondary with error-colour border and text, like `.icon-btn.is-danger`). Disabled when nothing to do: `--color-line` border, muted text. Forget asks no dialog, but shows the not-connected message after.
+- **Status message** below the buttons, one line in a box with a 2px left bar, `role="status"` (errors `role="alert"`), icon + text:
+  - Success: check icon, text ink, left bar `--color-purple-deep`, e.g. "Connected to owner/repo (branch main)."
+  - Error: "!" icon, text `--color-error` bold, left bar `--color-error`, e.g. "GitHub said no (401). Check the token and try again."
+  - Not connected: dash icon, muted text, left bar `--color-line`, "No token saved. Paste one above."
+  - Testing: mono "Testing..." with the pink indeterminate bar.
+- The token value is never printed back, only "Token saved (ends in ...x7Kq)" in mono.
+
+### Admin: Publish area (TASK-12 and TASK-13)
+- Layout: one panel, title "Publish", list of pending changes (mono 13px rows: `+` added, `~` changed, `-` removed, paths overflow-wrap anywhere), then the Publish button.
+- **Publish button**: accent (pink bg, ink text), label "Publish to GitHub", 44px. Disabled with no pending changes or no token (line border, muted text, helper line says why).
+- **Progress bar**: 12px high, 2px ink border, `--radius-sm`, white track, pink fill, step text in mono above ("Uploading 3 of 5 files"). `role="progressbar"` with aria-valuenow. During publishing, Publish is disabled and shows "Publishing..." (also announced).
+- **Success**: purple-deep left bar, check icon, "Published. View commit" with the commit link in deep purple, underlined.
+- **Confirmation dialog** (native `<dialog>`, `aria-modal`): white surface, 2px ink border, `--radius-card`, `--shadow-pass`, max width 520px, backdrop `--color-scrim`. Heading (h3): "These N old files will be removed". Under it the file list: scroll box max 40vh, mono 13px, one path per row with a minus icon, `--color-bg` background, 1px `--color-line` borders between rows. Buttons right-aligned: **Remove and publish** (primary, ink) and **Cancel** (secondary). Initial focus on Cancel (the safe choice). Esc = Cancel. Phone: dialog is 16px from the edges, buttons stack full width with Cancel last.
+- **Error messages**: box with error left bar, "!" icon, `--color-error` bold first line saying what happened in plain words, one muted line saying what to do next, then the **Try again** button (secondary, 44px, placed under the message; it repeats the whole publish from the beginning). Nothing is half-published, say so: "Nothing was changed on GitHub."
+- **Stale-ref message** (the branch moved while publishing): same box, first line "The site changed on GitHub while you were publishing." second line "Nothing was changed. Try again to use the newest version." plus Try again. Not styled as a crash.
+
+### Uploader two-file preview (TASK-7)
+- Each photo is a row on a white card (2px ink, `--radius-card`): two thumbnails side by side (phone: stacked), both showing the watermark. Each thumbnail has a mono 12px label under it: **MASTER** and **DISPLAY**, then pixel size and file size ("2400 x 1600 - 1.8 MB", "1200 x 800 - 180 KB"). Label chips: MASTER = ink bg, white text; DISPLAY = pink bg, ink text. Thumbnails keep the photo's real ratio, max 220px high.
+- Under the pair: file name (bold, overflow-wrap anywhere) and the target paths in mono muted.
+- **Per-photo error states**: the card gets an error-colour 2px border and a "!" message line in `--color-error` bold under the thumbnails ("Could not read this file. Is it a JPG, PNG or WebP?", "Too big to process in this browser", "Display copy still above 400 KB"). The failed photo does not block the others. Each failed card has a "Remove" secondary button. A processing card shows the pink indeterminate bar and "Processing...". Success shows a small check icon and "Ready".
+
 ## CSS variables
 ```css
 :root {
@@ -113,6 +158,9 @@ Short and subtle: 150-250ms for hover, 600ms for swing and flip. `@media (prefer
   --focus-ring: 3px solid var(--color-purple-deep);
   --tap-min: 44px;
   --dur-fast: 180ms; --dur-slow: 600ms;
+  /* v2 (add to css/tokens.css only if not present) */
+  --focus-ring-on-dark: 3px solid #FFFFFF;
+  --wm-color: #FFFFFF; --wm-opacity: 0.4; --wm-lattice-angle: 45deg;
 }
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-fast: 0ms; --dur-slow: 0ms; }
