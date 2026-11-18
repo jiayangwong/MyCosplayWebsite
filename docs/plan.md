@@ -460,7 +460,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - With `photoFull` routed to a 404, the dialog image keeps the `photo` source.
     - Admin: fill both fields, Save, reload: both values are in the draft and in the exported file.
 - Status: in-progress, ready for review (built 2026-11-18 by the programmer on branch `task-10-photo-viewer`, not merged; tests/task-10.spec.js 12/12 passing, full suite 92 passed + 2 project skips, PC + phone)
-- Review: pending
+- Review: changes requested (2026-11-18, round 1: 2 must-fix, see docs/reviews.md)
 - QA: pending
 
 ### TASK-11: GitHub connection panel in `/admin/` (token save / test / forget)
