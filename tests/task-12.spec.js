@@ -50,14 +50,18 @@ const sevenCalls = (head) => [
   REF_PATCH,
 ];
 
-/** Adds an event through the form, so the draft differs from the published file. */
+/** Adds an event through the form, so the draft differs from the published file. Uses the keyboard
+ *  (Enter on New event, Enter in the name field to submit), not mouse clicks: on the phone layout Save
+ *  event is far down a smooth-scrolling page, and under load the mouse-up of a click could land after the
+ *  scroll moved the button, so the click was lost (BUG-3). task-6 and task-10 still click Save event. */
 async function addEvent(page, short = 'PUB', name = 'Publish Test Con') {
-  await page.click('#new-event');
+  await page.press('#new-event', 'Enter');
+  await expect(page.locator('#form-title')).toHaveText('New event');
   await page.fill('#f-date', '2026-12-20');
   await page.fill('#f-short', short);
   await page.fill('#f-name', name);
-  await page.click('#save-event');
-  await expect(page.locator('#save-status')).toContainText(`Saved ${short}`);
+  await page.press('#f-name', 'Enter');
+  await expectResult(page.locator('#save-status')).toContainText(`Saved ${short}`);
 }
 
 async function exportedText(page) {
@@ -226,14 +230,17 @@ test('Discard draft locks Publish, Import and Discard while it reads GitHub, and
   await saveFakeToken(page);
   await addEvent(page);
   await expect(page.locator('#publish-btn')).toBeEnabled();
-  github.respond(`GET ${REPO}/contents/data/events.json`, { delay: 1200 });
+  // Hold the GitHub read open, so the locked state stays on screen until the test has checked it.
+  const read = github.hold(`GET ${REPO}/contents/data/events.json`);
   await page.click('#discard-draft');
+  await read.arrived;
   await expect(page.locator('#publish-btn')).toBeDisabled();
   await expect(page.locator('#publish-hint')).toHaveText('Loading the published events.json...');
   await expect(page.locator('#import-file')).toBeDisabled();
   await expect(page.locator('label[for="import-file"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(page.locator('#discard-draft')).toBeDisabled();
   await page.evaluate(() => document.getElementById('publish-btn').click()); // forced click does nothing
+  read.release();
   await expectResult(page.locator('#source-banner')).toContainText('newest copy from GitHub');
   await expect(page.locator('#import-file')).toBeEnabled();
   await expect(page.locator('#discard-draft')).toBeEnabled();
@@ -461,8 +468,10 @@ test('PATCH went through but the answer was lost -> confirmed by reading the ref
 test('double-clicking Publish makes only one commit; buttons are locked while publishing', async ({ page, github }) => {
   await saveFakeToken(page);
   await addEvent(page);
-  github.respond(REF_GET, { delay: 600 }); // slow first call so the lock can be observed
+  // Hold the first GitHub read open, so the busy state stays on screen until the test has checked it.
+  const firstRead = github.hold(REF_GET);
   await page.locator('#publish-btn').dblclick();
+  await firstRead.arrived;
   await expect(page.locator('#publish-btn')).toHaveText('Publishing...');
   await expect(page.locator('#publish-btn')).toBeDisabled();
   await expect(page.locator('#discard-draft')).toBeDisabled();
@@ -474,6 +483,7 @@ test('double-clicking Publish makes only one commit; buttons are locked while pu
   await expectResult(page.locator('#pub-step')).toContainText('Step 1 of 7');
   // A click forced through the disabled state still cannot start a second publish.
   await page.evaluate(() => document.getElementById('publish-btn').click());
+  firstRead.release();
   await expectResult(page.locator('#pub-ok')).toBeVisible();
   expect(github.calls().filter((c) => c === COMMIT_POST)).toHaveLength(1);
   expect(github.calls().filter((c) => c === REF_PATCH)).toHaveLength(1);

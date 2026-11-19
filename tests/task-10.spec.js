@@ -122,7 +122,9 @@ test('viewer shows the display copy, then swaps in the full-size master', async 
   await expect.poll(() => urls.some((u) => u.endsWith(FULL))).toBe(true);
 
   release();
-  await expect(img).toHaveAttribute('src', new RegExp(`${FULL}$`));
+  // After release the 2400x1600 master is fetched, decoded, cross-faded, then put on the main <img>.
+  // Under full-suite load that chain can take more than the default 5s, so this one wait is longer.
+  await expect(img).toHaveAttribute('src', new RegExp(`${FULL}$`), { timeout: 15000 });
   await expect(img).toHaveAttribute('alt', 'Anime Matsuri 2026');
   await expect(dialog.locator('.vlabel')).toBeHidden();
   await expect(dialog.locator('.vbar')).toBeHidden();

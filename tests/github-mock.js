@@ -105,6 +105,7 @@ class FakeGitHub {
     this.requests = []; // { method, path, query, headers, body }
     this.unhandled = [];
     this.overrides = []; // { method, test, response, once }
+    this.holds = []; // from hold(): { match, arrived, released, release }
   }
 
   /**
@@ -118,6 +119,27 @@ class FakeGitHub {
       test = (req) => req.method === method && req.path === path;
     }
     this.overrides.push({ test, response, once });
+  }
+
+  /**
+   * Holds the next matching request open until the test calls release(), then answers it like normal.
+   * `arrived` resolves when the request reaches the mock. Use it to check a busy state without timing.
+   * Strict: a held request that is never released fails the test (expectAllHandled).
+   */
+  hold(match) {
+    let release;
+    const gate = new Promise((done) => { release = done; });
+    let reached;
+    const arrived = new Promise((done) => { reached = done; });
+    const h = { match: String(match), arrived: false, released: false, release };
+    this.holds.push(h);
+    this.respond(match, async (req, route) => {
+      h.arrived = true;
+      reached(req);
+      await gate;
+      return this.route(route, req);
+    });
+    return { arrived, release: () => { h.released = true; release(); } };
   }
 
   /** Calls whose path is under the repo, e.g. ['GET /repos/o/r', 'POST /repos/o/r/git/blobs']. */
@@ -250,6 +272,9 @@ class FakeGitHub {
   }
 
   expectAllHandled() {
+    const stuck = this.holds.filter((h) => h.arrived && !h.released).map((h) => h.match);
+    this.holds.forEach((h) => h.release()); // never leave a route handler waiting after the test
+    expect(stuck, 'requests held with github.hold() that the test never released').toEqual([]);
     expect(this.unhandled, 'requests to api.github.com that tests/github-mock.js does not handle').toEqual([]);
   }
 }
