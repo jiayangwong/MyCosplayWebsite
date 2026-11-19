@@ -11,7 +11,7 @@ import { PUBLISH_BUSY_EVENT } from './github-panel.js';
 import { gitBlobSha } from './git-blob.js';
 import {
   managerReady, draftText, eventCount, baseEvents, draftDiffersFromBase, setBase, onDraftChange,
-  lockFileActions, exportEvents, isDraftLoading, draftEventIds,
+  lockFileActions, exportEvents, isDraftLoading, draftEventIds, revertPhoto,
 } from './manager.js';
 import {
   pendingPairs, onPendingChange, clearPendingPairs, removePendingItem, isPipelineFile,
@@ -64,10 +64,21 @@ export const PUBLISH_MESSAGES = Object.freeze({
   cancelled: 'Publish cancelled. Nothing was changed.',
   removed: (n) => `Removed ${n} old ${n === 1 ? 'file' : 'files'}.`,
   truncated: 'Could not list all old photos, so none were removed this time.',
-  notCanonical: 'Some photo paths in events.json are not written in the usual form (media/events/...), so no old files were removed this time.',
   confirmTitle: (n) => (n === 1 ? 'This 1 old file will be removed' : `These ${n} old files will be removed`),
   // TASK-15
   notWatermarked: (path) => `This file is not a watermarked file from the uploader: ${path}. Please process it again with the uploader.`,
+  // TASK-16: photo links in the JSON files of this publish. `who` = 'Event "CF 2026" (2026-03-14-cf)',
+  // 'Portrait' or 'Reel cover す (sugoi)'. The first sentence is the error text, the rest the "what to do" line.
+  linkForm: (who, value) => `${who} has a photo path that is not in the usual form: ${value}`,
+  linkMissing: (who, path) => `${who} points at a photo that is not on GitHub and not in this publish: ${path}`,
+  linkEventNext: 'Attach the photo again or fix the path, then publish. Nothing was changed.',
+  linkEventMissingNext: 'Attach the photo again, or remove it from the event, then publish. Nothing was changed.',
+  linkSiteNext: (clear) => `Make the photo again or press "${clear}", then publish. Nothing was changed.`,
+  linkUnchecked: "Could not list all files on GitHub, so the photo links can't be checked.",
+  linkUncheckedNext: 'Nothing was changed.',
+  more: (n) => ` (and ${n} more)`,
+  revertedBase: (name) => `Photo for ${name} set back to the published photo.`,
+  revertedNone: (name) => `Photo for ${name} removed from the event (it has no published photo).`,
 });
 
 const STEP_TEXT = [
@@ -236,8 +247,9 @@ export function isCanonicalPath(value) {
 }
 
 /**
- * True when every photo value is in plain form (isCanonicalPath). If not, Publish removes nothing this
- * time (fail safe), so an unusual way of writing a path can never let a file that is still in use be removed.
+ * True when every photo value is in plain form (isCanonicalPath). If not, the pending list previews no
+ * removals, and Publish stops before listing any (TASK-16, brokenPhotoLinks), so an unusual way of writing
+ * a path can never let a file that is still in use be removed.
  */
 export function allPathsCanonical(text) {
   return photoValues(text).every(isCanonicalPath);
@@ -285,6 +297,120 @@ export function sitePathProblem(entry, ids) {
   const m = /^media\/reels\/([^/]+)\.webp$/.exec(path);
   if (entry.target === 'reel' && m && ids.has(m[1]) && reelCoverPath(m[1]) === path) return '';
   return path || '(empty path)';
+}
+
+/* ---------- Photo link checks (TASK-16) ---------- */
+
+/** The events of an events.json text, in the order written ([] for bad JSON). */
+function eventsOf(text) {
+  try {
+    const data = JSON.parse(text);
+    return data && Array.isArray(data.events) ? data.events.filter((e) => e && typeof e === 'object') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** How a message names an event: 'CF 2026'. */
+const eventName = (event) => `${event.short ?? ''} ${String(event.date ?? '').slice(0, 4)}`;
+
+/**
+ * The problem with one photo link, or null. 'form': not in plain form. Then, for paths under `prefix`
+ * ('' = every path): 'unchecked' when the listing is truncated and the file is not new in this publish,
+ * 'missing' when the tree has no blob with exactly that path and it is not new in this publish.
+ */
+function linkProblem(value, blobs, truncated, newPaths, prefix) {
+  if (!isCanonicalPath(value)) return 'form';
+  if (!value.startsWith(prefix) || newPaths.has(value)) return null;
+  if (truncated) return 'unchecked';
+  return blobs.has(value) ? null : 'missing';
+}
+
+const blobPathsOf = (treeEntries) => new Set((Array.isArray(treeEntries) ? treeEntries : [])
+  .filter((e) => e && e.type === 'blob' && typeof e.path === 'string').map((e) => e.path));
+const asSet = (paths) => (paths instanceof Set ? paths : new Set(paths || []));
+
+/**
+ * Photo links of the events in the events.json text about to be committed that would be broken on the live
+ * site: [] when all is well, else [{ kind: 'form' | 'missing' | 'unchecked', who, id, field, value, next }]
+ * in the order of the text (display order: newest first). Plain paths outside media/events/ are not checked
+ * here (the repo guard of TASK-15 checks them). Never throws: bad JSON gives [].
+ */
+export function brokenPhotoLinks(text, treeEntries, truncated, newPaths) {
+  const blobs = blobPathsOf(treeEntries);
+  const fresh = asSet(newPaths);
+  const problems = [];
+  for (const event of eventsOf(text)) {
+    for (const field of ['photo', 'photoFull']) {
+      const value = event[field];
+      if (typeof value !== 'string' || !value) continue;
+      const kind = linkProblem(value, blobs, Boolean(truncated), fresh, MEDIA_PREFIX);
+      if (!kind) continue;
+      problems.push({
+        kind,
+        who: `Event "${eventName(event)}" (${event.id})`,
+        id: event.id,
+        field,
+        value,
+        next: kind === 'form' ? PUBLISH_MESSAGES.linkEventNext : PUBLISH_MESSAGES.linkEventMissingNext,
+      });
+    }
+  }
+  return problems;
+}
+
+/** A JSON text as an object, or null (bad JSON, not an object, or no text: the file is not in this commit). */
+function objectOf(text) {
+  if (typeof text !== 'string') return null;
+  try {
+    const data = JSON.parse(text);
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The same check for the site photos (BUG-4): `portrait` in the data/site.json text and every reel's `thumb`
+ * in the data/reels.json text of this commit (pass null for a file that is not in the commit). Every path is
+ * checked, not only media/... ones. Order: portrait, then reels in file order. Never throws: bad JSON gives [].
+ */
+export function brokenSitePhotoLinks(siteJsonText, reelsJsonText, treeEntries, truncated, newPaths) {
+  const blobs = blobPathsOf(treeEntries);
+  const fresh = asSet(newPaths);
+  const problems = [];
+  const check = (value, who, clear, extra) => {
+    if (typeof value !== 'string' || !value) return;
+    const kind = linkProblem(value, blobs, Boolean(truncated), fresh, '');
+    if (kind) problems.push({ kind, who, value, next: PUBLISH_MESSAGES.linkSiteNext(clear), ...extra });
+  };
+  const site = objectOf(siteJsonText);
+  if (site) check(site.portrait, 'Portrait', 'Clear portrait', { field: 'portrait' });
+  const reels = objectOf(reelsJsonText);
+  if (reels && Array.isArray(reels.reels)) {
+    for (const reel of reels.reels) {
+      if (!reel || typeof reel !== 'object') continue;
+      check(reel.thumb, `Reel cover ${reel.kana ?? ''} (${reel.id})`, 'Clear cover', { id: reel.id, field: 'thumb' });
+    }
+  }
+  return problems;
+}
+
+/**
+ * One message for all link problems: the first one by name, then "(and N more)" where N counts the other
+ * events / site photos with a problem (an event whose photo and photoFull are both missing counts once).
+ */
+function linkError(problems) {
+  const [first] = problems;
+  if (first.kind === 'unchecked') {
+    return new PublishError('link', PUBLISH_MESSAGES.linkUnchecked, PUBLISH_MESSAGES.linkUncheckedNext);
+  }
+  const text = first.kind === 'form'
+    ? PUBLISH_MESSAGES.linkForm(first.who, first.value)
+    : PUBLISH_MESSAGES.linkMissing(first.who, first.value);
+  const others = new Set(problems.map((p) => p.who)).size - 1;
+  const more = others > 0 ? PUBLISH_MESSAGES.more(others) : '';
+  return new PublishError('link', `${text}${more}.`, first.next);
 }
 
 /** True while the site draft points at this file (a share image is always used: og:image). */
@@ -422,7 +548,6 @@ function showResult(kind, detail = {}) {
     const notes = [];
     if (detail.removed) notes.push(PUBLISH_MESSAGES.removed(detail.removed));
     if (detail.truncated) notes.push(PUBLISH_MESSAGES.truncated);
-    else if (detail.notCanonical) notes.push(PUBLISH_MESSAGES.notCanonical);
     $('pub-ok-note').textContent = notes.join(' ');
     $('pub-ok-note').hidden = notes.length === 0;
   }
@@ -430,6 +555,40 @@ function showResult(kind, detail = {}) {
     $('pub-err-text').textContent = detail.message;
     $('pub-err-next').textContent = detail.next;
   }
+}
+
+/** The short note under the pending list ('' hides it). Replaced by the next note, cleared by Publish. */
+function showNote(text) {
+  const note = $('pub-note');
+  note.textContent = text;
+  note.hidden = !text;
+}
+
+/**
+ * TASK-16 (2): after "Remove from publish" on a pair, the event goes back to its published photo (or has
+ * none), so the draft never points at a file that will not be on GitHub. Only when the event still uses
+ * exactly this pair's paths; a path changed meanwhile is left alone. Returns the note, or ''.
+ */
+function revertPair(pair) {
+  const event = eventsOf(draftText()).find((e) => e.id === pair.eventId);
+  if (!event || event.photo !== pair.photo) return '';
+  if (event.photoFull && event.photoFull !== pair.photoFull) return '';
+  const published = eventsOf(baseEvents().text).find((e) => e.id === pair.eventId);
+  if (published && typeof published.photo === 'string' && published.photo) {
+    const full = typeof published.photoFull === 'string' ? published.photoFull : '';
+    revertPhoto(pair.eventId, published.photo, full);
+    return PUBLISH_MESSAGES.revertedBase(eventName(event));
+  }
+  revertPhoto(pair.eventId, '', '');
+  return PUBLISH_MESSAGES.revertedNone(eventName(event));
+}
+
+/** "Remove from publish" on a pair: drop it (and any pair of the same file), then undo its attach. */
+function undoAttach(item) {
+  const gone = pendingPairs().filter((p) => p.item === item);
+  removePendingItem(item);
+  const notes = gone.map(revertPair).filter(Boolean);
+  showNote(notes.length ? notes[notes.length - 1] : '');
 }
 
 function pendRow(mark, label, text) {
@@ -469,7 +628,7 @@ function render() {
     remove.type = 'button';
     remove.disabled = busy;
     remove.setAttribute('aria-label', `Remove ${pair.photo} from publish`);
-    remove.addEventListener('click', () => removePendingItem(pair.item));
+    remove.addEventListener('click', () => undoAttach(pair.item));
     li.append(paths, remove);
     list.append(li);
   }
@@ -678,12 +837,22 @@ async function run(token, { text, files, pairs, site, withEvents, json }) {
   }
   if (!tree) tree = await readTree();
 
+  // TASK-16: no photo link in the JSON files of this commit may point at a file that is neither on GitHub
+  // nor in this publish (and every link must be in plain form). Checked before the removal list, the dialog
+  // and any write. This also makes every non-plain path stop here, so the removal rules below only ever see
+  // plain paths.
+  const newPaths = new Set(files.map((f) => f.path));
+  const jsonText = (path) => (data.find((d) => d.path === path) || {}).text ?? null;
+  const problems = [
+    ...(withEvents ? brokenPhotoLinks(text, tree.entries, tree.truncated, newPaths) : []),
+    ...brokenSitePhotoLinks(jsonText(SITE_PATH), jsonText(REELS_PATH), tree.entries, tree.truncated, newPaths),
+  ];
+  if (problems.length) throw linkError(problems);
+
   // Old photo files no event uses any more (never when the listing is incomplete). Only when events.json
   // is part of this publish: the removal rules of TASK-13 need the events.json being committed.
   const used = usedPathsIn(text);
-  const newPaths = new Set(files.map((f) => f.path));
-  const notCanonical = withEvents && !allPathsCanonical(text);
-  let removals = !withEvents || tree.truncated || notCanonical ? [] : removalCandidates(tree.entries, used, newPaths);
+  let removals = !withEvents || tree.truncated ? [] : removalCandidates(tree.entries, used, newPaths);
   if (typeof publishHooks.editRemovals === 'function') removals = publishHooks.editRemovals(removals.slice());
   const guard = () => {
     for (const path of removals) {
@@ -761,7 +930,7 @@ async function run(token, { text, files, pairs, site, withEvents, json }) {
     if (now.object.sha !== made.sha) throw new PublishError('unsure', PUBLISH_MESSAGES.unsure, PUBLISH_MESSAGES.unsureNext);
   }
   return {
-    commitSha: made.sha, text, pairs, site, withEvents, removed: k, truncated: tree.truncated, notCanonical,
+    commitSha: made.sha, text, pairs, site, withEvents, removed: k, truncated: tree.truncated,
     json: data.map((d) => ({ path: d.path, sha: d.made, text: d.text })),
   };
 }
@@ -776,6 +945,7 @@ export async function publish() {
   const token = readToken();
   if (!token || !hasSomethingToPublish()) return;
   setBusy(true);
+  showNote('');
   showResult('');
   try {
     const prepared = await prepare(); // no request is made before this passes
@@ -786,7 +956,7 @@ export async function publish() {
     }
     clearPendingPairs(result.pairs); // published: no more "unsaved files" warning for them
     clearPendingSiteFiles(result.site);
-    showResult('ok', { sha: result.commitSha, removed: result.removed, truncated: result.truncated, notCanonical: result.notCanonical });
+    showResult('ok', { sha: result.commitSha, removed: result.removed, truncated: result.truncated });
   } catch (error) {
     if (error instanceof PublishError && error.kind === 'stale') showResult('stale');
     else if (error instanceof PublishError && error.kind === 'cancelled') showResult('cancel');

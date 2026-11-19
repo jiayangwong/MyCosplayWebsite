@@ -51,4 +51,5 @@
 - Steps to reproduce: 1. In /admin/ Site photos, make a Portrait and click "Use for Portrait". 2. Reload the page. 3. Look at the Publish panel.
 - Expected: the pending list and the draft agree (either the photo is still pending, or the draft choice is reset).
 - Actual: the pending file is gone (in memory only), but `puzzkezz.site.draft` still has `portrait: "media/site/portrait.webp"`. The Publish panel shows "~ data/site.json changed" and the Publish button is enabled, so a publish would point `data/site.json` at a file that is not in the repo (the public page then falls back to the placeholder). Not reproduced: "a pending share image survives Discard" was not separately checked.
-- Status: open
+- Status: fixed (TASK-16)
+- Fix: Publish now checks the `portrait` in the data/site.json and every reel `thumb` in the data/reels.json of the commit against the repo tree (after the tree read, before the removal dialog and any write; also on Try again). A path that is neither a file on GitHub nor a file of this publish stops the publish with "Portrait points at a photo that is not on GitHub and not in this publish: media/site/portrait.webp." (reels: "Reel cover <kana> (<id>) ..."), with no POST or PATCH (`brokenSitePhotoLinks` in js/admin/publish.js). Repro test: tests/task-16.spec.js "BUG-4 repro" (Use for Portrait, reload, Publish).

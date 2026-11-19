@@ -338,7 +338,27 @@ test('nothing unused: plain events.json publish shows no dialog and has no delet
   expect(github.repo.commits.get(github.repo.head).message).toBe('Update events from /admin/ (2 events, 0 photos)');
 });
 
-test('truncated tree: no dialog, no deletes, the "Could not list all old photos" note, publish still works', async ({ page, github }) => {
+// TASK-16: with a truncated listing, events that reference existing photos can't be checked, so the publish
+// stops before any write. With no media/events/ reference (below) it still works as in TASK-13.
+test('truncated tree, events reference existing photos: "can\'t be checked" stop, no dialog, no write (TASK-16)', async ({ page, github }) => {
+  const stray = `media/events/${X}/stray.webp`;
+  await setup(page, github, {
+    events: [ev(X, OLD), ev(Y)],
+    files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full'), [stray]: webp('s') },
+    truncated: true,
+  });
+  await rename(page, Y, 'Truncated Con');
+  const head = github.repo.head;
+  await page.click('#publish-btn');
+  await expectResult(page.locator('#pub-err-text')).toHaveText("Could not list all files on GitHub, so the photo links can't be checked.");
+  await expect(page.locator('#pub-err-next')).toHaveText('Nothing was changed.');
+  await expect(page.locator('#pub-confirm')).toBeHidden();
+  expect(writes(github)).toEqual([]);
+  expect(github.repo.head).toBe(head);
+  for (const p of [OLD.photo, OLD.photoFull, stray]) expect(github.repo.filesAt().has(p), p).toBe(true);
+});
+
+test('truncated tree, no photo references: no dialog, no deletes, the "Could not list all old photos" note, publish still works', async ({ page, github }) => {
   const stray = `media/events/${X}/stray.webp`;
   await setup(page, github, { events: [ev(X), ev(Y)], files: { [stray]: webp('s') }, truncated: true });
   await rename(page, X, 'Truncated Con');
@@ -648,7 +668,8 @@ test('used paths are also matched as the site resolves them; every unusual form 
 });
 
 for (const form of UNUSUAL) {
-  test(`unusual path ${JSON.stringify(form)}: Publish lists and removes nothing and says why`, async ({ page, github }) => {
+  // TASK-16: a non-plain path now stops the publish before any write (it used to publish with a note).
+  test(`unusual path ${JSON.stringify(form)}: Publish stops with "not in the usual form", lists and removes nothing, no write`, async ({ page, github }) => {
     const stray = `media/events/${X}/stray.webp`;
     await setup(page, github, {
       events: [ev(X, { photo: form, photoFull: OLD.photoFull }), ev(Y)],
@@ -656,14 +677,18 @@ for (const form of UNUSUAL) {
     });
     await rename(page, Y, 'Unusual Path Con');
     await expect(page.locator('#pub-pending')).not.toContainText('- ');
+    const head = github.repo.head;
     await page.click('#publish-btn');
-    await expectResult(page.locator('#pub-ok')).toBeVisible();
+    await expectResult(page.locator('#pub-err')).toBeVisible();
+    await expect(page.locator('#pub-err-text')).toHaveText(`Event "CF 2026" (${X}) has a photo path that is not in the usual form: ${form}.`);
+    await expect(page.locator('#pub-err-next')).toHaveText('Attach the photo again or fix the path, then publish. Nothing was changed.');
     await expect(page.locator('#pub-confirm')).toBeHidden();
-    await expect(page.locator('#pub-ok-note')).toHaveText('Some photo paths in events.json are not written in the usual form (media/events/...), so no old files were removed this time.');
-    expect(treeBody(github).tree.map((e) => e.path)).toEqual(['data/events.json']);
+    await expect(page.locator('#pub-ok')).toBeHidden();
+    expect(writes(github)).toEqual([]);
+    expect(github.repo.head).toBe(head);
     const live = github.repo.filesAt();
     for (const p of [OLD.photo, OLD.photoFull, stray]) expect(live.has(p), p).toBe(true);
-    expect(newCommits(github)).toBe(1);
+    expect(newCommits(github)).toBe(0);
   });
 }
 

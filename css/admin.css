@@ -318,6 +318,8 @@
 .pend-size { color: var(--color-muted); }
 .pend-remove { flex: none; }
 .pub-total { margin: 0 0 var(--space-3); font-size: 0.8125rem; font-weight: 700; }
+.pub-panel .pub-note { margin: 0 0 var(--space-3); }
+.pub-note[hidden] { display: none; }
 .pub-total[hidden] { display: none; }
 #pub-limit { margin: 0 0 var(--space-4); }
 
