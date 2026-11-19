@@ -594,3 +594,100 @@ test('the content hash of each uploaded image equals its tree entry (blobs are t
     expect(tree.some((e) => e.sha === sha)).toBe(true);
   }
 });
+
+// Review round 1 (must-fix): other ways of writing a used path must never let that file be removed.
+const UNUSUAL = [
+  `./media/events/${X}/old.webp`,
+  `media/events/${X}/./old.webp`,
+  `media/events/${X}/old.webp?v=2`,
+  `media/events/${X}/old.webp#x`,
+];
+
+test('used paths are also matched as the site resolves them; unusual forms make Publish remove nothing', async ({ page, github }) => {
+  await setup(page, github, { events: [ev(X), ev(Y)] });
+  const out = await page.evaluate(async ({ forms, old, full, stray }) => {
+    const m = await import('/js/admin/publish.js');
+    const text = (photo) => JSON.stringify({ version: 1, events: [{ id: 'x', photo, photoFull: full }] });
+    const entries = [old, full, stray].map((path) => ({ path, type: 'blob' }));
+    return {
+      forms: forms.map((f) => ({
+        used: m.usedPathsIn(text(f)).has(old),
+        canonical: m.allPathsCanonical(text(f)),
+        removals: m.removalCandidates(entries, m.usedPathsIn(text(f)), new Set()),
+      })),
+      plain: { canonical: m.allPathsCanonical(text(old)), removals: m.removalCandidates(entries, m.usedPathsIn(text(old)), new Set()) },
+    };
+  }, { forms: UNUSUAL, old: OLD.photo, full: OLD.photoFull, stray: `media/events/${X}/stray.webp` });
+  for (const f of out.forms) {
+    expect(f.used).toBe(true); // (a) the resolved form is in the used set
+    expect(f.canonical).toBe(false); // (b) and the publish fails safe
+    expect(f.removals).toEqual([`media/events/${X}/stray.webp`]); // even without (b), old.webp is never a candidate
+  }
+  expect(out.plain).toEqual({ canonical: true, removals: [`media/events/${X}/stray.webp`] });
+});
+
+for (const form of UNUSUAL) {
+  test(`unusual path "${form}": Publish lists and removes nothing and says why`, async ({ page, github }) => {
+    const stray = `media/events/${X}/stray.webp`;
+    await setup(page, github, {
+      events: [ev(X, { photo: form, photoFull: OLD.photoFull }), ev(Y)],
+      files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full'), [stray]: webp('s') },
+    });
+    await rename(page, Y, 'Unusual Path Con');
+    await expect(page.locator('#pub-pending')).not.toContainText('- ');
+    await page.click('#publish-btn');
+    await expectResult(page.locator('#pub-ok')).toBeVisible();
+    await expect(page.locator('#pub-confirm')).toBeHidden();
+    await expect(page.locator('#pub-ok-note')).toHaveText('Some photo paths in events.json are not written in the usual form (media/events/...), so no old files were removed this time.');
+    expect(treeBody(github).tree.map((e) => e.path)).toEqual(['data/events.json']);
+    const live = github.repo.filesAt();
+    for (const p of [OLD.photo, OLD.photoFull, stray]) expect(live.has(p), p).toBe(true);
+    expect(newCommits(github)).toBe(1);
+  });
+}
+
+test('the remove dialog closed without a cancel event (close()) counts as Cancel; Publish is not stuck', async ({ page, github }) => {
+  await setup(page, github, { events: [ev(X, OLD), ev(Y)], files: { [OLD.photo]: webp('o'), [OLD.photoFull]: webp('of') } });
+  await deleteEvent(page, X);
+  await page.click('#publish-btn');
+  await expectResult(page.locator('#pub-confirm')).toBeVisible();
+  await page.evaluate(() => document.getElementById('pub-confirm').close());
+  await expectResult(page.locator('#pub-cancel')).toBeVisible();
+  await expect(page.locator('#publish-btn')).toHaveText('Publish to GitHub');
+  await expect(page.locator('#publish-btn')).toBeEnabled();
+  await expect(page.locator('#pub-progress')).toBeHidden();
+  expect(writes(github)).toEqual([]);
+  // A normal publish still works afterwards (the old dialog listeners are gone).
+  await page.click('#publish-btn');
+  await expectResult(page.locator('#pub-confirm')).toBeVisible();
+  await page.click('#pub-confirm-yes');
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
+  expect(newCommits(github)).toBe(1);
+});
+
+test('"already published" with photos: Try again after an unsure result finds events.json and both images, no writes', async ({ page, github }) => {
+  await setup(page, github, { events: [ev(X), ev(Y)] });
+  await attach(page, X);
+  const head = github.repo.head;
+  github.respond(`PATCH ${REPO}/git/refs/heads/main`, async (req, route) => {
+    // The re-read still sees the old head (lag), but GitHub applies the update a moment later.
+    github.respond(REF_GET, { status: 200, body: { ref: 'refs/heads/main', object: { sha: head, type: 'commit' } } });
+    github.repo.head = req.body.sha;
+    return route.abort('failed');
+  });
+  await page.click('#publish-btn');
+  await expectResult(page.locator('#pub-err-text')).toHaveText('The connection dropped while the site was being updated.');
+  expect(await pendingPairs(page)).toHaveLength(1); // kept until it is clear the photos are live
+  const live = github.repo.head;
+  const before = calls(github).length;
+  await page.click('#pub-retry');
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
+  expect(calls(github).slice(before)).toEqual([
+    REF_GET, `GET ${REPO}/git/commits/${live}`, `GET ${REPO}/contents/data/events.json`,
+    `GET ${REPO}/git/trees/${github.repo.commits.get(live).tree}`,
+  ]);
+  expect(github.repo.head).toBe(live);
+  expect(newCommits(github)).toBe(1);
+  expect(await pendingPairs(page)).toEqual([]);
+  await expectResult(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+});

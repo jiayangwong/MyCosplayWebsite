@@ -55,6 +55,7 @@ export const PUBLISH_MESSAGES = Object.freeze({
   cancelled: 'Publish cancelled. Nothing was changed.',
   removed: (n) => `Removed ${n} old ${n === 1 ? 'file' : 'files'}.`,
   truncated: 'Could not list all old photos, so none were removed this time.',
+  notCanonical: 'Some photo paths in events.json are not written in the usual form (media/events/...), so no old files were removed this time.',
   confirmTitle: (n) => (n === 1 ? 'This 1 old file will be removed' : `These ${n} old files will be removed`),
 });
 
@@ -150,21 +151,53 @@ async function api(token, path, { method = 'GET', body, refUpdate = false } = {}
 
 /* ---------- Pure rules (paths, removals) ---------- */
 
-/** Every `photo` / `photoFull` used by an event in an events.json text. */
-export function usedPathsIn(text) {
-  const used = new Set();
+/** Every `photo` / `photoFull` string of the events in an events.json text (raw, as written). */
+function photoValues(text) {
   let events = [];
   try {
     const data = JSON.parse(text);
     events = Array.isArray(data.events) ? data.events : [];
   } catch {
-    return used;
+    return [];
   }
+  const values = [];
   for (const event of events) {
-    if (event && typeof event.photo === 'string') used.add(event.photo);
-    if (event && typeof event.photoFull === 'string') used.add(event.photoFull);
+    if (event && typeof event.photo === 'string' && event.photo) values.push(event.photo);
+    if (event && typeof event.photoFull === 'string' && event.photoFull) values.push(event.photoFull);
+  }
+  return values;
+}
+
+/**
+ * The repo file a photo value points at, as the site resolves it: "./a", "a/./b", "a?v=2", "a#x" and
+ * percent-escapes all lead to the same file. null if it can't be resolved.
+ */
+export function resolvedPath(value) {
+  try {
+    return decodeURIComponent(new URL(value, 'https://x.invalid/').pathname.slice(1));
+  } catch {
+    return null;
+  }
+}
+
+/** Every file used by an event in an events.json text: each value as written AND as the site resolves it. */
+export function usedPathsIn(text) {
+  const used = new Set();
+  for (const value of photoValues(text)) {
+    used.add(value);
+    const resolved = resolvedPath(value);
+    if (resolved) used.add(resolved);
   }
   return used;
+}
+
+/**
+ * True when every photo value is written in its plain form (equal to the file it resolves to). If not,
+ * Publish removes nothing this time (fail safe), so an unusual way of writing a path can never let a file
+ * that is still in use be removed.
+ */
+export function allPathsCanonical(text) {
+  return photoValues(text).every((value) => resolvedPath(value) === value);
 }
 
 /**
@@ -174,9 +207,8 @@ export function usedPathsIn(text) {
  */
 export function isRemovable(path, used, newPaths) {
   if (typeof path !== 'string' || !path.startsWith(MEDIA_PREFIX) || !path.endsWith('.webp')) return false;
-  if (path === EVENTS_PATH) return false;
   const rest = path.slice(MEDIA_PREFIX.length).split('/');
-  if (rest.length < 1 || rest.some((seg) => seg === '' || seg === '.' || seg === '..')) return false;
+  if (rest.some((seg) => seg === '' || seg === '.' || seg === '..')) return false;
   if (rest[rest.length - 1] === '.webp') return false;
   return !used.has(path) && !newPaths.has(path);
 }
@@ -232,6 +264,7 @@ function limitProblem({ pairs, files }) {
 
 /** Old photos that this draft no longer uses (a preview; the real list comes from the repo tree at publish). */
 function expectedRemovals(text, newPaths) {
+  if (!allPathsCanonical(text)) return [];
   const used = usedPathsIn(text);
   return [...usedPathsIn(baseEvents().text)].filter((p) => isRemovable(p, used, newPaths)).sort();
 }
@@ -307,6 +340,7 @@ function showResult(kind, detail = {}) {
     const notes = [];
     if (detail.removed) notes.push(PUBLISH_MESSAGES.removed(detail.removed));
     if (detail.truncated) notes.push(PUBLISH_MESSAGES.truncated);
+    else if (detail.notCanonical) notes.push(PUBLISH_MESSAGES.notCanonical);
     $('pub-ok-note').textContent = notes.join(' ');
     $('pub-ok-note').hidden = notes.length === 0;
   }
@@ -421,19 +455,27 @@ function confirmRemovals(paths) {
   return new Promise((resolve) => {
     const yes = $('pub-confirm-yes');
     const no = $('pub-confirm-no');
+    let settled = false;
     const finish = (ok) => {
+      if (settled) return; // the close event after an answer must not answer again
+      settled = true;
       yes.removeEventListener('click', onYes);
       no.removeEventListener('click', onNo);
       dialog.removeEventListener('cancel', onCancel);
+      dialog.removeEventListener('close', onClose);
       if (dialog.open) dialog.close();
       resolve(ok);
     };
     const onYes = () => finish(true);
     const onNo = () => finish(false);
     const onCancel = (e) => { e.preventDefault(); finish(false); }; // Esc = Cancel
+    // Closed any other way (some browsers skip 'cancel' on Esc, or close() from elsewhere): also Cancel,
+    // so Publish can never stay stuck on "Publishing...".
+    const onClose = () => finish(false);
     yes.addEventListener('click', onYes);
     no.addEventListener('click', onNo);
     dialog.addEventListener('cancel', onCancel);
+    dialog.addEventListener('close', onClose);
     dialog.showModal();
     no.focus(); // the safe choice
   });
@@ -507,7 +549,8 @@ async function run(token, { text, files, pairs }) {
   // Old photo files no event uses any more (never when the listing is incomplete).
   const used = usedPathsIn(text);
   const newPaths = new Set(files.map((f) => f.path));
-  let removals = tree.truncated ? [] : removalCandidates(tree.entries, used, newPaths);
+  const notCanonical = !allPathsCanonical(text);
+  let removals = tree.truncated || notCanonical ? [] : removalCandidates(tree.entries, used, newPaths);
   if (typeof publishHooks.editRemovals === 'function') removals = publishHooks.editRemovals(removals.slice());
   const guard = () => {
     for (const path of removals) {
@@ -575,7 +618,7 @@ async function run(token, { text, files, pairs }) {
     // Not visible yet does not prove it failed: the PATCH may still be applied, or the read may lag.
     if (now.object.sha !== made.sha) throw new PublishError('unsure', PUBLISH_MESSAGES.unsure, PUBLISH_MESSAGES.unsureNext);
   }
-  return { commitSha: made.sha, blobSha: eventsBlob.sha, text, pairs, removed: k, truncated: tree.truncated };
+  return { commitSha: made.sha, blobSha: eventsBlob.sha, text, pairs, removed: k, truncated: tree.truncated, notCanonical };
 }
 
 function hasSomethingToPublish() {
@@ -594,7 +637,7 @@ export async function publish() {
     const result = await run(token, prepared);
     setBase(result.blobSha, result.text);
     clearPendingPairs(result.pairs); // published: no more "unsaved files" warning for them
-    showResult('ok', { sha: result.commitSha, removed: result.removed, truncated: result.truncated });
+    showResult('ok', { sha: result.commitSha, removed: result.removed, truncated: result.truncated, notCanonical: result.notCanonical });
   } catch (error) {
     if (error instanceof PublishError && error.kind === 'stale') showResult('stale');
     else if (error instanceof PublishError && error.kind === 'cancelled') showResult('cancel');
