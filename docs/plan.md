@@ -526,7 +526,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - A second Publish right after a success works without a reload (uses the updated `baseEventsSha`).
     - Double-clicking Publish makes only one commit.
     - Every request with the token goes to `https://api.github.com`. Unhandled `api.github.com` routes fail the test.
-- Status: ready for re-review (review round 1 fixes 2026-11-19 on branch task-12-publish)
+- Status: ready for re-review (review round 2 fixes 2026-11-19 on branch task-12-publish)
 - Review: changes requested (round 2)
 - QA: pending
 

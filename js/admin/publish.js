@@ -8,7 +8,7 @@ import { PUBLISH_BUSY_EVENT } from './github-panel.js';
 import { gitBlobSha } from './git-blob.js';
 import {
   managerReady, draftText, eventCount, baseEvents, draftDiffersFromBase, setBase, onDraftChange,
-  lockFileActions, exportEvents,
+  lockFileActions, exportEvents, isDraftLoading,
 } from './manager.js';
 
 export const EVENTS_PATH = 'data/events.json';
@@ -22,7 +22,6 @@ export const PUBLISH_MESSAGES = Object.freeze({
   ready: `Makes one commit on ${GITHUB.owner}/${GITHUB.repo} (${GITHUB.branch}).`,
   success: 'Published. The site updates in about 1-2 minutes.',
   stale: 'The site changed since you started editing (maybe from another device). Export a backup, then reload this page.',
-  staleNext: 'Nothing was changed on GitHub. To go on: 1. Export backup. 2. Discard draft (this loads the newest events.json from GitHub). 3. Import your backup, or redo your edits, and check the other change is still there. 4. Publish.',
   nothingChanged: 'Nothing was changed on GitHub.',
   network: TOKEN_MESSAGES.network,
   unauthorized: 'Your GitHub token is wrong or has expired.',
@@ -59,6 +58,11 @@ class PublishError extends Error {
   }
 }
 
+/** Stale: the stale box in admin/index.html holds its own text and the recovery steps (one place only). */
+function staleError(status = 0) {
+  return new PublishError('stale', PUBLISH_MESSAGES.stale, '', status);
+}
+
 function waitMinutes(response) {
   const retry = Number(response.headers.get('retry-after'));
   if (Number.isFinite(retry) && retry > 0) return Math.max(1, Math.ceil(retry / 60));
@@ -75,7 +79,7 @@ function failure(response, { write, refUpdate }) {
     || (status === 403 && (response.headers.get('x-ratelimit-remaining') === '0' || response.headers.has('retry-after')));
   if (limited) return new PublishError('rate', PUBLISH_MESSAGES.rateLimit(waitMinutes(response)), nothing, status);
   if (status === 401) return new PublishError('unauthorized', PUBLISH_MESSAGES.unauthorized, PUBLISH_MESSAGES.unauthorizedNext, status);
-  if (refUpdate && (status === 409 || status === 422)) return new PublishError('stale', PUBLISH_MESSAGES.stale, PUBLISH_MESSAGES.staleNext, status);
+  if (refUpdate && (status === 409 || status === 422)) return staleError(status);
   if (status === 403 || status === 404) {
     return write
       ? new PublishError('no-write', PUBLISH_MESSAGES.noWrite, PUBLISH_MESSAGES.noWriteNext, status)
@@ -160,7 +164,11 @@ function render() {
   }
 
   const token = readToken() !== '';
-  if (busy) {
+  if (isDraftLoading()) {
+    btn.disabled = true;
+    btn.textContent = 'Publish to GitHub';
+    hint.textContent = 'Loading the published events.json...';
+  } else if (busy) {
     btn.disabled = true;
     btn.textContent = 'Publishing...';
     hint.textContent = 'Publishing... Keep this page open.';
@@ -199,13 +207,13 @@ async function run(token) {
     current = await api(token, `${REPO}/contents/${EVENTS_PATH}?ref=${head}`);
   } catch (error) {
     // No events.json on the branch any more: someone else changed the repo.
-    if (error.status === 404) throw new PublishError('stale', PUBLISH_MESSAGES.stale, PUBLISH_MESSAGES.staleNext);
+    if (error.status === 404) throw staleError(404);
     throw error;
   }
   // GitHub already has exactly this text (for example a Try again after an unsure result): done, no writes.
   if (current.sha && current.sha === await gitBlobSha(text)) return { commitSha: head, blobSha: current.sha, text };
   if (!base.sha || current.sha !== base.sha) {
-    throw new PublishError('stale', PUBLISH_MESSAGES.stale, PUBLISH_MESSAGES.staleNext);
+    throw staleError();
   }
 
   showProgress(4);
@@ -244,7 +252,7 @@ async function run(token) {
 
 export async function publish() {
   // `busy` is set before the first await, so a second click (or Try again) cannot start a second publish.
-  if (busy) return;
+  if (busy || isDraftLoading()) return;
   const token = readToken();
   if (!token || !draftDiffersFromBase()) return;
   setBusy(true);

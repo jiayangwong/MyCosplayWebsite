@@ -19,6 +19,8 @@ const $ = (id) => document.getElementById(id);
 const state = { events: [], editingId: null, base: { sha: null, text: '' } };
 const listeners = new Set();
 const draftListeners = new Set();
+const REPO_READ_TIMEOUT_MS = 30000;
+let draftLoading = false;
 const BANNER_DRAFT = 'Source: your browser draft (not published yet). Press Publish to GitHub to put it live.';
 let resolveReady;
 /** Resolves once the events and the base are loaded. */
@@ -323,9 +325,16 @@ async function loadFromRepo() {
   if (!token) return null;
   try {
     const path = `/repos/${GITHUB.owner}/${GITHUB.repo}/contents/data/events.json?ref=${encodeURIComponent(GITHUB.branch)}`;
-    const response = await githubFetch(path, { token });
-    if (!response.ok) return null;
-    const file = await response.json();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REPO_READ_TIMEOUT_MS);
+    let file;
+    try {
+      const response = await githubFetch(path, { token, signal: controller.signal });
+      if (!response.ok) return null;
+      file = await response.json();
+    } finally {
+      clearTimeout(timer);
+    }
     if (file.encoding !== 'base64' || typeof file.content !== 'string' || typeof file.sha !== 'string') return null;
     const binary = atob(file.content.replace(/\s/g, ''));
     const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
@@ -340,15 +349,29 @@ async function loadFromRepo() {
 async function discardDraft() {
   if (!window.confirm('Discard your browser draft and reload the published data/events.json?')) return;
   localStorage.removeItem(DRAFT_KEY);
-  // With a token, start again from the copy on GitHub itself, so its SHA is the new base and a backup
-  // imported after this can be published (the stale check compares against GitHub, not the site copy).
-  const fromRepo = await loadFromRepo();
-  const published = fromRepo || await loadPublished();
-  state.events = sortEvents(published.events);
-  state.base = published.base;
-  setBanner(fromRepo ? 'Source: published data/events.json (newest copy from GitHub)' : 'Source: published data/events.json');
-  clearForm();
+  // While the published copy loads, Publish, Import and Discard are locked so nothing races the swap.
+  draftLoading = true;
+  lockFileActions(true);
   draftChanged();
+  try {
+    // With a token, start again from the copy on GitHub itself, so its SHA is the new base and a backup
+    // imported after this can be published (the stale check compares against GitHub, not the site copy).
+    const fromRepo = await loadFromRepo();
+    const published = fromRepo || await loadPublished();
+    state.events = sortEvents(published.events);
+    state.base = published.base;
+    setBanner(fromRepo ? 'Source: published data/events.json (newest copy from GitHub)' : 'Source: published data/events.json');
+    clearForm();
+  } finally {
+    draftLoading = false;
+    lockFileActions(false);
+    draftChanged();
+  }
+}
+
+/** True while Discard draft is loading the published events.json. */
+export function isDraftLoading() {
+  return draftLoading;
 }
 
 /* ---------- API for the media uploader ---------- */

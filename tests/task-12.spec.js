@@ -3,7 +3,7 @@
 // a test on any unhandled api.github.com call, and if the token shows up anywhere except the Authorization
 // header of a request to https://api.github.com.
 const fs = require('fs');
-const { test, expect, API, gitBlobSha, saveFakeToken } = require('./github-mock');
+const { test, expect, API, FAKE_TOKEN, gitBlobSha } = require('./github-mock');
 
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
 const REF_GET = `GET ${REPO}/git/ref/heads/main`;
@@ -16,14 +16,28 @@ const SUCCESS = 'Published. The site updates in about 1-2 minutes.';
 const UNSURE = 'The connection dropped while the site was being updated.';
 const UNSURE_NEXT = 'It is not clear if the change went live. Try again: it checks GitHub first and never publishes twice.';
 const JP_NAME = 'コミックフィエスタ 冬 ✨ Puzz';
+// A publish is 7 mocked round trips; on the phone project under full-suite load it can take just over the
+// default 5s. Every wait on a publish result (and on Discard reading GitHub) uses this longer timeout.
+const RESULT_TIMEOUT = 15000;
+const expectResult = expect.configure({ timeout: RESULT_TIMEOUT });
+// Some tests publish twice (or Discard + Publish); give the whole test room for two slow publishes.
+test.describe.configure({ timeout: 60000 });
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept());
   await page.goto('admin/index.html');
-  await expect(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
-  await expect(page.locator('html')).toHaveAttribute('data-github-ready', 'true');
-  await expect(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
+  await expectResult(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
+  await expectResult(page.locator('html')).toHaveAttribute('data-github-ready', 'true');
+  await expectResult(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
 });
+
+/** Saves the fake token and waits until it is stored. Uses Enter in the field (keyboard focus, not a
+ *  mouse click) because on the phone layout a click on Save token could land mid layout shift and be lost. */
+async function saveFakeToken(page) {
+  await page.fill('#gh-token', FAKE_TOKEN);
+  await page.press('#gh-token', 'Enter');
+  await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
+}
 
 /** The 7 calls of one publish, in order, for a given head commit. */
 const sevenCalls = (head) => [
@@ -56,15 +70,15 @@ const newCommits = (github) => github.repo.commits.size - 1;
 
 test('panel: no token -> disabled with hint; token + no changes -> "Nothing to publish"; new help text', async ({ page, github }) => {
   await expect(page.locator('.help-box')).toContainText('Changes stay on this browser until you press Publish to GitHub. Export events.json is a backup you can commit by hand.');
-  await expect(page.locator('#pub-title')).toHaveText('Publish');
+  await expectResult(page.locator('#pub-title')).toHaveText('Publish');
   await expect(page.locator('#publish-btn')).toBeDisabled();
   await expect(page.locator('#publish-hint')).toHaveText('Add a GitHub token to publish');
   await saveFakeToken(page);
   await expect(page.locator('#publish-btn')).toBeDisabled();
-  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
-  await expect(page.locator('#pub-pending')).toHaveText('No pending changes.');
+  await expectResult(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  await expectResult(page.locator('#pub-pending')).toHaveText('No pending changes.');
   await addEvent(page);
-  await expect(page.locator('#pub-pending li')).toHaveText('~ data/events.json changed');
+  await expectResult(page.locator('#pub-pending li')).toHaveText('~ data/events.json changed');
   await expect(page.locator('#publish-btn')).toBeEnabled();
   await expect(page.locator('#publish-btn')).toHaveText('Publish to GitHub');
   expect(github.calls()).toEqual([]); // nothing is sent until Publish is pressed
@@ -78,8 +92,8 @@ test('happy path: exactly 7 calls in order, one-file tree, blob = Export, parent
   const head = github.repo.head;
 
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-ok')).toBeVisible();
-  await expect(page.locator('#pub-ok')).toContainText(SUCCESS);
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-ok')).toContainText(SUCCESS);
 
   expect(github.calls()).toEqual(sevenCalls(head));
   const reqs = github.requests;
@@ -106,10 +120,10 @@ test('happy path: exactly 7 calls in order, one-file tree, blob = Export, parent
   const draft = await page.evaluate(() => JSON.parse(localStorage.getItem('puzzkezz.events.draft')));
   expect(draft.baseEventsSha).toBe(github.repo.filesAt().get('data/events.json').sha);
   expect(draft.baseEventsSha).toBe(gitBlobSha(expected));
-  await expect(page.locator('#pub-commit')).toHaveAttribute('href', `https://github.com/jiayangwong/MyCosplayWebsite/commit/${github.repo.head}`);
-  await expect(page.locator('#pub-commit')).toHaveAttribute('target', '_blank');
-  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
-  await expect(page.locator('#pub-progress')).toBeHidden();
+  await expectResult(page.locator('#pub-commit')).toHaveAttribute('href', `https://github.com/jiayangwong/MyCosplayWebsite/commit/${github.repo.head}`);
+  await expectResult(page.locator('#pub-commit')).toHaveAttribute('target', '_blank');
+  await expectResult(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  await expectResult(page.locator('#pub-progress')).toBeHidden();
   // Every request that carried the token went to the GitHub API (the fixture also checks for leaks).
   for (const r of github.requests) expect(r.headers.authorization).toMatch(/^Bearer /);
   expect(github.requests.length).toBe(7);
@@ -126,16 +140,16 @@ test('a second publish right after a success works without a reload', async ({ p
   await saveFakeToken(page);
   await addEvent(page, 'ONE', 'First Publish');
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
   const first = github.repo.head;
   const draft = await page.evaluate(() => JSON.parse(localStorage.getItem('puzzkezz.events.draft')));
   expect(draft.baseEventsSha).toBe(github.repo.filesAt().get('data/events.json').sha);
 
   await addEvent(page, 'TWO', 'Second Publish');
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeHidden();
-  await expect(page.locator('#pub-ok')).toBeVisible();
-  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  await expectResult(page.locator('#pub-stale')).toBeHidden();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#publish-btn')).toHaveText('Nothing to publish');
   expect(newCommits(github)).toBe(2);
   expect(github.repo.commits.get(github.repo.head).parents).toEqual([first]);
   expect(github.repo.read('data/events.json')).toContain('Second Publish');
@@ -147,11 +161,11 @@ test('stale (blob): repo events.json changed elsewhere -> stale message, no POST
   await addEvent(page);
   const outside = github.repo.pushOutside({ 'data/events.json': '{"version":1,"events":[]}\n' });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeVisible();
-  await expect(page.locator('#pub-stale')).toContainText(STALE);
-  await expect(page.locator('#pub-stale')).toContainText('Nothing was changed on GitHub.');
-  await expect(page.locator('#pub-ok')).toBeHidden();
-  await expect(page.locator('#pub-err')).toBeHidden();
+  await expectResult(page.locator('#pub-stale')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toContainText(STALE);
+  await expectResult(page.locator('#pub-stale')).toContainText('Nothing was changed on GitHub.');
+  await expectResult(page.locator('#pub-ok')).toBeHidden();
+  await expectResult(page.locator('#pub-err')).toBeHidden();
   expect(github.calls()).toEqual(sevenCalls(outside).slice(0, 3));
   expect(writes(github)).toEqual([]);
   expect(github.repo.head).toBe(outside);
@@ -159,7 +173,7 @@ test('stale (blob): repo events.json changed elsewhere -> stale message, no POST
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#pub-export')]);
   expect(download.suggestedFilename()).toBe('events.json');
   expect(fs.readFileSync(await download.path(), 'utf8')).toContain('Publish Test Con');
-  await expect(page.locator('#pub-reload')).toBeVisible();
+  await expectResult(page.locator('#pub-reload')).toBeVisible();
 });
 
 test('stale recovery: Export backup -> Discard draft -> Import backup -> Publish makes exactly one commit', async ({ page, github }) => {
@@ -169,9 +183,9 @@ test('stale recovery: Export backup -> Discard draft -> Import backup -> Publish
   const other = { version: 1, events: [{ id: '2026-01-10-oth', date: '2026-01-10', short: 'OTH', name: 'Other Device Con' }] };
   const outside = github.repo.pushOutside({ 'data/events.json': `${JSON.stringify(other, null, 2)}\n` });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeVisible();
-  await expect(page.locator('#pub-stale')).toContainText('Discard draft');
-  await expect(page.locator('#pub-stale')).toContainText('Import your backup');
+  await expectResult(page.locator('#pub-stale')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toContainText('Discard draft');
+  await expectResult(page.locator('#pub-stale')).toContainText('Import your backup');
 
   // 1. Export backup
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#pub-export')]);
@@ -179,14 +193,14 @@ test('stale recovery: Export backup -> Discard draft -> Import backup -> Publish
   expect(backup).toContain('Backup Con');
   // 2. Discard draft: loads the newest events.json from GitHub (not the older site copy) and takes its SHA as base.
   await page.click('#discard-draft');
-  await expect(page.locator('#source-banner')).toContainText('newest copy from GitHub');
+  await expectResult(page.locator('#source-banner')).toContainText('newest copy from GitHub');
   await expect(page.locator('.event-row')).toHaveCount(1);
   await expect(page.locator('.event-row')).toContainText('Other Device Con');
   const draftBase = await page.evaluate(() => localStorage.getItem('puzzkezz.events.draft'));
   expect(draftBase).toBeNull(); // nothing saved until an edit
   // 3. Import the backup, merge the other device's event back in by hand.
   await page.setInputFiles('#import-file', { name: 'events.json', mimeType: 'application/json', buffer: Buffer.from(backup) });
-  await expect(page.locator('#save-status')).toContainText('Imported');
+  await expectResult(page.locator('#save-status')).toContainText('Imported');
   await page.click('#new-event');
   await page.fill('#f-date', '2026-01-10');
   await page.fill('#f-short', 'OTH');
@@ -197,8 +211,8 @@ test('stale recovery: Export backup -> Discard draft -> Import backup -> Publish
   // 4. Publish
   const before = github.calls().length;
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-ok')).toBeVisible();
-  await expect(page.locator('#pub-stale')).toBeHidden();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toBeHidden();
   expect(github.calls().filter((c) => c === REF_PATCH)).toHaveLength(1);
   expect(github.calls().slice(before)).toEqual(sevenCalls(outside));
   expect(github.repo.commits.get(github.repo.head).parents).toEqual([outside]);
@@ -208,16 +222,48 @@ test('stale recovery: Export backup -> Discard draft -> Import backup -> Publish
   expect(live).toContain('Other Device Con');
 });
 
+test('Discard draft locks Publish, Import and Discard while it reads GitHub, and unlocks after', async ({ page, github }) => {
+  await saveFakeToken(page);
+  await addEvent(page);
+  await expect(page.locator('#publish-btn')).toBeEnabled();
+  github.respond(`GET ${REPO}/contents/data/events.json`, { delay: 1200 });
+  await page.click('#discard-draft');
+  await expect(page.locator('#publish-btn')).toBeDisabled();
+  await expect(page.locator('#publish-hint')).toHaveText('Loading the published events.json...');
+  await expect(page.locator('#import-file')).toBeDisabled();
+  await expect(page.locator('label[for="import-file"]')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('#discard-draft')).toBeDisabled();
+  await page.evaluate(() => document.getElementById('publish-btn').click()); // forced click does nothing
+  await expectResult(page.locator('#source-banner')).toContainText('newest copy from GitHub');
+  await expect(page.locator('#import-file')).toBeEnabled();
+  await expect(page.locator('#discard-draft')).toBeEnabled();
+  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  expect(writes(github)).toEqual([]);
+});
+
+test('Discard draft unlocks again when GitHub cannot be reached (falls back to the site copy)', async ({ page, github }) => {
+  await saveFakeToken(page);
+  await addEvent(page);
+  github.respond(`GET ${REPO}/contents/data/events.json`, { abort: true });
+  await page.click('#discard-draft');
+  await expectResult(page.locator('#source-banner')).toHaveText('Source: published data/events.json');
+  await expect(page.locator('#import-file')).toBeEnabled();
+  await expect(page.locator('#discard-draft')).toBeEnabled();
+  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  await addEvent(page, 'AGN', 'Again Con');
+  await expect(page.locator('#publish-btn')).toBeEnabled();
+});
+
 test('Reload alone does not re-base the draft: Publish is still stale', async ({ page, github }) => {
   await saveFakeToken(page);
   await addEvent(page);
   github.repo.pushOutside({ 'data/events.json': '{"version":1,"events":[]}\n' });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toBeVisible();
   await page.click('#pub-reload');
-  await expect(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
+  await expectResult(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toBeVisible();
   expect(writes(github)).toEqual([]);
 });
 
@@ -227,9 +273,9 @@ test('a draft saved before Publish existed (no base) stops as stale instead of g
     version: 1, events: [{ id: '2026-12-20-old', date: '2026-12-20', short: 'OLD', name: 'Old Draft Con' }],
   })));
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
+  await expectResult(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toBeVisible();
   expect(writes(github)).toEqual([]);
 });
 
@@ -239,8 +285,8 @@ test('stale (ref): PATCH returns 422 -> stale message, fake repo head unchanged'
   const head = github.repo.head;
   github.respond(REF_PATCH, { status: 422, body: { message: 'Update is not a fast forward' } });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeVisible();
-  await expect(page.locator('#pub-stale')).toContainText(STALE);
+  await expectResult(page.locator('#pub-stale')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toContainText(STALE);
   expect(github.repo.head).toBe(head);
   expect(github.calls()).toEqual(sevenCalls(head));
   await expect(page.locator('#publish-btn')).toBeEnabled(); // draft kept, still pending
@@ -252,7 +298,7 @@ test('stale (ref): PATCH returns 409 -> stale message too', async ({ page, githu
   const head = github.repo.head;
   github.respond(REF_PATCH, { status: 409, body: { message: 'Conflict' } });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toContainText(STALE);
+  await expectResult(page.locator('#pub-stale')).toContainText(STALE);
   expect(github.repo.head).toBe(head);
 });
 
@@ -265,7 +311,7 @@ test('stale (ref) for real: branch moves between reading and the PATCH -> nothin
     return github.route(route, req);
   });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-stale')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toBeVisible();
   const moved = github.repo.head;
   expect(github.repo.commits.get(moved).message).toBe('Outside change');
   expect(github.repo.read('data/events.json')).not.toContain('Publish Test Con');
@@ -323,10 +369,10 @@ for (const f of FAILURES) {
     const head = github.repo.head;
     github.respond(f.match, f.response);
     await page.click('#publish-btn');
-    await expect(page.locator('#pub-err')).toBeVisible();
-    await expect(page.locator('#pub-err-text')).toHaveText(f.text);
-    await expect(page.locator('#pub-err-next')).toContainText('Nothing was changed on GitHub.');
-    await expect(page.locator('#pub-ok')).toBeHidden();
+    await expectResult(page.locator('#pub-err')).toBeVisible();
+    await expectResult(page.locator('#pub-err-text')).toHaveText(f.text);
+    await expectResult(page.locator('#pub-err-next')).toContainText('Nothing was changed on GitHub.');
+    await expectResult(page.locator('#pub-ok')).toBeHidden();
     expect(github.repo.head).toBe(head);
     expect(github.calls()).not.toContain(REF_PATCH);
     expect(newCommits(github)).toBe(0);
@@ -337,8 +383,8 @@ for (const f of FAILURES) {
     // Try again repeats the whole publish from step 1 and now succeeds with one ref update.
     const before = github.calls().length;
     await page.click('#pub-retry');
-    await expect(page.locator('#pub-ok')).toBeVisible();
-    await expect(page.locator('#pub-err')).toBeHidden();
+    await expectResult(page.locator('#pub-ok')).toBeVisible();
+    await expectResult(page.locator('#pub-err')).toBeHidden();
     expect(github.calls().slice(before)).toEqual(sevenCalls(head));
     expect(github.calls().filter((c) => c === REF_PATCH)).toHaveLength(1);
     expect(github.repo.commits.get(github.repo.head).parents).toEqual([head]);
@@ -351,15 +397,15 @@ test('PATCH connection drops and the ref did not move (yet) -> "not clear" messa
   const head = github.repo.head;
   github.respond(REF_PATCH, { abort: true });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-err-text')).toHaveText(UNSURE);
-  await expect(page.locator('#pub-err-next')).toHaveText(UNSURE_NEXT);
-  await expect(page.locator('#pub-err-next')).not.toContainText('Nothing was changed');
+  await expectResult(page.locator('#pub-err-text')).toHaveText(UNSURE);
+  await expectResult(page.locator('#pub-err-next')).toHaveText(UNSURE_NEXT);
+  await expectResult(page.locator('#pub-err-next')).not.toContainText('Nothing was changed');
   expect(github.repo.head).toBe(head);
   // Steps 1-7 plus one read of the ref to check whether the update happened.
   expect(github.calls()).toEqual([...sevenCalls(head), REF_GET]);
   // It really did not go live: Try again publishes once.
   await page.click('#pub-retry');
-  await expect(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
   expect(newCommits(github)).toBe(2); // the orphan commit from the first try + the live one
   expect(github.repo.commits.get(github.repo.head).parents).toEqual([head]);
 });
@@ -370,7 +416,7 @@ test('500 on the PATCH and the ref re-read does not show the commit -> "not clea
   const head = github.repo.head;
   github.respond(REF_PATCH, { status: 500, body: { message: 'Server Error' } });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-err-text')).toHaveText(UNSURE);
+  await expectResult(page.locator('#pub-err-text')).toHaveText(UNSURE);
   expect(github.repo.head).toBe(head);
 });
 
@@ -386,16 +432,16 @@ test('unsure, but the PATCH was applied later -> Try again finds the text on Git
     return route.abort('failed');
   });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-err-text')).toHaveText(UNSURE);
+  await expectResult(page.locator('#pub-err-text')).toHaveText(UNSURE);
   const live = github.repo.head;
   const before = github.calls().length;
   await page.click('#pub-retry');
-  await expect(page.locator('#pub-ok')).toBeVisible();
-  await expect(page.locator('#pub-stale')).toBeHidden();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-stale')).toBeHidden();
   expect(github.calls().slice(before)).toEqual(sevenCalls(live).slice(0, 3)); // reads only
   expect(github.repo.head).toBe(live);
   expect(newCommits(github)).toBe(1);
-  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  await expectResult(page.locator('#publish-btn')).toHaveText('Nothing to publish');
 });
 
 test('PATCH went through but the answer was lost -> confirmed by reading the ref, shown as published', async ({ page, github }) => {
@@ -407,9 +453,9 @@ test('PATCH went through but the answer was lost -> confirmed by reading the ref
     return route.abort('failed'); // ...but the reply never arrived
   });
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
   expect(github.repo.commits.get(github.repo.head).parents).toEqual([head]);
-  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  await expectResult(page.locator('#publish-btn')).toHaveText('Nothing to publish');
 });
 
 test('double-clicking Publish makes only one commit; buttons are locked while publishing', async ({ page, github }) => {
@@ -423,12 +469,12 @@ test('double-clicking Publish makes only one commit; buttons are locked while pu
   await expect(page.locator('#import-file')).toBeDisabled();
   await expect(page.locator('label[for="import-file"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(page.locator('#gh-forget')).toBeDisabled();
-  await expect(page.locator('#pub-progress')).toBeVisible();
-  await expect(page.locator('#pub-bar')).toHaveAttribute('role', 'progressbar');
-  await expect(page.locator('#pub-step')).toContainText('Step 1 of 7');
+  await expectResult(page.locator('#pub-progress')).toBeVisible();
+  await expectResult(page.locator('#pub-bar')).toHaveAttribute('role', 'progressbar');
+  await expectResult(page.locator('#pub-step')).toContainText('Step 1 of 7');
   // A click forced through the disabled state still cannot start a second publish.
   await page.evaluate(() => document.getElementById('publish-btn').click());
-  await expect(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
   expect(github.calls().filter((c) => c === COMMIT_POST)).toHaveLength(1);
   expect(github.calls().filter((c) => c === REF_PATCH)).toHaveLength(1);
   expect(newCommits(github)).toBe(1);
@@ -446,7 +492,7 @@ test('Export / Import still work next to Publish; the token is never in the publ
   const text = await exportedText(page);
   expect(JSON.parse(text).events).toHaveLength(1);
   await page.click('#publish-btn');
-  await expect(page.locator('#pub-ok')).toBeVisible();
+  await expectResult(page.locator('#pub-ok')).toBeVisible();
   expect(github.repo.read('data/events.json')).toBe(text);
   for (const r of github.requests) expect(`${API}${r.path}`.startsWith(`${API}/repos/jiayangwong/MyCosplayWebsite/`)).toBe(true);
 });
