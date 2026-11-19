@@ -234,3 +234,23 @@ Result: CHANGES REQUESTED
   - Many web servers merge doubled slashes. If GitHub Pages does, `media//events/X/old.webp` shows `media/events/X/old.webp` on the live site, but Publish treats that file as unused and removes it. We cannot check how Pages behaves from here, so fail safe.
   - Fix: also require no empty segment, for example `resolvedPath(value) === value && !value.split('/').includes('')`.
   - Add `media//events/X/old.webp` and `media/events/X//old.webp` to `UNUSUAL` in tests/task-13.spec.js. A one-line fix plus 2 test rows.
+
+## Review TASK-13 (round 3) - 2026-11-19
+Result: APPROVED
+- Commit 69865fe re-reviewed.
+- Tests:
+  - My run: tests/task-12.spec.js plus tests/task-13.spec.js with `--workers=2`: 134 passed, 0 failed.
+  - I did not run the full suite this round, because memory on the machine is tight. The programmer reports 271 passed, 3 skipped, 0 failed, and the coordinator's task-13 run with `--repeat-each=3` gave 246 passed, 0 failed.
+- The round-2 must-fix is resolved. `isCanonicalPath` requires all of these:
+  - the allowlist regex `^[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$`, which rules out empty segments (so no `//`, no leading or trailing `/`), and any `%`, `?`, `#`, `;`, `\`, `:`, whitespace or non-ASCII character;
+  - no `.` or `..` segment;
+  - `resolvedPath(v) === v`.
+- If any event's path is not canonical, nothing is removed. Both `//` forms are now covered by unit tests and end-to-end tests.
+- The allowlist is correct. The only forms that still count as canonical name a genuinely different file on a case-sensitive host that does not trim dots: uppercase letters, a trailing `.`, and `...`, `~` or `.hidden` names (checked in Node). `photoPathError` also still refuses any `..` substring.
+- The deletion guards are still airtight:
+  - `isRemovable` is unchanged apart from the 2 dead checks removed in round 2.
+  - The used set holds both the raw and the resolved form of each path.
+  - The not-canonical fail-safe, like the truncated-tree one, sets the list to `[]` before the hook and before both guard runs.
+- No false fail-safe in normal use. Uploader paths are `media/events/<date>-<slugify(short)>/<slugify(name)>[-n][-full].webp`, and `slugify` only gives `[a-z0-9-]` (it applies NFKD and strips accents and other non-ASCII). I checked awkward inputs (`IMG_2024 (1).JPG`, Japanese-only names, `Café Ünïcode.heic`, `a.b.c.png`, a short form of `C.F! 冬`): every resulting path is canonical. The current data/events.json has no photo paths. Only hand-typed unusual paths turn removals off, and then the note says why.
+- Earlier rulings stand.
+- Follow-up for idea-collector (not blocking): "Remove from publish" leaves the draft pointing at photos that are not on GitHub. Because removals are still predicted, an event that replaced its photo could go live with a broken image and its old photo deleted. It should be decided before the release.

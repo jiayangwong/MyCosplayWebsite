@@ -573,7 +573,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - 21 pending pairs (made with a small fixture) -> the limit message, and the button is disabled.
     - A path outside the allowed patterns (injected into the draft) is refused with no network call.
 - Status: ready for re-review (review round 2 fixes 2026-11-19 on branch task-13-photo-publish)
-- Review: changes requested (round 2)
+- Review: approved 2026-11-19
 - QA: pending
 
 ### TASK-15: Watermark marker in every uploader file + Publish check + repo guard test - APPROVED 2026-11-18
