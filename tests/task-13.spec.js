@@ -595,39 +595,60 @@ test('the content hash of each uploaded image equals its tree entry (blobs are t
   }
 });
 
-// Review round 1 (must-fix): other ways of writing a used path must never let that file be removed.
-const UNUSUAL = [
+// Review rounds 1-2 (must-fix): other ways of writing a used path must never let that file be removed.
+// SAME_FILE: forms a browser resolves to media/events/X/old.webp itself. OTHER_FORMS: forms a server might
+// map to it (collapsing "//", dropping ";params", Unicode look-alikes...). Every one is non-canonical, so
+// Publish removes nothing at all while any event uses one.
+const SAME_FILE = [
   `./media/events/${X}/old.webp`,
   `media/events/${X}/./old.webp`,
   `media/events/${X}/old.webp?v=2`,
   `media/events/${X}/old.webp#x`,
+  `media/events/${X}%2Fold.webp`,
+  `media/events/${X}/old%2Ewebp`,
+  `media/events/${X}/%2e%2e/${X}/old.webp`,
+  ` media/events/${X}/old.webp`,
+  `media/events/${X}/old.webp `,
+  `media/events/${X}/old.we\tbp`,
+  `media\\events\\${X}\\old.webp`,
 ];
+const OTHER_FORMS = [
+  `media//events/${X}/old.webp`,
+  `media/events/${X}//old.webp`,
+  `media/events/${X}/old.webp/`,
+  `media/events/${X}/old.webp;v=2`,
+  `media/events/${X}/old\u2024webp`,
+  `media/events/${X}/old\uFF0Ewebp`,
+  `media/events/${X}/old .webp`,
+];
+const UNUSUAL = [...SAME_FILE, ...OTHER_FORMS];
+// Plain forms that name a genuinely different file on GitHub Pages (case-sensitive, no trailing-dot trim).
+const DIFFERENT_FILE = [`media/events/${X}/OLD.webp`, `media/events/${X}/old.WEBP`, `media/events/${X}/old.webp.`];
 
-test('used paths are also matched as the site resolves them; unusual forms make Publish remove nothing', async ({ page, github }) => {
+test('used paths are also matched as the site resolves them; every unusual form is non-canonical', async ({ page, github }) => {
   await setup(page, github, { events: [ev(X), ev(Y)] });
-  const out = await page.evaluate(async ({ forms, old, full, stray }) => {
+  const out = await page.evaluate(async ({ same, unusual, different, old, full, stray }) => {
     const m = await import('/js/admin/publish.js');
     const text = (photo) => JSON.stringify({ version: 1, events: [{ id: 'x', photo, photoFull: full }] });
     const entries = [old, full, stray].map((path) => ({ path, type: 'blob' }));
     return {
-      forms: forms.map((f) => ({
-        used: m.usedPathsIn(text(f)).has(old),
-        canonical: m.allPathsCanonical(text(f)),
-        removals: m.removalCandidates(entries, m.usedPathsIn(text(f)), new Set()),
-      })),
+      same: same.map((f) => ({ f, used: m.usedPathsIn(text(f)).has(old), removals: m.removalCandidates(entries, m.usedPathsIn(text(f)), new Set()) })),
+      unusual: unusual.map((f) => ({ f, canonical: m.isCanonicalPath(f), all: m.allPathsCanonical(text(f)) })),
+      different: different.map((f) => ({ f, canonical: m.isCanonicalPath(f) })),
       plain: { canonical: m.allPathsCanonical(text(old)), removals: m.removalCandidates(entries, m.usedPathsIn(text(old)), new Set()) },
     };
-  }, { forms: UNUSUAL, old: OLD.photo, full: OLD.photoFull, stray: `media/events/${X}/stray.webp` });
-  for (const f of out.forms) {
-    expect(f.used).toBe(true); // (a) the resolved form is in the used set
-    expect(f.canonical).toBe(false); // (b) and the publish fails safe
-    expect(f.removals).toEqual([`media/events/${X}/stray.webp`]); // even without (b), old.webp is never a candidate
+  }, { same: SAME_FILE, unusual: UNUSUAL, different: DIFFERENT_FILE, old: OLD.photo, full: OLD.photoFull, stray: `media/events/${X}/stray.webp` });
+  for (const r of out.same) {
+    expect(r.used, r.f).toBe(true); // (a) the resolved form is in the used set
+    expect(r.removals, r.f).toEqual([`media/events/${X}/stray.webp`]); // even without (b), old.webp is never a candidate
   }
+  for (const r of out.unusual) expect([r.f, r.canonical, r.all]).toEqual([r.f, false, false]); // (b) fail safe
+  for (const r of out.different) expect([r.f, r.canonical]).toEqual([r.f, true]);
   expect(out.plain).toEqual({ canonical: true, removals: [`media/events/${X}/stray.webp`] });
 });
 
 for (const form of UNUSUAL) {
-  test(`unusual path "${form}": Publish lists and removes nothing and says why`, async ({ page, github }) => {
+  test(`unusual path ${JSON.stringify(form)}: Publish lists and removes nothing and says why`, async ({ page, github }) => {
     const stray = `media/events/${X}/stray.webp`;
     await setup(page, github, {
       events: [ev(X, { photo: form, photoFull: OLD.photoFull }), ev(Y)],

@@ -191,13 +191,26 @@ export function usedPathsIn(text) {
   return used;
 }
 
+/** Plain path characters only: ASCII letters, digits, "-", "_", ".", "~", one "/" between non-empty parts. */
+const PLAIN_PATH = /^[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*$/;
+
 /**
- * True when every photo value is written in its plain form (equal to the file it resolves to). If not,
- * Publish removes nothing this time (fail safe), so an unusual way of writing a path can never let a file
- * that is still in use be removed.
+ * True when a photo value is written in plain form: only the characters above (so no "//", leading or
+ * trailing "/", "%", "?", "#", ";", "\\", ":", whitespace or non-ASCII), no "." or ".." part, and equal to
+ * the file the site resolves it to. Anything else might reach the same file in a way this code can't see.
+ */
+export function isCanonicalPath(value) {
+  if (typeof value !== 'string' || !PLAIN_PATH.test(value)) return false;
+  if (value.split('/').some((seg) => seg === '.' || seg === '..')) return false;
+  return resolvedPath(value) === value;
+}
+
+/**
+ * True when every photo value is in plain form (isCanonicalPath). If not, Publish removes nothing this
+ * time (fail safe), so an unusual way of writing a path can never let a file that is still in use be removed.
  */
 export function allPathsCanonical(text) {
-  return photoValues(text).every((value) => resolvedPath(value) === value);
+  return photoValues(text).every(isCanonicalPath);
 }
 
 /**
