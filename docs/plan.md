@@ -527,7 +527,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Double-clicking Publish makes only one commit.
     - Every request with the token goes to `https://api.github.com`. Unhandled `api.github.com` routes fail the test.
 - Status: ready for review (built 2026-11-19 on branch task-12-publish)
-- Review: pending
+- Review: changes requested
 - QA: pending
 
 ### TASK-13: Publish photo pairs (master + display copy) and remove unused old photos, in the same commit
