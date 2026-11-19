@@ -14,6 +14,7 @@ import {
 } from './manager.js';
 import { pendingPairs, onPendingChange, clearPendingPairs, removePendingItem, isPipelineFile } from './pending.js';
 import { MAX_FILE_BYTES, formatBytes } from './watermark.js';
+import { readWatermarkMarker } from './wm-marker.js';
 
 export const EVENTS_PATH = 'data/events.json';
 /** The only folder Publish may remove files from (and only unused `.webp` files, see isRemovable). */
@@ -57,6 +58,8 @@ export const PUBLISH_MESSAGES = Object.freeze({
   truncated: 'Could not list all old photos, so none were removed this time.',
   notCanonical: 'Some photo paths in events.json are not written in the usual form (media/events/...), so no old files were removed this time.',
   confirmTitle: (n) => (n === 1 ? 'This 1 old file will be removed' : `These ${n} old files will be removed`),
+  // TASK-15
+  notWatermarked: (path) => `This file is not a watermarked file from the uploader: ${path}. Please process it again with the uploader.`,
 });
 
 const STEP_TEXT = [
@@ -73,12 +76,31 @@ const STEP_TEXT = [
 /**
  * Checks run on every file right before a publish sends anything (also on Try again).
  * Each check is `async (path, blob) => message | null`; a message stops the whole publish with no request.
- * TASK-15 registers the watermark marker check here (readWatermarkMarker), see addFileCheck.
+ * TASK-15 registers the watermark marker check here (watermarkMarkerCheck, below).
  */
 const fileChecks = [];
 export function addFileCheck(check) {
   fileChecks.push(check);
 }
+
+/** Image files Publish checks for the watermark marker (TASK-15). */
+export const MARKED_IMAGE_RE = /\.(webp|png|jpe?g)$/i;
+
+/**
+ * TASK-15: every image file must carry the hidden marker the uploader adds (js/admin/wm-marker.js).
+ * This checks the bytes, on top of the WeakSet check, which only knows which Blob objects the pipeline made.
+ */
+export async function watermarkMarkerCheck(path, blob) {
+  if (!MARKED_IMAGE_RE.test(String(path))) return null;
+  let bytes = null;
+  try {
+    bytes = new Uint8Array(await blob.arrayBuffer());
+  } catch {
+    bytes = null;
+  }
+  return bytes && readWatermarkMarker(bytes) ? null : PUBLISH_MESSAGES.notWatermarked(path);
+}
+addFileCheck(watermarkMarkerCheck);
 
 /**
  * Test seam only: `editRemovals(paths) => paths` lets tests inject a removal path that breaks the rules, to

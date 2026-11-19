@@ -254,3 +254,41 @@ Result: APPROVED
 - No false fail-safe in normal use. Uploader paths are `media/events/<date>-<slugify(short)>/<slugify(name)>[-n][-full].webp`, and `slugify` only gives `[a-z0-9-]` (it applies NFKD and strips accents and other non-ASCII). I checked awkward inputs (`IMG_2024 (1).JPG`, Japanese-only names, `Café Ünïcode.heic`, `a.b.c.png`, a short form of `C.F! 冬`): every resulting path is canonical. The current data/events.json has no photo paths. Only hand-typed unusual paths turn removals off, and then the note says why.
 - Earlier rulings stand.
 - Follow-up for idea-collector (not blocking): "Remove from publish" leaves the draft pointing at photos that are not on GitHub. Because removals are still predicted, an event that replaced its photo could go live with a broken image and its old photo deleted. It should be decided before the release.
+
+## Review TASK-15 - 2026-11-19
+Result: APPROVED
+- Reviewed commit f0e7f62 against site-v1.
+- Tests (my runs, `--workers=2`):
+  - tests/task-15.spec.js: 14 passed.
+  - Full suite: 285 passed, 3 skipped, 0 failed.
+- Marker correctness: checked against the WebP container spec and PNG spec.
+  - VP8X is correct: 10-byte payload, flags only `L` (alpha, VP8L hint bit only), reserved bytes 0, canvas width-1 and height-1 as 24-bit little-endian. The VP8 size comes from the 14-bit fields after the `9d 01 2a` start code. The VP8L size comes from the 14+14 bits after `0x2f`.
+  - The RIFF size is `4 + body`, and every chunk is re-emitted padded to an even length.
+  - An existing VP8X (Chrome's ALPH case) is kept as it is. Old PZWM chunks are replaced, so there is never a second marker.
+  - The unknown chunk sits after the image data, which the spec allows for extended files.
+  - Chromium decodes the marked file to the same size with identical pixels (test). libwebp's demuxer refuses a VP8X canvas that does not match the frame, so this also proves the canvas fields. Firefox and Safari use the same libwebp parsing rules.
+  - PNG: the `tEXt` chunk (`puzzkezz-wm\0<json>`, Latin-1) goes before the first IDAT. The CRC covers type + data. The reader checks the CRC and stops looking at the first IDAT.
+  - The reader is strict but robust. It needs RIFF/WEBP, VP8X first, a chunk walk inside the RIFF size and the file length, a marker of at most 1 KB, and exact `wm`/`v` with positive integer `f`/`div`. Everything is in try/catch, so it never throws.
+- An unmarked file cannot reach a commit through Publish:
+  - `encode()` marks the file and registers only the new marked Blob in the WeakSet. The unmarked encoder Blob is never registered.
+  - `prepare()` runs the path checks, then the WeakSet check, then `watermarkMarkerCheck` on every file, before any request. It runs on every publish and every Try again.
+  - A Blob that cannot be read gives `bytes = null` and is refused.
+  - The test proves both layers separately: an unmarked Blob that is registered is caught by the marker check, and a marked Blob that is not registered is caught by the WeakSet.
+- Repo guard is meaningful:
+  - It walks the filesystem and skips only the 5 folders at the root. `storyboard/` and `tests/` are scanned.
+  - Allowlist entries are pinned by exact path + SHA-256 + reason. A stale or missing entry fails.
+  - Unmarked fixtures must decode to 16 colours or fewer.
+  - References in the JSON files and the public HTML are resolved and must exist.
+  - Each message starts with the file path.
+  - The self-test reports exactly the 3 bad files, and a noisy "fixture" fails the colour rule.
+- Node `data:` URL import: acceptable. wm-marker.js has no imports, and if a relative import is ever added the import fails loudly instead of passing silently. A cleaner long-term option is a `js/admin/package.json` with `{"type":"module"}`, so it can be imported by file URL (this needs a check that the static server and the browser are unaffected). Not blocking.
+- Allowlist ruling (open question 21):
+  - The plan line "only og-image.png is allowlisted" was written without knowing about the committed docs screenshots and the reference PNG. The programmer handled it correctly: each file is pinned by hash, the reason says "no photo of Puzz", the test forbids `media/` and `storyboard/` entries, and the question is raised for the user.
+  - I viewed og-image.png, docs/screenshots/admin-pc.png, docs/screenshots/home-phone-full.png and extra_asset/puzz-extra-asset/sashisuseso-reference.png. All of them are UI with sample data, `[Portrait]`/"photo soon" placeholders, or text only. None has a photo of a person.
+  - Accepted as an interim until the user answers question 21. If the user wants the files deleted instead, that is a small follow-up (remove the files and their entries).
+- Scope and UI text: only TASK-15 files changed. The help-box sentence matches the criterion word for word. The Publish message matches the plan exactly.
+- [nice-to-have] js/admin/wm-marker.js:156-157 - `webpChunks` already returns null when the last chunk is missing its pad byte (`next > end`), so the re-pad branch can never run. Remove it, or relax `webpChunks` on purpose and keep it.
+- [nice-to-have] js/admin/watermark.js:187-189 - if marking fails, the user is told "This browser can't make WebP files", which is misleading. A specific message (or the generic processing-failed message) would be clearer.
+- [nice-to-have] tests/wm-guard.js:34 - symlinked image files are skipped by the scan (`isFile()` is false). A referenced symlink is still caught by the reference check, but an unreferenced one is not. Consider `fs.statSync` for symlinks, or reporting them as problems.
+- [nice-to-have] tests/task-15.spec.js:501 - pin the exact allowlisted path set in the test. Adding an entry would then need a visible test change too, which matches the plan's "only og-image.png" intent once question 21 is answered.
+- [nice-to-have] tests/wm-guard.js:92 - only `<img src>` is checked. If `srcset`/`<source srcset>` is ever used, add it.
