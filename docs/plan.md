@@ -648,7 +648,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Guard self-test: the guard logic, run on a temporary folder (not the repo) containing an unmarked `media/events/x/a.webp`, a marked one, an allowlisted file with a wrong hash, and a JSON reference to a missing file, reports exactly the 3 bad ones.
     - The real repo scan passes (with today's repo: only `og-image.png` is allowlisted).
 - Status: done - ready for review (built 2026-11-19 on branch `task-15-watermark-marker`)
-- Review: pending
+- Review: approved 2026-11-19
 - QA: pending
 
 ### TASK-14: Site photos - portrait (Home + About), reel covers, share image, via the uploader and Publish - APPROVED 2026-11-18
