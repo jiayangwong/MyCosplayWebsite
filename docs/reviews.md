@@ -207,3 +207,30 @@ Result: CHANGES REQUESTED
 - [nice-to-have] js/admin/publish.js:587-605 (`confirmRemovals`) - It only resolves on the buttons or on `cancel`. Chrome's close-watcher rules can close a modal dialog on Esc *without* firing `cancel` when there was no user activation since it opened. Then the promise never settles and Publish stays "Publishing..." until a reload. No data risk (nothing has been written yet), but listen for `close` too and resolve `false` unless Yes was pressed.
 - [nice-to-have] js/admin/publish.js:333,335 - `path === EVENTS_PATH` and `rest.length < 1` can never be true after the prefix check (split always returns at least one item). It is harmless defence in depth; drop it or leave a one-line comment.
 - [nice-to-have] tests/task-13.spec.js - There is no test for the "already published" shortcut *with photos* (unsure PATCH that was applied later, then Try again finds the text and both images on GitHub -> success with reads only, no second commit). The logic is right, but this is the path most likely to regress.
+
+## Review TASK-13 (round 2) - 2026-11-19
+Result: CHANGES REQUESTED
+- Commit e330c4c re-reviewed. Full suite: 243 passed, 3 skipped, 0 failed.
+- Round-1 must-fix is mostly resolved:
+  - `usedPathsIn` adds both the raw and the resolved form of each path.
+  - `allPathsCanonical` makes Publish remove nothing when a path is written in an unusual form, and the guard uses the same extended set.
+  - The new tests cover `./`, `/./`, `?v=2` and `#x`, both as unit checks and end to end.
+- Round-1 nice-to-haves are done:
+  - `close` counts as Cancel, and `settled` stops a second answer: the `close` event that follows Yes is ignored.
+  - The "already published" shortcut with photos now has a test.
+- Removing the 2 checks from `isRemovable` was safe:
+  - `path === EVENTS_PATH` can never be true, because `data/events.json` fails the `startsWith('media/events/')` check first.
+  - `rest.length < 1` can never be true, because `split` always returns at least one item.
+  - The segment checks that matter (`''`, `.`, `..`, a bare `.webp`) are still there.
+- Other ways of writing a path, run through `resolvedPath` and `allPathsCanonical` in Node:
+  - Percent-encoding (`old%2Ewebp`, `%2e%2e`, `%6F`): resolves to a different string, so it counts as not plain and nothing is removed. A bad escape (`%zz`) makes `decodeURIComponent` throw, which gives null, which also counts as not plain. Safe.
+  - Leading `/`: refused by `photoPathError`. Even if one got past it (for example a hand-edited events.json in the repo), it counts as not plain. Safe.
+  - Backslash: refused by `photoPathError`. The URL parser also turns `\` into `/`, so it counts as not plain. Safe.
+  - Leading or trailing spaces, tabs or newlines: the URL parser strips them, so they count as not plain. Safe.
+  - Case differences (`Media/events/...`): counts as plain and does not protect `media/events/...`. Correct: GitHub Pages paths are case-sensitive, so that reference never loaded the lowercase file.
+  - **Doubled slash (`media//events/X/old.webp`, `media/events/X//old.webp`): still counts as plain**, because the URL parser keeps empty segments. See must-fix 1.
+- Rulings from round 1 stand. Item 10 ("Remove from publish" leaves the draft pointing at missing photos) stays a new idea for the idea-collector, to be decided before the release.
+- [must-fix] js/admin/publish.js `allPathsCanonical` - A photo value with an empty segment (`//`) passes as plain form.
+  - Many web servers merge doubled slashes. If GitHub Pages does, `media//events/X/old.webp` shows `media/events/X/old.webp` on the live site, but Publish treats that file as unused and removes it. We cannot check how Pages behaves from here, so fail safe.
+  - Fix: also require no empty segment, for example `resolvedPath(value) === value && !value.split('/').includes('')`.
+  - Add `media//events/X/old.webp` and `media/events/X//old.webp` to `UNUSUAL` in tests/task-13.spec.js. A one-line fix plus 2 test rows.
