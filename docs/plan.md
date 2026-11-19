@@ -665,7 +665,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - A file with a broken or foreign marker (for example `wm: "other"`) and a wrong allowlist hash -> fails.
   - The existing TASK-15 self-test still reports exactly the same 3 bad files; the real repo scan still passes; the full suite passes.
 - Status: ready for review (built 2026-11-19 on branch task-17-guard-marked-stale-hash)
-- Review: pending
+- Review: approved 2026-11-19
 - QA: pending
 
 ### TASK-15: Watermark marker in every uploader file + Publish check + repo guard test - APPROVED 2026-11-18
