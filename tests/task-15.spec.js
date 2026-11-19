@@ -456,6 +456,7 @@ test('guard self-test on a temporary folder: reports exactly the 3 bad files, ea
     expect(result.problems.find((p) => p.path.endsWith('missing.webp')).message).toContain('does not exist');
     expect(result.checked).not.toContain('node_modules/pkg/photo.png');
     expect(result.checked).not.toContain('.claude/x/photo.webp');
+    expect(result.stale).toEqual([]); // TASK-17: an unmarked changed file is a failure, never a stale note
 
     // A "fixture" that is a photo (many colours) fails the synthetic check.
     const noisy = Buffer.from(await page.evaluate(async () => {
@@ -479,11 +480,97 @@ test('guard self-test on a temporary folder: reports exactly the 3 bad files, ea
   }
 });
 
+/* ---------- TASK-17: a marked file whose allowlist hash is stale ---------- */
+
+/** A copy of a marked PNG whose marker text has `from` replaced by `to` (same length), CRC fixed or not. */
+function editMarkerPng(marked, from, to, { fixCrc }) {
+  const b = Buffer.from(marked);
+  const key = Buffer.from(`puzzkezz-wm\0`, 'latin1');
+  const dataStart = b.indexOf(key);
+  if (dataStart < 8) throw new Error('no marker chunk');
+  const at = dataStart - 8; // chunk start: length (4) + type (4)
+  const size = b.readUInt32BE(at);
+  const textAt = b.indexOf(Buffer.from(from, 'latin1'), dataStart);
+  if (textAt === -1 || textAt >= dataStart + size || from.length !== to.length) throw new Error('bad edit');
+  b.write(to, textAt, 'latin1');
+  if (fixCrc) b.writeUInt32BE(require('zlib').crc32(b.subarray(at + 4, at + 8 + size)), at + 8 + size);
+  return b;
+}
+
+test('TASK-17 guard: a stale allowlist hash passes only with a valid marker, and the entry is reported stale', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wm-guard-17-'));
+  try {
+    const write = (rel, data) => {
+      fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+      fs.writeFileSync(path.join(root, rel), data);
+    };
+    const small = fs.readFileSync(SMALL);
+    const big = fs.readFileSync(BIG);
+    const marked = Buffer.from(marker.addWatermarkMarker(small, { f: 8, div: 80 }));
+    expect(marker.readWatermarkMarker(marked)).toEqual({ wm: 'puzzkezz-lattice', v: 1, f: 8, div: 80 });
+    const foreign = editMarkerPng(marked, 'puzzkezz-lattice', 'other-wm-lattice', { fixCrc: true }); // well-formed, foreign id
+    const corrupt = editMarkerPng(marked, 'puzzkezz-lattice', 'puzzkezz-lattic3', { fixCrc: false }); // CRC no longer matches
+    const version2 = editMarkerPng(marked, '"v":1', '"v":2', { fixCrc: true }); // right id, unknown version
+    for (const bad of [foreign, corrupt, version2]) expect(marker.readWatermarkMarker(bad)).toBeNull();
+
+    const WRONG = '0'.repeat(64);
+    write('og-image.png', marked); // allowlisted, wrong hash, valid marker: passes, reported stale
+    write('docs/shot-unmarked.png', small); // allowlisted, wrong hash, no marker: fails as before
+    write('docs/shot-ok.png', big); // allowlisted, right hash, no marker: passes, not stale
+    write('docs/shot-foreign.png', foreign); // allowlisted, wrong hash, foreign marker: fails
+    write('docs/shot-corrupt.png', corrupt); // allowlisted, wrong hash, broken marker: fails
+    write('docs/shot-v2.png', version2); // allowlisted, wrong hash, unknown marker version: fails
+    write('img/loose.png', small); // not allowlisted, no marker: fails
+    write('tests/wm-allowlist.json', JSON.stringify({
+      files: [
+        { path: 'og-image.png', sha256: WRONG, reason: 'test' },
+        { path: 'docs/shot-unmarked.png', sha256: WRONG, reason: 'test' },
+        { path: 'docs/shot-ok.png', sha256: guard.sha256(big), reason: 'test' },
+        { path: 'docs/shot-foreign.png', sha256: WRONG, reason: 'test' },
+        { path: 'docs/shot-corrupt.png', sha256: WRONG, reason: 'test' },
+        { path: 'docs/shot-v2.png', sha256: WRONG, reason: 'test' },
+      ],
+    }));
+    write('index.html', '<meta property="og:image" content="og-image.png">');
+
+    const result = guard.checkRepo(root, { readMarker: marker.readWatermarkMarker });
+    expect(result.problems.map((p) => p.path).sort()).toEqual([
+      'docs/shot-corrupt.png', 'docs/shot-foreign.png', 'docs/shot-unmarked.png', 'docs/shot-v2.png', 'img/loose.png',
+    ]);
+    for (const p of result.problems) expect(p.message.startsWith(`${p.path}: `), p.message).toBe(true);
+    // The unmarked changed file fails with exactly the TASK-15 message.
+    expect(result.problems.find((p) => p.path === 'docs/shot-unmarked.png').message).toBe(
+      `docs/shot-unmarked.png: changed since it was put on tests/wm-allowlist.json (SHA-256 is ${guard.sha256(small)}, the list says ${WRONG}). A changed file needs the uploader's watermark, or a new reviewed allowlist entry.`,
+    );
+    expect(result.problems.find((p) => p.path === 'img/loose.png').message).toContain('has no watermark marker');
+    // Only the marked file is stale; the right-hash file is not.
+    expect(result.stale).toEqual([{
+      path: 'og-image.png',
+      message: 'Allowlist entry is stale (file changed, now carries the watermark marker): og-image.png. Remove it from tests/wm-allowlist.json.',
+    }]);
+
+    // A marker reader that returns a foreign or truthy-but-wrong object does not open the stale rule.
+    for (const fake of [{ wm: 'other', v: 1 }, { wm: 'puzzkezz-lattice', v: 2 }, { wm: 'puzzkezz-lattice' }, true, 'puzzkezz-lattice']) {
+      expect(guard.isValidMarker(fake), JSON.stringify(fake)).toBe(false);
+      const r = guard.checkRepo(root, { readMarker: (bytes) => (marker.readWatermarkMarker(bytes) ? fake : null) });
+      expect(r.stale).toEqual([]);
+      expect(r.problems.map((p) => p.path)).toContain('og-image.png');
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('the real repo scan passes: every image is marked or allowlisted, fixtures are synthetic, references exist', async ({ page }) => {
   await page.goto('index.html');
   const result = guard.checkRepo(guard.ROOT, { readMarker: marker.readWatermarkMarker });
   expect(result.problems.map((p) => p.message)).toEqual([]);
   expect(result.checked).toContain('og-image.png');
+  // TASK-17: stale allowlist entries (marked file, old hash) are notes for QA, not failures.
+  for (const s of result.stale) {
+    test.info().annotations.push({ type: 'stale allowlist entry', description: s.message });
+    console.log(`[wm-guard] ${s.message}`);
+  }
 
   // Fixtures without the marker must be flat synthetic images (at most 16 colours), not photos.
   for (const rel of result.needsColourCheck) {
@@ -498,7 +585,14 @@ test('the real repo scan passes: every image is marked or allowlisted, fixtures 
     expect(entry.sha256, entry.path).toMatch(/^[0-9a-f]{64}$/);
     expect(entry.reason, entry.path).toMatch(/no photo of Puzz/);
   }
-  expect(allow.map((e) => e.path)).toContain('og-image.png');
+  // TASK-17: og-image.png is allowlisted or carries the marker (Puzz may publish a Share image over it).
+  const ogMarked = guard.isValidMarker(marker.readWatermarkMarker(fs.readFileSync(path.join(guard.ROOT, 'og-image.png'))));
+  expect(allow.map((e) => e.path).includes('og-image.png') || ogMarked, 'og-image.png must be allowlisted or marked').toBe(true);
+  // Every other allowlist entry stays pinned by its exact hash: only og-image.png may be stale.
+  expect(result.stale.map((s) => s.path).filter((p) => p !== 'og-image.png')).toEqual([]);
+  for (const entry of allow.filter((e) => e.path !== 'og-image.png')) {
+    expect(guard.sha256(fs.readFileSync(path.join(guard.ROOT, entry.path))), `${entry.path}: hash must match the allowlist`).toBe(entry.sha256);
+  }
   expect(allow.every((e) => !e.path.startsWith('media/') && !e.path.startsWith('storyboard/'))).toBe(true);
 
   // og:image of every public page is a checked file.
