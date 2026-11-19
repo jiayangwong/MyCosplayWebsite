@@ -326,6 +326,24 @@ Mobile:
 - References: IDEA-7, IDEA-8, IDEA-9; canvas board "Watermark density: 2x vs 3x + portrait"
 - Priority (user's view): must-have
 
+## IDEA-11: "Remove from publish" can break an event's photo and delete its old photo (data loss)
+- Date: 2026-11-19
+- Status: ready-for-planning
+- Summary: In /admin/, removing a pending photo pair from the publish while the draft event still points at those photo paths makes Publish commit a broken image link and also delete the event's previous photo. It must be decided before release.
+- Details:
+  - Found by the reviewer during TASK-13.
+  - Each pending photo pair in /admin/ has a "Remove from publish" button.
+  - If the user removes a pair but the draft event still points at those paths (photo / photoFull):
+    - Publish commits events.json with paths to files that are not in the repo, so the event goes live with a broken image.
+    - Worse (data-loss angle): the event's previous photo is now unused, so Publish's remove step (IDEA-8, delete old photos on publish) deletes it. Git history still has it, but the live site loses it.
+  - Options for the planner and the user to decide:
+    - (a) "Remove from publish" also clears the event's photo fields, or puts back the previous paths from the published events.json.
+    - (b) Publish refuses, with a clear message, when any event points at a media/events/ path that is neither in the repo tree nor in this publish.
+    - (c) Both (a) and (b).
+  - Related: IDEA-8 (publish and delete old photos), IDEA-9 (photo pairs).
+- References: TASK-13 review (reviewer finding, 2026-11-19)
+- Priority (user's view): high (must be decided before release)
+
 ## Comparison and recommendation (for the user to decide)
 - UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
 
