@@ -92,3 +92,84 @@ Result: APPROVED
   All of this stays within TASK-11.
 - Tests: full run 134 passed, 3 skipped, 1 failed. The failure was task-1 on the phone project (a public page this task does not touch). Re-running task-1 + task-9 + task-11 gave 39 passed and 0 failed, so it was a timing flake under load. This is the same kind of flake as round 1.
 - [nice-to-have] tests/github-mock.js GET trees still ignores `?recursive=1`. TASK-13 is already planned to extend it; when it does, a non-recursive call should list top-level entries only.
+
+## Review TASK-12 - 2026-11-19
+Result: CHANGES REQUESTED
+- Checked and correct:
+  - The 7 calls run in the plan's order, and the PATCH is always the last write and always sends `force: false`. The commit has `parents: [head]`, the tree has `base_tree` and only `data/events.json`, and the contents read uses `ref={head}`.
+  - A failure at any earlier step never reaches the PATCH, so the ref cannot move.
+  - The blob is sent as `encoding: 'utf-8'` and the text is JSON-encoded by fetch as UTF-8. The browser's `gitBlobSha` uses TextEncoder bytes. I checked this with a scratch test (not committed): a Japanese + emoji event name round-trips byte for byte, the stored `baseEventsSha` equals the git SHA of the committed file, and a second publish works and reloads as "Nothing to publish".
+  - `githubFetch` is the only code that sends the token. It sends with `cache: 'no-store'`, so the step-1 ref read and the extra re-read cannot come from the browser cache.
+  - `busy` is set before the first await. The double-click test also forces a click through the disabled state.
+  - The `github` fixture is automatic, unhandled routes fail the test, and the leak watcher is on.
+  - Full suite: 175 passed, 3 skipped, 0 failed.
+- Rulings on the programmer's decisions:
+  1. Accepted. The plan's stale wording with Export backup / Reload replaces the storyboard's "Try again". Try again would only repeat the same stale check with the same base. See must-fix 1: the Reload path has to actually lead somewhere.
+  2. Accepted. Storing `baseEventsSha` + `baseEventsText` and comparing in Export format is right: data/events.json is not in Export format today, so a raw-text compare would always show "changed". A null SHA (no Web Crypto, or a failed load) stops the publish as stale, which is the safe side. Setting the base to the *committed* text, not the current draft, correctly keeps edits made during a publish pending.
+  3. Accepted. The calls, the encoded branch, and the commit message `(<n> events, 0 photos)` are fine.
+  4. Accepted in principle. The extra re-read cannot cause a double commit: a retry rebuilds on the current head, the stale check runs again, and `force: false` holds. It cannot give a false success either: `made.sha` is a new commit whose parent is `head`, so the ref pointing at it means this publish went live. The "not confirmed" branch needs a change, see must-fix 2.
+  5. Accepted. 401; 403/404 split by write vs read; rate limit from 429 or 403 with `x-ratelimit-remaining: 0` / `retry-after`; 409/422 count as stale only on the PATCH; a 404 on contents counts as stale; other errors show "GitHub said no (N)".
+  6. Accepted. The busy flag, the Import/Discard locks via `lockFileActions`, and Forget token locked via `PUBLISH_BUSY_EVENT`.
+  7. Accepted. "Step N of 7" is a fair use of the style guide's step-text pattern for a single-file publish (TASK-13 extends it). "Nothing to publish" plus the hint is right.
+  8. Good coverage of the plan's list. Gaps: non-ASCII text, and the stale recovery path (both below).
+- [must-fix] js/admin/publish.js:24 + admin/index.html:178-188 + js/admin/manager.js:433 - The stale recovery is a dead end. After the stale message, "Reload" restores the draft *with its old `baseEventsSha`*, so the next Publish is stale again, forever. I reproduced this with a scratch test: stale -> Reload -> Publish -> stale. The only way out (Discard draft, then Import the backup) is never explained. Fix: keep the plan's first line, but make the muted next line say what to do. For example: "Nothing was changed on GitHub. After reloading, press Discard draft to load the newest events.json, then Import your backup (or redo your edits) and publish." Do not quietly re-base the draft on reload, because that would overwrite the other device's change. Add a test: stale -> Export backup -> Discard -> Import backup -> Publish succeeds with exactly one commit.
+- [must-fix] js/admin/publish.js:236 - After a network error or 5xx on the PATCH, if the re-read does not show `made.sha`, the code re-throws the original error, and the page says "Nothing was changed on GitHub." That is not known. A PATCH aborted by the 30s timeout can still be applied by GitHub afterwards, and a ref read right after a write can lag. Fix: in that branch throw the `unsure` error (keep the `made.sha` match as success), and update the test "PATCH connection drops but GitHub did not move the ref" to expect the unsure text. This stays safe: a Try again after an unsure result cannot double-commit (see ruling 4).
+- [nice-to-have] js/admin/publish.js:204 - So that a Try again after "unsure" ends in the truth instead of the stale box: if step 3 finds `current.sha === gitBlobSha(text)` (GitHub already has exactly this draft), show success and `setBase` without writing anything.
+- [nice-to-have] js/admin/manager.js:433 - A draft saved before Publish existed takes the *current* published SHA as its base. If the repo changed after that draft was made, the stale check would not catch it. This is a one-time migration case. Safer: use `{ sha: null }` so the first publish stops as stale and the user follows the (fixed) recovery steps. Or at least show a banner.
+- [nice-to-have] tests/task-12.spec.js - Add a Japanese / emoji event name to the happy path (the decoded blob equals Export, and the stored base SHA equals the fake repo's SHA), so a later switch to base64 encoding cannot break non-ASCII text unnoticed.
+- [nice-to-have] css/admin.css:285 - `.pend li { padding: 6px 10px }` uses raw px. Use the spacing tokens if they are close enough.
+
+## Review TASK-12 (round 2) - 2026-11-19
+Result: CHANGES REQUESTED
+- Must-fix 1 (stale dead end) is resolved:
+  - The stale box lists the 4 steps.
+  - Discard with a token reads `contents/data/events.json?ref=main` and takes both events and base from that one response, so the pair always matches.
+  - A reload keeps the old base, and an old draft gets `sha: null`, so its first Publish stops as stale.
+  - The new tests cover the full recovery path (one commit, and both events end up live), Reload alone still being stale, and an old draft.
+- Must-fix 2 (unproven "Nothing was changed") is resolved. When the ref re-read does not show `made.sha`, the page now shows the unsure message, and the abort, 500 and "applied later" cases are tested.
+- Answers to the coordinator's questions:
+  - **Discard -> GitHub read:**
+    - No leak. It goes only through `githubFetch`, so the token is sent only as the Bearer header to api.github.com, with `no-store`, and is never logged.
+    - No unmocked calls in older specs. task-6 is the only other spec that presses Discard, and it never saves a token, so `loadFromRepo` returns before any fetch. In task-11/12 the mock handles `?ref=main`.
+    - A file over 1 MB (`encoding: "none"`) or any failed read falls back to the site copy, which is the safe side.
+  - **"Already on GitHub" success:** safe.
+    - It fires only when the blob SHA at the `head` read in step 1 equals the git SHA of the exact text being published. No write happens, so nothing can be overwritten.
+    - The page says "Published" only when that text is already on main. That holds whether the earlier PATCH landed late or another device pushed the same bytes.
+    - The link goes to `head`, and step 3 read the file at `ref=head`, so that commit really contains the file. It may not be the commit that first added it, which is acceptable.
+  - **Discard re-basing:** it does not hide a stale situation.
+    - The new base is exactly the file the user now sees.
+    - A lagging contents read can only give an older base, which then fails the stale check (safe).
+    - Overwriting the other change after Import is the user's explicit manual merge, and step 3 tells them to check it.
+- Tests:
+  - Full run: 184 passed, 1 failed, 3 skipped. The failure was the phone project, "stale (ref): PATCH returns 422", on `toContainText`.
+  - task-12.spec.js with `--repeat-each=3`: 143 passed, 1 failed, a different test (phone, "failure: 404 on the tree write", `#pub-ok` not visible after Try again).
+  - In the error-context snapshot, the publish had finished successfully after the 5s expect timeout ran out. These are timing flakes, not logic bugs. Still, 2 failures in 2 runs will fail QA and break the stable suite.
+- [must-fix] tests/task-12.spec.js - The publish-outcome assertions use the default 5s expect timeout. A Publish runs 7-11 mocked round trips (one or two runs when Try again is involved), and on the phone project under 4 workers that does not always finish in 5s. Give the assertions that wait for the result box an explicit longer timeout, for example `{ timeout: 15000 }` or a `PUBLISH_DONE` constant (`#pub-ok`, `#pub-err`/`#pub-err-text`, `#pub-stale`). Then run `npx playwright test tests/task-12.spec.js --repeat-each=3` with 0 failures.
+- [nice-to-have] js/admin/publish.js:25 - `staleNext` now repeats the 4 steps from admin/index.html, but the stale box never shows `error.next`, so the two copies can drift. Keep the steps in one place, for example `staleNext: 'Nothing was changed on GitHub.'`.
+- [nice-to-have] js/admin/manager.js `loadFromRepo` - There is no timeout, and Publish stays enabled while Discard waits for GitHub. A publish started in that window is still safe (stale check, `force: false`), but the screen could then show an older base. Use an AbortController timeout, as `api()` does, and disable Publish/Import while Discard runs.
+
+## Review TASK-12 (round 3) - 2026-11-19
+Result: APPROVED
+- The round-2 must-fix is resolved:
+  - All publish-outcome waits use `RESULT_TIMEOUT` (15s) through `expect.configure`, and each test gets 60s.
+  - The stale steps now live only in admin/index.html (`staleError()` passes an empty `next`).
+- Lock/unlock in Discard is correct on every path:
+  - If the confirm is cancelled, Discard returns before anything is locked.
+  - `loadFromRepo` and `loadPublished` never throw: on a timeout, abort, non-OK reply, bad JSON or a file over 1 MB they return null or the empty fallback. Even so, `finally` always clears `draftLoading`, calls `lockFileActions(false)` and re-renders.
+  - Publish and Discard cannot overlap: Discard is locked while publishing, and `publish()` returns while `isDraftLoading()`, including on a forced click.
+  - The 30s AbortController also covers a body that stalls during `response.json()`.
+  - New tests cover both the delayed read and the aborted read.
+- Save-token "click miss" (programmer's extra change): I could not reproduce it, and I treat it as a test artefact, not a product bug.
+  - I ran a scratch probe (not committed) on the phone project 40 times, alongside the task-3 and task-7 specs. It used the old fill + click helper right after the ready flags and logged the button's page position every animation frame plus every click target.
+  - Result: 40/40 saved. Every click landed on `#gh-save`, and the button did not move between the ready flags and the click.
+  - The click handler is attached before `data-github-ready` is set.
+  - The only movement is *after* a save: the "Token saved, ends in ..." line (above the buttons) appears and pushes the buttons down 32px. That cannot swallow the Save tap itself.
+  - The task-11 spec still covers the real click path. No bug filed.
+  - The fill + Enter helper with a wait for "Token saved" is fine, and it also exercises the Enter handler.
+- Tests:
+  - Full suite once: 189 passed, 3 skipped, 0 failed.
+  - task-12 with `--repeat-each=3`: 155 passed, 1 failed (desktop, "double-clicking Publish makes only one commit..." line 474). It saw `Step 2/4/7 of 7` but never `Step 1 of 7`.
+  - That assertion races a fixed `{ delay: 600 }` on the first ref read. Under load the page is already past step 1 when the poll starts.
+  - This is test-only. The lock and the one-commit result were not wrong; the run never got that far. It is a single assertion, not the systematic 5s problem from round 2, so it does not block approval. It should be fixed before or during QA (see below).
+- [nice-to-have, fix before QA] tests/task-12.spec.js:463,474 - Hold the first `REF_GET` on a gate the test releases (for example a promise resolved after the lock assertions) instead of `{ delay: 600 }`. Or assert `/Step [1-7] of 7/`. Then the transient "Step 1" state cannot be missed. If QA hits it first, log it as a test-only bug for the bugfixer.
+- [nice-to-have, TASK-11 follow-up, not a bug] admin/index.html:137-139 - The "Token saved" line appears above Save / Test / Forget and pushes them down 32px right after a save. A quick second tap aimed at Test connection could land on the wrong spot. Consider putting `#gh-saved` below the button row or reserving its height.

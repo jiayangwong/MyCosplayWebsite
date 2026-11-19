@@ -1,7 +1,12 @@
 // Event manager: edit events in the browser, keep a draft in localStorage, import/export events.json.
-// Nothing here can change the live site. Puzz exports events.json and commits it to data/events.json.
+// Nothing here changes the live site. Publish (publish.js) commits the draft; Export is the hand-made backup.
+// The draft also remembers which data/events.json it started from (`base`: git blob SHA + export text),
+// so Publish can stop if the repo's copy changed in the meantime.
 import { EVENTS_URL, sortEvents, validateEvent, makeEventId, formatDate } from '../events-data.js';
 import { renderMedia } from '../embed.js';
+import { gitBlobSha } from './git-blob.js';
+import { githubFetch, readToken } from './github-token.js';
+import { GITHUB } from './github-config.js';
 
 export const DRAFT_KEY = 'puzzkezz.events.draft';
 const FIELDS = ['date', 'short', 'name', 'venue', 'link', 'photo', 'photoFull'];
@@ -11,8 +16,15 @@ const inputId = (field) => `f-${field.replace(/[A-Z]/g, (c) => `-${c.toLowerCase
 const EXPORT_ORDER = ['id', 'date', 'short', 'name', 'venue', 'activities', 'link', 'photo', 'photoFull', 'sample'];
 
 const $ = (id) => document.getElementById(id);
-const state = { events: [], editingId: null };
+const state = { events: [], editingId: null, base: { sha: null, text: '' } };
 const listeners = new Set();
+const draftListeners = new Set();
+const REPO_READ_TIMEOUT_MS = 30000;
+let draftLoading = false;
+const BANNER_DRAFT = 'Source: your browser draft (not published yet). Press Publish to GitHub to put it live.';
+let resolveReady;
+/** Resolves once the events and the base are loaded. */
+export const managerReady = new Promise((resolve) => { resolveReady = resolve; });
 
 function make(tag, className, text) {
   const node = document.createElement(tag);
@@ -25,13 +37,24 @@ function setBanner(text) {
   $('source-banner').textContent = text;
 }
 
-function saveDraft() {
+function draftChanged() {
+  draftListeners.forEach((fn) => fn());
+}
+
+function saveDraft(banner = BANNER_DRAFT) {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), events: state.events }));
-    setBanner('Source: your browser draft (not published yet). Export events.json to publish.');
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      version: 1,
+      savedAt: new Date().toISOString(),
+      baseEventsSha: state.base.sha,
+      baseEventsText: state.base.text,
+      events: state.events,
+    }));
+    setBanner(banner);
   } catch (error) {
     setBanner(`Could not save the draft in this browser: ${error.message}`);
   }
+  draftChanged();
 }
 
 function readDraft() {
@@ -39,21 +62,28 @@ function readDraft() {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    return Array.isArray(data.events) ? data.events : null;
+    if (!Array.isArray(data.events)) return null;
+    const base = typeof data.baseEventsSha === 'string' && typeof data.baseEventsText === 'string'
+      ? { sha: data.baseEventsSha, text: data.baseEventsText }
+      : null;
+    return { events: data.events, base };
   } catch {
     return null;
   }
 }
 
+/** The published data/events.json: its events and its base (git blob SHA of the exact bytes + export text). */
 async function loadPublished() {
   try {
     const response = await fetch(EVENTS_URL, { cache: 'no-cache' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    return Array.isArray(data.events) ? data.events : [];
+    const bytes = await response.arrayBuffer();
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    const events = Array.isArray(data.events) ? data.events : [];
+    return { events, base: { sha: await gitBlobSha(bytes), text: exportText(events) } };
   } catch (error) {
     console.warn('Could not load data/events.json:', error.message);
-    return [];
+    return { events: [], base: { sha: null, text: '' } };
   }
 }
 
@@ -245,8 +275,13 @@ function orderedEvent(event) {
   return out;
 }
 
-function exportEvents() {
-  const json = `${JSON.stringify({ version: 1, events: sortEvents(state.events).map(orderedEvent) }, null, 2)}\n`;
+/** events.json text as Export and Publish write it: newest first, fixed key order, 2-space indent, trailing newline. */
+export function exportText(events) {
+  return `${JSON.stringify({ version: 1, events: sortEvents(events).map(orderedEvent) }, null, 2)}\n`;
+}
+
+export function exportEvents() {
+  const json = exportText(state.events);
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
   const a = make('a');
   a.href = url;
@@ -274,7 +309,7 @@ async function importEvents(file) {
       if (errs.length) throw new Error(`Event ${i + 1} (${ev.short || '?'} ${ev.date || '?'}): ${errs.map((x) => x.message).join(' ')}`);
     });
     state.events = sortEvents(events);
-    saveDraft();
+    saveDraft(); // keeps the base: the repo copy this browser started from has not changed
     clearForm();
     $('save-status').textContent = `Imported ${events.length} events from ${file.name}.`;
   } catch (error) {
@@ -283,12 +318,60 @@ async function importEvents(file) {
   }
 }
 
+/** data/events.json as it is on GitHub right now (newer than the site copy for 1-2 minutes after a push).
+ *  Needs a saved token. Returns { events, base } or null if there is no token or GitHub can't be read. */
+async function loadFromRepo() {
+  const token = readToken();
+  if (!token) return null;
+  try {
+    const path = `/repos/${GITHUB.owner}/${GITHUB.repo}/contents/data/events.json?ref=${encodeURIComponent(GITHUB.branch)}`;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REPO_READ_TIMEOUT_MS);
+    let file;
+    try {
+      const response = await githubFetch(path, { token, signal: controller.signal });
+      if (!response.ok) return null;
+      file = await response.json();
+    } finally {
+      clearTimeout(timer);
+    }
+    if (file.encoding !== 'base64' || typeof file.content !== 'string' || typeof file.sha !== 'string') return null;
+    const binary = atob(file.content.replace(/\s/g, ''));
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    const events = Array.isArray(data.events) ? data.events : [];
+    return { events, base: { sha: file.sha, text: exportText(events) } };
+  } catch {
+    return null;
+  }
+}
+
 async function discardDraft() {
   if (!window.confirm('Discard your browser draft and reload the published data/events.json?')) return;
   localStorage.removeItem(DRAFT_KEY);
-  state.events = sortEvents(await loadPublished());
-  setBanner('Source: published data/events.json');
-  clearForm();
+  // While the published copy loads, Publish, Import and Discard are locked so nothing races the swap.
+  draftLoading = true;
+  lockFileActions(true);
+  draftChanged();
+  try {
+    // With a token, start again from the copy on GitHub itself, so its SHA is the new base and a backup
+    // imported after this can be published (the stale check compares against GitHub, not the site copy).
+    const fromRepo = await loadFromRepo();
+    const published = fromRepo || await loadPublished();
+    state.events = sortEvents(published.events);
+    state.base = published.base;
+    setBanner(fromRepo ? 'Source: published data/events.json (newest copy from GitHub)' : 'Source: published data/events.json');
+    clearForm();
+  } finally {
+    draftLoading = false;
+    lockFileActions(false);
+    draftChanged();
+  }
+}
+
+/** True while Discard draft is loading the published events.json. */
+export function isDraftLoading() {
+  return draftLoading;
 }
 
 /* ---------- API for the media uploader ---------- */
@@ -351,14 +434,58 @@ export function attachPhoto(path, fullPath) {
   }
 }
 
+/* ---------- API for Publish ---------- */
+/** The events.json text Publish would commit (same as Export). */
+export function draftText() {
+  return exportText(state.events);
+}
+
+export function eventCount() {
+  return state.events.length;
+}
+
+/** The data/events.json this draft started from: { sha, text }. sha is null if it could not be read. */
+export function baseEvents() {
+  return { ...state.base };
+}
+
+/** True when the draft differs from the events.json it started from. */
+export function draftDiffersFromBase() {
+  return draftText() !== state.base.text;
+}
+
+/** After a publish: the committed text and its blob SHA become the new base, so the next publish needs no reload. */
+export function setBase(sha, text) {
+  state.base = { sha, text };
+  saveDraft('Source: your browser draft (same as what you last published).');
+}
+
+export function onDraftChange(fn) {
+  draftListeners.add(fn);
+}
+
+/** While publishing, Import and Discard are locked so the draft cannot be swapped underneath. */
+export function lockFileActions(locked) {
+  $('import-file').disabled = locked;
+  const label = document.querySelector('label[for="import-file"]');
+  label.classList.toggle('is-disabled', locked);
+  label.setAttribute('aria-disabled', String(locked));
+  $('discard-draft').disabled = locked;
+}
+
 /* ---------- Start ---------- */
 async function init() {
   const draft = readDraft();
   if (draft) {
-    state.events = sortEvents(draft);
-    setBanner('Source: your browser draft (not published yet). Export events.json to publish.');
+    state.events = sortEvents(draft.events);
+    // A draft from before Publish existed has no base. Its start point is unknown, so the first Publish
+    // stops as stale and the page explains how to go on (Export, Discard, Import, Publish).
+    state.base = draft.base || { sha: null, text: '' };
+    setBanner(BANNER_DRAFT);
   } else {
-    state.events = sortEvents(await loadPublished());
+    const published = await loadPublished();
+    state.events = sortEvents(published.events);
+    state.base = published.base;
     setBanner('Source: published data/events.json');
   }
   $('event-form').addEventListener('submit', onSubmit);
@@ -378,6 +505,7 @@ async function init() {
   $('discard-draft').addEventListener('click', discardDraft);
   clearForm();
   document.documentElement.dataset.managerReady = 'true';
+  resolveReady();
 }
 
 init();

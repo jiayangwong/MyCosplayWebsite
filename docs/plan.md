@@ -526,9 +526,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - A second Publish right after a success works without a reload (uses the updated `baseEventsSha`).
     - Double-clicking Publish makes only one commit.
     - Every request with the token goes to `https://api.github.com`. Unhandled `api.github.com` routes fail the test.
-- Status: todo
-- Review: pending
-- QA: pending
+- Status: ready for re-review (review round 2 fixes 2026-11-19 on branch task-12-publish)
+- Review: approved 2026-11-19
+- QA: passed 2026-11-19 (exploratory checks all fine; only test-only flakes, see BUG-3)
 
 ### TASK-13: Publish photo pairs (master + display copy) and remove unused old photos, in the same commit
 - Linked idea(s): IDEA-8, IDEA-9
