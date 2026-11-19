@@ -412,7 +412,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - `page.on('request')` records no request other than same-origin page assets during processing.
 - Status: ready for review (built 2026-11-19 on branch task-7-lattice-watermark)
 - Review: approved 2026-11-19
-- QA: pending
+- QA: passed 2026-11-19
 
 ### TASK-8: Gallery, About, Contact (simple v1 pages)
 - Linked idea(s): GLOBAL NOTES (tabs), IDEA-7 (photos feed the gallery)
