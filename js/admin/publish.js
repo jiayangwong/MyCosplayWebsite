@@ -1,5 +1,6 @@
-// Publish to GitHub: commits the draft's data/events.json, the pending photo pairs (TASK-13) and the removal
-// of old, unused photo files as ONE commit through the Git Data API.
+// Publish to GitHub: commits the draft's data/events.json, the pending photo pairs (TASK-13), the removal
+// of old, unused photo files, and the site photos with data/site.json + data/reels.json (TASK-14) as ONE
+// commit through the Git Data API.
 // Order: read ref -> read commit -> read contents (stale check) -> read tree (recursive) -> [confirm removals]
 // -> blobs (one at a time) -> tree -> commit -> move ref (force: false).
 // The ref is the only write that changes the live site, and it is always the last call, so a failure at any
@@ -12,7 +13,14 @@ import {
   managerReady, draftText, eventCount, baseEvents, draftDiffersFromBase, setBase, onDraftChange,
   lockFileActions, exportEvents, isDraftLoading, draftEventIds,
 } from './manager.js';
-import { pendingPairs, onPendingChange, clearPendingPairs, removePendingItem, isPipelineFile } from './pending.js';
+import {
+  pendingPairs, onPendingChange, clearPendingPairs, removePendingItem, isPipelineFile,
+  pendingSiteFiles, removePendingSiteFile, clearPendingSiteFiles,
+} from './pending.js';
+import {
+  siteDraftReady, onSiteDraftChange, siteText, reelsText, siteChanged, reelsChanged, baseOf, setSiteBase,
+  reelIds, draftPortrait, draftThumb, resetToBase, SITE_PATH, REELS_PATH, PORTRAIT_PATH, SHARE_PATH, reelCoverPath,
+} from './site-draft.js';
 import { MAX_FILE_BYTES, formatBytes } from './watermark.js';
 import { readWatermarkMarker } from './wm-marker.js';
 
@@ -266,6 +274,28 @@ export function pairPathProblem(pair, eventIds) {
   return '';
 }
 
+/**
+ * '' if a pending site photo (TASK-14) has one of the allowed fixed paths for its target, else the bad path:
+ * media/site/portrait.webp, media/reels/<reel-id>.webp (only ids in data/reels.json), og-image.png.
+ */
+export function sitePathProblem(entry, ids) {
+  const path = entry && typeof entry.path === 'string' ? entry.path : '';
+  if (entry.target === 'portrait' && path === PORTRAIT_PATH) return '';
+  if (entry.target === 'share' && path === SHARE_PATH) return '';
+  const m = /^media\/reels\/([^/]+)\.webp$/.exec(path);
+  if (entry.target === 'reel' && m && ids.has(m[1]) && reelCoverPath(m[1]) === path) return '';
+  return path || '(empty path)';
+}
+
+/** True while the site draft points at this file (a share image is always used: og:image). */
+function siteFileUsed(entry) {
+  if (entry.target === 'share') return true;
+  if (sitePathProblem(entry, reelIds())) return true; // kept, so prepare() refuses it before any request
+  if (entry.target === 'portrait') return draftPortrait() === entry.path;
+  const m = /^media\/reels\/([^/]+)\.webp$/.exec(entry.path || '');
+  return Boolean(m) && draftThumb(m[1]) === entry.path;
+}
+
 /* ---------- What is pending ---------- */
 
 /**
@@ -286,12 +316,19 @@ function publishSet(text = draftText()) {
     pairs.push(pair);
     files.push(...mine);
   }
-  return { pairs, files };
+  // Site photos (TASK-14): only files the site draft still uses.
+  const site = pendingSiteFiles().filter(siteFileUsed);
+  for (const entry of site) files.push({ path: entry.path, blob: entry.out ? entry.out.blob : null, site: entry });
+  return { pairs, site, files };
 }
 
+/** Number of photos in a publish: each event pair and each site photo counts as one. */
+const photoCount = (set) => set.pairs.length + set.site.length;
+
 /** Limit problems that keep the button disabled: { message, next } or null. */
-function limitProblem({ pairs, files }) {
-  if (pairs.length > MAX_PHOTOS) return { message: PUBLISH_MESSAGES.tooMany, next: PUBLISH_MESSAGES.tooManyNext };
+function limitProblem(set) {
+  const { files } = set;
+  if (photoCount(set) > MAX_PHOTOS) return { message: PUBLISH_MESSAGES.tooMany, next: PUBLISH_MESSAGES.tooManyNext };
   const big = files.find((f) => f.blob && f.blob.size > MAX_FILE_BYTES);
   if (big) return { message: PUBLISH_MESSAGES.tooBig(big.path), next: PUBLISH_MESSAGES.tooBigNext };
   return null;
@@ -318,6 +355,11 @@ async function prepare() {
     const bad = pairPathProblem(pair, ids);
     if (bad) throw new PublishError('path', PUBLISH_MESSAGES.badPath(bad), PUBLISH_MESSAGES.nothingSent);
   }
+  const reels = reelIds();
+  for (const entry of set.site) {
+    const bad = sitePathProblem(entry, reels);
+    if (bad) throw new PublishError('path', PUBLISH_MESSAGES.badPath(bad), PUBLISH_MESSAGES.nothingSent);
+  }
   for (const file of set.files) {
     if (!isPipelineFile(file.blob)) {
       throw new PublishError('not-uploader', PUBLISH_MESSAGES.notUploader(file.path), PUBLISH_MESSAGES.notUploaderNext);
@@ -330,7 +372,12 @@ async function prepare() {
       if (problem) throw new PublishError('check', String(problem), PUBLISH_MESSAGES.nothingSent);
     }
   }
-  return { text, ...set };
+  // Events go in when they changed or event photos are pending (as before TASK-14); site JSON when changed.
+  const withEvents = text !== baseEvents().text || set.pairs.length > 0;
+  const json = [];
+  if (siteChanged()) json.push({ path: SITE_PATH, text: siteText(), base: baseOf(SITE_PATH) });
+  if (reelsChanged()) json.push({ path: REELS_PATH, text: reelsText(), base: baseOf(REELS_PATH) });
+  return { text, withEvents, json, ...set };
 }
 
 /* ---------- UI ---------- */
@@ -349,13 +396,13 @@ function setBusy(value) {
 }
 
 /** step 0 hides the bar. During the upload step, `sub` = { n, total } blobs. */
-function showProgress(step, sub = null) {
+function showProgress(step, sub = null, label = null) {
   const box = $('pub-progress');
   box.hidden = step === 0;
   if (!step) return;
   const part = sub ? (sub.n - 1) / sub.total : 0;
   const pct = Math.round(((step - 1 + part) / STEPS) * 100);
-  const what = sub ? `Uploading file ${sub.n} of ${sub.total}` : STEP_TEXT[step - 1];
+  const what = sub ? `Uploading file ${sub.n} of ${sub.total}` : (label || STEP_TEXT[step - 1]);
   $('pub-step').textContent = `Step ${step} of ${STEPS}: ${what}`;
   const bar = $('pub-bar');
   bar.setAttribute('aria-valuenow', String(pct));
@@ -426,14 +473,38 @@ function render() {
     li.append(paths, remove);
     list.append(li);
   }
+  for (const entry of set.site) {
+    const li = make('li', 'pend-pair');
+    const big = entry.out && entry.out.blob.size > MAX_FILE_BYTES;
+    if (big) li.classList.add('is-err');
+    const row = make('p', 'pend-file');
+    const b = make('b', '', '+');
+    b.setAttribute('aria-label', 'added');
+    const size = entry.out ? formatBytes(entry.out.blob.size) : '?';
+    row.append(b, ` ${entry.label} -> ${entry.path} `, make('span', 'pend-size', `(${size})`));
+    const paths = make('div', 'pend-paths');
+    paths.append(row);
+    const remove = make('button', 'btn btn-secondary btn-sm pend-remove', 'Remove from publish');
+    remove.type = 'button';
+    remove.disabled = busy;
+    remove.setAttribute('aria-label', `Remove ${entry.path} from publish`);
+    remove.addEventListener('click', () => {
+      removePendingSiteFile(entry.path);
+      resetToBase(entry.path); // the draft goes back to the published value, never to a missing file
+    });
+    li.append(paths, remove);
+    list.append(li);
+  }
   if (changed) list.append(pendRow('~', 'changed', `${EVENTS_PATH} changed`));
+  if (siteChanged()) list.append(pendRow('~', 'changed', `${SITE_PATH} changed`));
+  if (reelsChanged()) list.append(pendRow('~', 'changed', `${REELS_PATH} changed`));
   for (const path of removals) list.append(pendRow('-', 'removed', `${path} (no event uses it)`));
   if (!list.children.length) list.append(make('li', 'pend-empty', 'No pending changes.'));
 
   const total = $('pub-total');
-  if (set.pairs.length) {
+  if (photoCount(set)) {
     const bytes = set.files.reduce((sum, f) => sum + (f.blob ? f.blob.size : 0), 0);
-    const n = set.pairs.length;
+    const n = photoCount(set);
     const k = set.files.length;
     total.textContent = `Adds ${n} ${n === 1 ? 'photo' : 'photos'}, ${k} ${k === 1 ? 'file' : 'files'}, ${formatBytes(bytes)}`;
     total.hidden = false;
@@ -443,7 +514,7 @@ function render() {
   }
 
   const token = readToken() !== '';
-  const something = changed || set.pairs.length > 0;
+  const something = changed || photoCount(set) > 0 || siteChanged() || reelsChanged();
   btn.classList.remove('is-limit');
   if (isDraftLoading()) {
     btn.disabled = true;
@@ -540,7 +611,18 @@ async function allOnGitHub(treeEntries, files) {
 }
 
 /* ---------- Publish ---------- */
-async function run(token, { text, files, pairs }) {
+/** GitHub's blob SHA of a file at `head`, or null when the file is not there (404). */
+async function shaOnGitHub(token, path, head) {
+  try {
+    const file = await api(token, `${REPO}/contents/${path}?ref=${head}`);
+    return file.sha;
+  } catch (error) {
+    if (error.status === 404) return null;
+    throw error;
+  }
+}
+
+async function run(token, { text, files, pairs, site, withEvents, json }) {
   const base = baseEvents();
   const branch = encodeURIComponent(GITHUB.branch);
 
@@ -552,14 +634,23 @@ async function run(token, { text, files, pairs }) {
   const commit = await api(token, `${REPO}/git/commits/${head}`);
   const baseTree = commit.tree.sha;
 
-  showProgress(3);
-  let current;
-  try {
-    current = await api(token, `${REPO}/contents/${EVENTS_PATH}?ref=${head}`);
-  } catch (error) {
-    // No events.json on the branch any more: someone else changed the repo.
-    if (error.status === 404) throw staleError(404);
-    throw error;
+  // The JSON files of this publish, each with its own base SHA (stale check).
+  showProgress(3, null, withEvents ? null : 'Checking the site files on GitHub');
+  const data = [];
+  if (withEvents) {
+    let current;
+    try {
+      current = await api(token, `${REPO}/contents/${EVENTS_PATH}?ref=${head}`);
+    } catch (error) {
+      // No events.json on the branch any more: someone else changed the repo.
+      if (error.status === 404) throw staleError(404);
+      throw error;
+    }
+    data.push({ path: EVENTS_PATH, text, current: current.sha, base: base.sha, events: true });
+  }
+  for (const j of json) {
+    // eslint-disable-next-line no-await-in-loop
+    data.push({ path: j.path, text: j.text, current: await shaOnGitHub(token, j.path, head), base: j.base.sha });
   }
 
   let tree = null;
@@ -568,24 +659,31 @@ async function run(token, { text, files, pairs }) {
     const listing = await api(token, `${REPO}/git/trees/${baseTree}?recursive=1`);
     return { entries: Array.isArray(listing.tree) ? listing.tree : [], truncated: Boolean(listing.truncated) };
   };
-  // GitHub already has exactly this text (and these photos), for example a Try again after an unsure
+  // GitHub already has exactly these texts (and these files), for example a Try again after an unsure
   // result: done, no writes.
-  const done = { commitSha: head, blobSha: current.sha, text, pairs, removed: 0, truncated: false };
-  if (current.sha && current.sha === await gitBlobSha(text)) {
-    if (!files.length) return done;
+  const shas = [];
+  for (const d of data) shas.push(await gitBlobSha(d.text)); // eslint-disable-line no-await-in-loop
+  const done = {
+    commitSha: head, text, pairs, site, withEvents, removed: 0, truncated: false,
+    json: data.map((d) => ({ path: d.path, sha: d.current, text: d.text })),
+  };
+  if (data.every((d, i) => d.current && d.current === shas[i])) {
+    if (!files.length && data.length) return done;
     tree = await readTree();
     if (!tree.truncated && await allOnGitHub(tree.entries, files)) return done;
   }
-  if (!base.sha || current.sha !== base.sha) {
-    throw staleError();
+  for (const d of data) {
+    // events.json: a base is needed (as in TASK-12). site.json may be new on both sides (null === null).
+    if (d.events ? (!d.base || d.current !== d.base) : d.current !== d.base) throw staleError();
   }
   if (!tree) tree = await readTree();
 
-  // Old photo files no event uses any more (never when the listing is incomplete).
+  // Old photo files no event uses any more (never when the listing is incomplete). Only when events.json
+  // is part of this publish: the removal rules of TASK-13 need the events.json being committed.
   const used = usedPathsIn(text);
   const newPaths = new Set(files.map((f) => f.path));
-  const notCanonical = !allPathsCanonical(text);
-  let removals = tree.truncated || notCanonical ? [] : removalCandidates(tree.entries, used, newPaths);
+  const notCanonical = withEvents && !allPathsCanonical(text);
+  let removals = !withEvents || tree.truncated || notCanonical ? [] : removalCandidates(tree.entries, used, newPaths);
   if (typeof publishHooks.editRemovals === 'function') removals = publishHooks.editRemovals(removals.slice());
   const guard = () => {
     for (const path of removals) {
@@ -597,8 +695,8 @@ async function run(token, { text, files, pairs }) {
     throw new PublishError('cancelled', PUBLISH_MESSAGES.cancelled);
   }
 
-  // Blobs, one at a time: the photos, then events.json.
-  const total = files.length + 1;
+  // Blobs, one at a time: the photos, then the JSON files.
+  const total = files.length + data.length;
   const entries = [];
   for (let i = 0; i < files.length; i += 1) {
     showProgress(UPLOAD_STEP, { n: i + 1, total });
@@ -613,8 +711,14 @@ async function run(token, { text, files, pairs }) {
     const blob = await api(token, `${REPO}/git/blobs`, { method: 'POST', body: { content, encoding: 'base64' } });
     entries.push({ path: files[i].path, mode: '100644', type: 'blob', sha: blob.sha });
   }
-  showProgress(UPLOAD_STEP, { n: total, total });
-  const eventsBlob = await api(token, `${REPO}/git/blobs`, { method: 'POST', body: { content: text, encoding: 'utf-8' } });
+  const jsonEntries = [];
+  for (let i = 0; i < data.length; i += 1) {
+    showProgress(UPLOAD_STEP, { n: files.length + i + 1, total });
+    // eslint-disable-next-line no-await-in-loop
+    const blob = await api(token, `${REPO}/git/blobs`, { method: 'POST', body: { content: data[i].text, encoding: 'utf-8' } });
+    data[i].made = blob.sha;
+    jsonEntries.push({ path: data[i].path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
 
   guard(); // again, right before the tree is built
   showProgress(6);
@@ -623,7 +727,7 @@ async function run(token, { text, files, pairs }) {
     body: {
       base_tree: baseTree,
       tree: [
-        { path: EVENTS_PATH, mode: '100644', type: 'blob', sha: eventsBlob.sha },
+        ...jsonEntries,
         ...entries,
         ...removals.map((path) => ({ path, mode: '100644', type: 'blob', sha: null })),
       ],
@@ -632,7 +736,10 @@ async function run(token, { text, files, pairs }) {
 
   showProgress(7);
   const k = removals.length;
-  const message = `Update events from /admin/ (${eventCount()} events, ${pairs.length} photos${k ? `, ${k} old files removed` : ''})`;
+  const photos = pairs.length + site.length;
+  const message = withEvents
+    ? `Update events from /admin/ (${eventCount()} events, ${photos} photos${k ? `, ${k} old files removed` : ''})`
+    : `Update site photos from /admin/ (${photos} photos)`;
   const made = await api(token, `${REPO}/git/commits`, {
     method: 'POST',
     body: { message, tree: newTree.sha, parents: [head] },
@@ -653,11 +760,14 @@ async function run(token, { text, files, pairs }) {
     // Not visible yet does not prove it failed: the PATCH may still be applied, or the read may lag.
     if (now.object.sha !== made.sha) throw new PublishError('unsure', PUBLISH_MESSAGES.unsure, PUBLISH_MESSAGES.unsureNext);
   }
-  return { commitSha: made.sha, blobSha: eventsBlob.sha, text, pairs, removed: k, truncated: tree.truncated, notCanonical };
+  return {
+    commitSha: made.sha, text, pairs, site, withEvents, removed: k, truncated: tree.truncated, notCanonical,
+    json: data.map((d) => ({ path: d.path, sha: d.made, text: d.text })),
+  };
 }
 
 function hasSomethingToPublish() {
-  return draftDiffersFromBase() || publishSet().pairs.length > 0;
+  return draftDiffersFromBase() || photoCount(publishSet()) > 0 || siteChanged() || reelsChanged();
 }
 
 export async function publish() {
@@ -670,14 +780,21 @@ export async function publish() {
   try {
     const prepared = await prepare(); // no request is made before this passes
     const result = await run(token, prepared);
-    setBase(result.blobSha, result.text);
+    for (const j of result.json) {
+      if (j.path === EVENTS_PATH) setBase(j.sha, j.text);
+      else setSiteBase(j.path, j.sha, j.text);
+    }
     clearPendingPairs(result.pairs); // published: no more "unsaved files" warning for them
+    clearPendingSiteFiles(result.site);
     showResult('ok', { sha: result.commitSha, removed: result.removed, truncated: result.truncated, notCanonical: result.notCanonical });
   } catch (error) {
     if (error instanceof PublishError && error.kind === 'stale') showResult('stale');
     else if (error instanceof PublishError && error.kind === 'cancelled') showResult('cancel');
     else if (error instanceof PublishError) showResult('err', { message: error.message, next: error.next });
-    else showResult('err', { message: PUBLISH_MESSAGES.other('error'), next: PUBLISH_MESSAGES.nothingChanged });
+    else {
+      console.error(error);
+      showResult('err', { message: PUBLISH_MESSAGES.other('error'), next: PUBLISH_MESSAGES.nothingChanged });
+    }
   } finally {
     showProgress(0);
     setBusy(false);
@@ -687,12 +804,14 @@ export async function publish() {
 async function init() {
   if (!$('publish-panel')) return;
   await managerReady;
+  await siteDraftReady;
   $('publish-btn').addEventListener('click', publish);
   $('pub-retry').addEventListener('click', publish);
   $('pub-export').addEventListener('click', exportEvents);
   $('pub-reload').addEventListener('click', () => window.location.reload());
   onDraftChange(render);
   onPendingChange(render);
+  onSiteDraftChange(render);
   window.addEventListener(TOKEN_EVENT, render);
   window.addEventListener('storage', (e) => {
     if (e.key === null || e.key === TOKEN_KEY) render();

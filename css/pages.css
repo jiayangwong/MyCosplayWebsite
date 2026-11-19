@@ -223,3 +223,8 @@ dialog.viewer::backdrop { background: var(--color-scrim); }
 
 /* ---------- 404 ---------- */
 .lost { padding: var(--space-16) 0; display: flex; flex-direction: column; gap: var(--space-4); align-items: flex-start; }
+
+/* TASK-14: the watermarked portrait from data/site.json replaces the placeholder once it has loaded. */
+.portrait.has-photo { overflow: hidden; background: var(--color-surface); }
+.portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.portrait img[hidden] { display: none; }

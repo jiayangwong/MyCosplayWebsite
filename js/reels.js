@@ -22,6 +22,14 @@ function make(tag, className, text) {
   return node;
 }
 
+/** A reel cover path: plain relative path inside the site, else '' (placeholder). */
+function safeThumb(value) {
+  if (typeof value !== 'string') return '';
+  const v = value.trim();
+  if (!v || v.startsWith('/') || /^[a-z][a-z0-9+.-]*:/i.test(v) || v.split('/').includes('..')) return '';
+  return v;
+}
+
 function buildCard(reel, index) {
   const li = make('li', 'reel-card');
   li.dataset.index = String(index);
@@ -46,14 +54,19 @@ function buildCard(reel, index) {
   badge.append(kana, make('span', 'kana-badge-romaji', reel.kanaRomaji));
   cover.append(badge);
 
-  if (reel.thumb) {
+  const label = make('span', 'reel-cover-label', reel.url ? 'Watch reel' : 'Reel cover');
+  cover.append(label);
+  const thumb = safeThumb(reel.thumb);
+  if (thumb) {
+    // TASK-14: the watermarked cover from the uploader. If it fails to load, the placeholder stays.
     const img = document.createElement('img');
-    img.src = reel.thumb;
-    img.alt = '';
+    img.alt = `${reel.en} reel cover`;
     img.loading = 'lazy';
+    img.decoding = 'async';
+    img.addEventListener('load', () => { label.hidden = true; }, { once: true });
+    img.addEventListener('error', () => { img.remove(); label.hidden = false; }, { once: true });
+    img.setAttribute('src', thumb);
     cover.append(img);
-  } else {
-    cover.append(make('span', 'reel-cover-label', reel.url ? 'Watch reel' : 'Reel cover'));
   }
   if (!reel.url) cover.append(make('span', 'reel-soon', 'Coming soon'));
 

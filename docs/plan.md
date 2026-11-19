@@ -680,7 +680,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Stale: the mock's `data/reels.json` SHA differs from the draft's base -> stale message, no `POST`/`PATCH`.
     - Public pages with mocked `data/site.json` and `data/reels.json`: the portrait `<img>` with the right alt shows on Home and About; a reel card shows its cover; routing the portrait to 404 shows the placeholder; `portrait: null` shows the placeholder.
     - After the publish test, the TASK-15 repo guard logic run on the fake repo's files reports no problems.
-- Status: todo
+- Status: ready for review (built 2026-11-19 by the programmer on branch `task-14-site-photos`)
 - Review: pending
 - QA: pending
 
@@ -739,3 +739,7 @@ Detail decided by the planner (say if you disagree): if GitHub's file list is ev
 
 21. **More files on the watermark allowlist than "only og-image.png".** The TASK-15 test says that with today's repo only `og-image.png` is allowlisted, but the repo also holds 10 other committed PNGs that are not photos and do not come from the uploader: the 9 site screenshots in `docs/screenshots/` (sample data, `[Portrait]` placeholders) and the text-only reference picture `extra_asset/puzz-extra-asset/sashisuseso-reference.png`. The scan must cover them (only `.git/`, `node_modules/`, `.claude/`, `test-results/`, `playwright-report/` are skipped), so the programmer put all 11 files on `tests/wm-allowlist.json`, each with its SHA-256 and a reason ("no photo of Puzz"). Is that OK, or should these files be deleted from the repo (or moved out of it) instead? Nothing else in TASK-15 changes.
     - **User answer (2026-11-19): "Stay until I upload my photo."** The 11 allowlisted non-photo images stay in the repo for now. Revisit when the user uploads their own photos (TASK-14 in use): at that point the screenshots / og-image screenshot can be replaced or removed.
+
+### Question found while building TASK-14 (2026-11-19, programmer)
+
+22. **og-image.png allowlist entry after a Share image is published.** The repo guard (TASK-15) fails when an allowlisted file's SHA-256 changes, even if the new file carries the uploader's marker. So the first time Puzz publishes a Share image (a marked PNG written over `og-image.png`), the next test run fails on the old `og-image.png` entry in `tests/wm-allowlist.json` until that entry is removed by hand (the marked file then passes on its own), and the TASK-15 test line that expects `og-image.png` on the allowlist must change too. The programmer did not change the guard (that would weaken a TASK-15 rule). Options: (a) remove the entry by hand when the share image is published (current behaviour), (b) let the guard accept a marked file even when its allowlist hash is stale. Which one?

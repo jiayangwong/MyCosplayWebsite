@@ -193,3 +193,8 @@
 .hall-wrap.is-static { background-position: 0 0; }
 .hall-wrap.is-static .station-inner,
 .hall-wrap.is-static .year-sign { transform: none; opacity: 1; will-change: auto; }
+
+/* TASK-14: the watermarked portrait from data/site.json replaces the placeholder once it has loaded. */
+.pass-photo.has-photo { padding: 0; overflow: hidden; background: var(--color-surface); }
+.pass-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pass-photo img[hidden] { display: none; }
