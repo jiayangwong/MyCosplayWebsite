@@ -7,6 +7,7 @@ import { SITE } from '../site-config.js';
 import { slugify } from '../events-data.js';
 import { onEventChange, attachPhoto, usedPhotoPaths, isEditingSavedEvent } from './manager.js';
 import { addPendingPair, removePendingItem, pendingPaths, markPipelineFile } from './pending.js';
+import { addWatermarkMarker } from './wm-marker.js';
 
 /** Watermark density: f = round(shorter side / WM_DIVISOR). 80 = "2x" (user decision 2026-11-18). */
 export const WM_DIVISOR = 80;
@@ -173,8 +174,22 @@ async function encode(source, size, opts, quality) {
   canvas.width = 0;
   if (!blob) throw new UploadError('tooLarge');
   if (blob.type !== 'image/webp') throw new UploadError('noWebp');
-  markPipelineFile(blob); // only blobs registered here can be published (TASK-13)
-  return { blob, width: size.width, height: size.height };
+  // TASK-15: the hidden "made by the uploader" marker, added after the watermark is drawn and before the
+  // file is previewed, downloaded, attached or listed. Marking makes a new Blob, and only that marked Blob
+  // is registered as a pipeline file (TASK-13): the unmarked encoder output can never be published.
+  let marked;
+  try {
+    const bytes = addWatermarkMarker(new Uint8Array(await blob.arrayBuffer()), {
+      f: watermarkLayout(size.width, size.height).f,
+      div: WM_DIVISOR,
+    });
+    marked = new Blob([bytes], { type: 'image/webp' });
+  } catch (error) {
+    console.error(error);
+    throw new UploadError('noWebp');
+  }
+  markPipelineFile(marked); // only blobs registered here can be published (TASK-13)
+  return { blob: marked, width: size.width, height: size.height };
 }
 
 /* ---------- Uploader UI ---------- */

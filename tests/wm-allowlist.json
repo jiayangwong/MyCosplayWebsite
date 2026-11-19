@@ -1,0 +1,60 @@
+{
+  "_note": "Image files that may be in the repo without the uploader's watermark marker (TASK-15). Each entry needs the exact path, the SHA-256 of the file and a reason. A photo of Puzz never goes here: it must come out of the uploader.",
+  "files": [
+    {
+      "path": "docs/screenshots/admin-pc.png",
+      "sha256": "86a04787f3a29846bfea651bee695a269029158cc8cb8d5115d6d2ebea1f844a",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/events-pc.png",
+      "sha256": "a4de17c1404924057134bda1085150d270f01b5a56375c65a671ed7e441e95e4",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/home-pc-full.png",
+      "sha256": "b01772a5f0727baba083510dfc9e69906a3de5dad38d6fd63dcfa357daaecb4b",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/home-pc-hall.png",
+      "sha256": "4a76a7668865a2f63c9689b5df6a1331327aec05e352ce031dd11ad6d4d230f4",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/home-pc.png",
+      "sha256": "f3e631601aaca2ab7f8e791e25b052b8f0295f1ec308fd8b5b9709429acad7f4",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/home-phone-full.png",
+      "sha256": "d91eee878a6d76545b8ffa7f736a6ba11360978be6e7c9c3b0e3ea39b1ca4f71",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/home-phone.png",
+      "sha256": "4fcb8f4bd09564f2ddba8d2452d06ac1c9ee1618c8b283c5a094bf344f90a338",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/menu-phone.png",
+      "sha256": "1bed8f762670fb0b65f5d3b41b74f843edbfef6e44e6cb43321e41bbc4959a55",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "docs/screenshots/reels-phone.png",
+      "sha256": "d56dbf2560eead70fe85cc5671983459db4c5a540ce10b1a55e161405e1e61b5",
+      "reason": "screenshot of the site with sample data and placeholders (docs), no photo of Puzz"
+    },
+    {
+      "path": "extra_asset/puzz-extra-asset/sashisuseso-reference.png",
+      "sha256": "a4671761d9d825d82e5a751a33e5fe6881259de718c318b5a9261b94fa17dd1a",
+      "reason": "text-only reference screenshot of the sa-shi-su-se-so acronym, no photo of Puzz"
+    },
+    {
+      "path": "og-image.png",
+      "sha256": "eff7de368dee353e6469266f8f6700160b688babd3a2f1285042e11e9417d13d",
+      "reason": "site screenshot (share image), no photo of Puzz. Replaced by a watermarked upload in TASK-14."
+    }
+  ]
+}

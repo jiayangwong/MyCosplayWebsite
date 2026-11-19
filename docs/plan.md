@@ -647,7 +647,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Publish check: inject an unmarked WebP into the pending list. Publish shows the "not a watermarked file" message naming that path, and the mock records no `POST` or `PATCH`.
     - Guard self-test: the guard logic, run on a temporary folder (not the repo) containing an unmarked `media/events/x/a.webp`, a marked one, an allowlisted file with a wrong hash, and a JSON reference to a missing file, reports exactly the 3 bad ones.
     - The real repo scan passes (with today's repo: only `og-image.png` is allowlisted).
-- Status: todo
+- Status: done - ready for review (built 2026-11-19 on branch `task-15-watermark-marker`)
 - Review: pending
 - QA: pending
 
@@ -734,3 +734,7 @@ No open questions remain for IDEA-10.
 20. **What "Remove from publish" does to the event:** the planner recommends **putting back the photo that is live now** (from the published events.json), or clearing the photo when there is none. The other choice, always clearing the photo, would make the old photo unused, so the next Publish would offer to delete it. Put back (recommended) / always clear?
 
 Detail decided by the planner (say if you disagree): if GitHub's file list is ever incomplete ("truncated", only at about 100,000 files), Publish refuses rather than guessing.
+
+### Question found while building TASK-15 (2026-11-19, programmer)
+
+21. **More files on the watermark allowlist than "only og-image.png".** The TASK-15 test says that with today's repo only `og-image.png` is allowlisted, but the repo also holds 10 other committed PNGs that are not photos and do not come from the uploader: the 9 site screenshots in `docs/screenshots/` (sample data, `[Portrait]` placeholders) and the text-only reference picture `extra_asset/puzz-extra-asset/sashisuseso-reference.png`. The scan must cover them (only `.git/`, `node_modules/`, `.claude/`, `test-results/`, `playwright-report/` are skipped), so the programmer put all 11 files on `tests/wm-allowlist.json`, each with its SHA-256 and a reason ("no photo of Puzz"). Is that OK, or should these files be deleted from the repo (or moved out of it) instead? Nothing else in TASK-15 changes.
