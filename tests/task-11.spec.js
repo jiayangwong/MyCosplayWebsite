@@ -71,10 +71,13 @@ test('classic ghp_ token and empty input are refused and not stored', async ({ p
 test('Test connection: 200 / 401 / 404 / network abort show their messages', async ({ page, github }) => {
   await saveFakeToken(page);
 
-  github.respond(`GET ${REPO_PATH}`, { delay: 400 });
+  // Hold the request open, so "Testing..." stays on screen until the test has checked it.
+  const check = github.hold(`GET ${REPO_PATH}`);
   await page.click('#gh-test');
+  await check.arrived;
   await expect(page.locator('#gh-status')).toContainText('Testing...');
   await expect(page.locator('#gh-status .ibar')).toBeVisible();
+  check.release();
   await expect(page.locator('#gh-status')).toHaveText(/Connected to jiayangwong\/MyCosplayWebsite \(main\)\. Write access is checked when you publish\./);
   await expect(page.locator('#gh-status')).toHaveAttribute('data-state', 'ok');
 
