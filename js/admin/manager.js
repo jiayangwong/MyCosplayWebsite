@@ -310,6 +310,11 @@ export function onEventChange(fn) {
   fn(currentEventId());
 }
 
+/** True while the form edits an event that is already in the draft (its id is fixed). */
+export function isEditingSavedEvent() {
+  return state.editingId !== null;
+}
+
 /** Every photo / photoFull path used by an event in the draft or typed into the form. */
 export function usedPhotoPaths() {
   const used = new Set();

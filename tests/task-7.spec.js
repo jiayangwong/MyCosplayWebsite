@@ -39,6 +39,8 @@ async function readOutput(page, i, which) {
     c.height = bmp.height;
     const ctx = c.getContext('2d');
     ctx.drawImage(bmp, 0, 0);
+    const [bw, bh] = [bmp.width, bmp.height];
+    bmp.close();
     const d = ctx.getImageData(0, 0, c.width, c.height).data;
     const baseSum = base[0] + base[1] + base[2];
     const grid = new Array(9).fill(0);
@@ -52,7 +54,7 @@ async function readOutput(page, i, which) {
         if (sum > best) { best = sum; brightest = [d[k], d[k + 1], d[k + 2]]; }
       }
     }
-    return { type: blob.type, riff: ascii(0, 4), webp: ascii(8, 12), width: bmp.width, height: bmp.height, grid, brightest };
+    return { type: blob.type, riff: ascii(0, 4), webp: ascii(8, 12), width: bw, height: bh, grid, brightest };
   }, { src, base: SRC });
 }
 
@@ -168,6 +170,39 @@ test('defaults, and changing the opacity or text re-renders both files', async (
   await waitReady(page);
 });
 
+test('the decoded photo is released after encoding, and a re-render decodes the file again', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__bitmaps = { made: 0, open: 0 };
+    const make = window.createImageBitmap.bind(window);
+    window.createImageBitmap = async (...args) => {
+      const bmp = await make(...args);
+      window.__bitmaps.made += 1;
+      window.__bitmaps.open += 1;
+      const close = bmp.close.bind(bmp);
+      let closed = false;
+      bmp.close = () => { if (!closed) { closed = true; window.__bitmaps.open -= 1; } close(); };
+      return bmp;
+    };
+  });
+  await open(page);
+  await page.setInputFiles('#wm-files', [BIG, SMALL]);
+  await waitReady(page, 0);
+  await waitReady(page, 1);
+  const first = await page.evaluate(() => ({ ...window.__bitmaps }));
+  expect(first.open).toBe(0); // nothing decoded is kept once both files are made
+  expect(first.made).toBe(2);
+
+  await page.locator('#wm-opacity').fill('80');
+  await expect.poll(async () => readOutput(page, 1, 'display').then((o) => o.brightest[1], () => 0), { timeout: 20000 }).toBeGreaterThan(240);
+  await waitReady(page, 0);
+  await waitReady(page, 1);
+  expectBrightest(await readOutput(page, 0, 'master'), 0.8);
+  expectBrightest(await readOutput(page, 1, 'display'), 0.8);
+  const after = await page.evaluate(() => ({ ...window.__bitmaps }));
+  expect(after.made).toBeGreaterThanOrEqual(4); // both photos were decoded again from the file
+  expect(after.open).toBe(0);
+});
+
 test('toBlob returning nothing shows "Too large" on that card only; the next photo still works', async ({ page }) => {
   await page.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.toBlob;
@@ -266,6 +301,36 @@ test('attach fills both photo fields, saves the draft, and adds a pending pair',
     await Promise.all([page.waitForEvent('download'), card(page, 0).getByRole('button', { name }).click()]);
   }
   expect(await page.evaluate(async () => (await import('/js/admin/pending.js')).hasUnsavedFiles())).toBe(false);
+});
+
+test('a pair attached to an unsaved new event follows a changed date or short form', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'New event' }).click();
+  await page.fill('#f-date', '2026-09-12');
+  await page.fill('#f-short', 'TST');
+  await page.fill('#f-name', 'Test Fest');
+  await page.setInputFiles('#wm-files', BIG);
+  await waitReady(page);
+  await card(page).getByRole('button', { name: 'Attach to selected event' }).click();
+  await expect(page.locator('#f-photo')).toHaveValue('media/events/2026-09-12-tst/flat-2400x1600.webp');
+
+  await page.fill('#f-short', 'TSX');
+  await page.fill('#f-date', '2026-09-13');
+  await expect(page.locator('#wm-event-id')).toHaveText('2026-09-13-tsx');
+  await expect(page.locator('#f-photo')).toHaveValue('media/events/2026-09-13-tsx/flat-2400x1600.webp');
+  await expect(page.locator('#f-photo-full')).toHaveValue('media/events/2026-09-13-tsx/flat-2400x1600-full.webp');
+  await expect(card(page).locator('.wm-path')).toContainText('media/events/2026-09-13-tsx/flat-2400x1600.webp');
+  const pairs = await page.evaluate(async () => (await import('/js/admin/pending.js')).pendingPairs().map((p) => [p.eventId, p.photo, p.photoFull]));
+  expect(pairs).toEqual([['2026-09-13-tsx', 'media/events/2026-09-13-tsx/flat-2400x1600.webp', 'media/events/2026-09-13-tsx/flat-2400x1600-full.webp']]);
+
+  await page.click('#save-event');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('puzzkezz.events.draft')).events.find((e) => e.id === '2026-09-13-tsx'));
+  expect(saved.photo).toBe('media/events/2026-09-13-tsx/flat-2400x1600.webp');
+  expect(saved.photoFull).toBe('media/events/2026-09-13-tsx/flat-2400x1600-full.webp');
+
+  // A saved event keeps its id: editing its date no longer moves the pair.
+  await page.fill('#f-date', '2026-09-14');
+  await expect(page.locator('#f-photo')).toHaveValue('media/events/2026-09-13-tsx/flat-2400x1600.webp');
 });
 
 test('the uploader explains privacy and fits the screen', async ({ page }) => {

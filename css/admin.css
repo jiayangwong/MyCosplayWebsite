@@ -190,7 +190,7 @@
 }
 .wm-thumb figcaption { margin-top: var(--space-1); font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
 
-.chip { display: inline-block; padding: 1px var(--space-2); border: 1px solid var(--color-ink); border-radius: var(--radius-sm); font: 700 11px var(--font-mono); }
+.chip { display: inline-block; padding: 1px var(--space-2); border: 1px solid var(--color-ink); border-radius: var(--radius-sm); font: 700 var(--fs-small) var(--font-mono); }
 .chip-master { background: var(--color-ink); color: var(--color-surface); }
 .chip-display { background: var(--color-pink); color: var(--color-ink); }
 
@@ -204,7 +204,7 @@
 .wm-actions [hidden] { display: none; }
 
 /* Processing: pink indeterminate bar */
-.wm-ibar { position: relative; height: 3px; overflow: hidden; background: rgba(207, 200, 218, 0.6); }
+.wm-ibar { position: relative; height: 3px; overflow: hidden; background: color-mix(in srgb, var(--color-line) 30%, transparent); }
 .wm-ibar[hidden] { display: none; }
 .wm-ibar::after { content: ""; position: absolute; top: 0; bottom: 0; left: -35%; width: 35%; background: var(--color-pink); animation: wm-slide 1.1s linear infinite; }
 @keyframes wm-slide { from { left: -35%; } to { left: 100%; } }

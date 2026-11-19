@@ -5,7 +5,7 @@
 // on a canvas also drops EXIF data (GPS location, camera details).
 import { SITE } from '../site-config.js';
 import { slugify } from '../events-data.js';
-import { onEventChange, attachPhoto, usedPhotoPaths } from './manager.js';
+import { onEventChange, attachPhoto, usedPhotoPaths, isEditingSavedEvent } from './manager.js';
 import { addPendingPair, removePendingItem, pendingPaths } from './pending.js';
 
 /** Watermark density: f = round(shorter side / WM_DIVISOR). 80 = "2x" (user decision 2026-11-18). */
@@ -292,23 +292,26 @@ function showOutput(item, which, out) {
 async function processItem(item) {
   if (!items.includes(item)) return; // removed while waiting
   setState(item, 'processing');
-  if (!item.bitmap) {
-    try {
-      item.bitmap = await createImageBitmap(item.file);
-    } catch {
-      setState(item, 'error', MESSAGES.read);
-      return;
-    }
-  }
-  await fontsReady;
-  const opts = options();
-  const { width, height } = item.bitmap;
-  const m = masterSize(width, height);
-  const d = displaySize(width, height);
+  // The decoded photo is only kept while its two files are made (a 24 MP photo is about 96 MB),
+  // then released. A re-render decodes item.file again.
+  let bitmap;
   try {
+    bitmap = await createImageBitmap(item.file);
+  } catch {
+    setState(item, 'error', MESSAGES.read);
+    return;
+  }
+  item.readable = true;
+  try {
+    await fontsReady;
+    const opts = options();
+    const m = masterSize(bitmap.width, bitmap.height);
+    const d = displaySize(bitmap.width, bitmap.height);
     if (m.width * m.height > IOS_CANVAS_PIXELS && isIOS()) throw new UploadError('tooLarge');
-    const display = await encode(item.bitmap, d, opts, DISPLAY_QUALITY);
-    const master = await encode(item.bitmap, m, opts, MASTER_QUALITY);
+    const display = await encode(bitmap, d, opts, DISPLAY_QUALITY);
+    const master = await encode(bitmap, m, opts, MASTER_QUALITY);
+    bitmap.close();
+    bitmap = null;
     item.display = display;
     item.master = master;
     item.downloaded = { display: false, master: false };
@@ -323,6 +326,8 @@ async function processItem(item) {
     item.master = null;
     removePendingItem(item);
     setState(item, 'error', error instanceof UploadError ? error.message : MESSAGES.tooLarge);
+  } finally {
+    if (bitmap) bitmap.close();
   }
 }
 
@@ -344,11 +349,34 @@ function attach(item) {
     return;
   }
   if (item.state !== 'ready' || item.tooBig) return;
-  item.attached = { eventId, name: item.name };
+  item.attached = { eventId, name: item.name, unsaved: !isEditingSavedEvent() };
   const p = paths(item);
   addPendingPair({ eventId, photo: p.display, photoFull: p.master, item });
   attachPhoto(p.display, p.master);
   assignNames();
+}
+
+/**
+ * A pair attached to a new event that is not saved yet uses the id the form would give it. When the
+ * date or short form changes, that id changes too, so the pair (and the form's photo paths) move to
+ * the new id. Pairs whose paths are no longer in the form are left alone (Publish drops unused pairs).
+ */
+function rekeyUnsavedPairs(newId) {
+  if (!newId || isEditingSavedEvent()) return;
+  const formPhoto = $('f-photo').value.trim();
+  for (const item of items) {
+    const a = item.attached;
+    if (!a || !a.unsaved || a.eventId === newId) continue;
+    const oldDisplay = `media/events/${a.eventId}/${a.name}.webp`;
+    if (formPhoto !== oldDisplay) continue;
+    item.attached = null;
+    assignNames(); // picks a free name for the new id
+    item.attached = { eventId: newId, name: item.name, unsaved: true };
+    const p = paths(item);
+    removePendingItem(item);
+    addPendingPair({ eventId: newId, photo: p.display, photoFull: p.master, item });
+    attachPhoto(p.display, p.master);
+  }
 }
 
 function removeItem(item) {
@@ -356,7 +384,6 @@ function removeItem(item) {
   if (i !== -1) items.splice(i, 1);
   removePendingItem(item);
   Object.values(item.urls).forEach((u) => u && URL.revokeObjectURL(u));
-  if (item.bitmap) item.bitmap.close();
   item.ui.card.remove();
   assignNames();
   $('wm-download-all').disabled = !items.some((x) => x.state === 'ready');
@@ -430,7 +457,7 @@ function scheduleRerender() {
     enqueue(async () => {
       rerenderQueued = false;
       for (const item of items.slice()) {
-        if (item.bitmap) await processItem(item); // re-render every photo that could be read
+        if (item.readable) await processItem(item); // re-render every photo that could be read
       }
     });
   }, 200);
@@ -465,6 +492,7 @@ function init() {
 
   onEventChange((id) => {
     eventId = id;
+    rekeyUnsavedPairs(id);
     $('wm-event-id').textContent = id || '(fill in date + short form, or edit an event)';
     assignNames();
   });
