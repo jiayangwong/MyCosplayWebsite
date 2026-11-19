@@ -572,7 +572,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Removing an event after attaching its pair removes the pair from the publish list.
     - 21 pending pairs (made with a small fixture) -> the limit message, and the button is disabled.
     - A path outside the allowed patterns (injected into the draft) is refused with no network call.
-- Status: ready for re-review (review round 2 fixes 2026-11-19 on branch task-13-photo-publish)
+- Status: done (merged into site-v1 on 2026-11-19; review approved round 3, QA passed)
 - Review: approved 2026-11-19
 - QA: passed 2026-11-19
 
