@@ -574,7 +574,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - A path outside the allowed patterns (injected into the draft) is refused with no network call.
 - Status: ready for re-review (review round 2 fixes 2026-11-19 on branch task-13-photo-publish)
 - Review: approved 2026-11-19
-- QA: pending
+- QA: passed 2026-11-19
 
 ### TASK-15: Watermark marker in every uploader file + Publish check + repo guard test - APPROVED 2026-11-18
 - Linked idea(s): IDEA-10 (with IDEA-9, IDEA-8)
