@@ -32,3 +32,12 @@
 - Status: verified (QA 2026-11-19: 2 full runs on 0732ddb, 137 passed, 3 skipped, 0 failed each)
 - Cause: tests that did not block Google Fonts waited on fonts.googleapis.com / fonts.gstatic.com over the real network, which stalled `load` / `networkidle` under full-suite load; the default worker count (half the CPUs) on WSL added to the load.
 - Fix: playwright.config.js now starts Chromium with `--host-resolver-rules` that make both Google Fonts hosts fail DNS at once, for every test in both projects (no spec edits; page.route mocks such as tests/github-mock.js are unaffected). `workers` capped at 4 (2 on CI), `retries: 0`. Verified with 3 full-suite runs in a row: 137 passed, 3 skipped, 0 failed each (3.1m, 3.4m, 2.4m).
+
+## BUG-3: TASK-12 tests miss under load (double-click "Step 1 of 7" wait, addEvent "Saved" wait) (flaky)
+- Found by: QA
+- Task: TASK-12 (tests only; also seen once in tests/task-10.spec.js:103 under the same load)
+- Severity: minor (test only)
+- Steps to reproduce: 1. Run `npx playwright test` while the machine is busy (other sessions running Playwright). 2. The "double-clicking Publish" test (tests/task-12.spec.js:474, delay at :463) waits for `Step 1 of 7`, which shows only during a 600ms delay, so it can miss. Also seen once: `[phone] task-12.spec.js:71` timed out in `addEvent` waiting 5s for "Saved PUB", and `[desktop] task-10.spec.js:103` timed out on the full-size swap.
+- Expected: pass every time.
+- Actual: intermittent timeout. Each passed on immediate re-run (task-12:71 phone 8/8, task-10:103 desktop 5/5). The product behaves correctly (QA checked the double-click and lock behaviour by hand).
+- Status: open (test-only, not blocking TASK-12)
