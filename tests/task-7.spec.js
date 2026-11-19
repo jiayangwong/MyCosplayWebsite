@@ -11,6 +11,10 @@ const SRC = [247, 211, 223]; // the flat colour of both fixtures
 
 // Encoding a 2400 x 1600 master and reading every pixel back is slow on a busy machine.
 test.describe.configure({ timeout: 60000 });
+// readOutput() below fetches the output blob: URLs to inspect the bytes. The admin CSP (TASK-11) only allows
+// connect-src 'self' https://api.github.com, so these tests (which check pixels, not CSP) bypass it.
+// The app itself never fetches blob: URLs; TASK-11 checks the CSP with bypass off.
+test.use({ bypassCSP: true });
 
 /** Opens the event manager. Google Fonts are aborted (they can hang and are not needed here). */
 async function open(page) {
