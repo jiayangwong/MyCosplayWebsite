@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.0 - PROPOSED, not released yet (date is set at deploy)
+First public version. Release notes are in docs/release.md. Entries below were made while building it.
+
 ## Unreleased
 - 2026-11-17 TASK-1: site shell. Design tokens, fonts, header tabs (PC), MENU full-screen menu (phone), footer, robots.txt (css/tokens.css, css/base.css, js/nav.js, js/site-config.js, *.html)
 - 2026-11-17 TASK-2: event data layer. Sample data/events.json, load / sort newest first / group by year / validate / make ids, embed detection (js/events-data.js, js/embed.js, data/events.json)
