@@ -489,7 +489,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - A scan of every non-test file in the repo (`*.html`, `*.js`, `*.json`) finds no string matching `ghp_[A-Za-z0-9]{20,}` or `github_pat_[A-Za-z0-9_]{20,}`.
 - Status: ready for re-review (round 1 fixes 2026-11-19 on branch task-11-github-panel: must-fix + nice-to-haves in docs/reviews.md)
 - Review: approved 2026-11-19
-- QA: pending
+- QA: passed 2026-11-19 (BUG-1 minor header overflow at 375px is a TASK-6 issue, BUG-2 flaky tests under load; neither blocks)
 
 ### TASK-12: Publish events.json to GitHub in one atomic commit (with stale check)
 - Linked idea(s): IDEA-8
