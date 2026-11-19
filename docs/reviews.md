@@ -318,3 +318,54 @@ Round 1. Branch `task-14-site-photos` (f0c87da), diffed against site-v1. Full su
 - [nice-to-have] js/admin/publish.js:291 - after Discard draft, a pending **Share image** stays in the publish set (`siteFileUsed` is always true for share), although the confirm now says "events and site photos". Clear pending site files on discard, or word the confirm so it does not promise that. Also related: pending.js:109 keeps warning on beforeunload for site files that are no longer used by the draft.
 - [nice-to-have] js/reels.js:26 - `safeThumb` duplicates `safeRelativePath` in js/portrait.js (and is slightly weaker: it has no `\\` or `://` check). Export one helper and use it in both.
 - [nice-to-have] js/admin/publish.js:286 - `reelCoverPath(m[1]) === path` is always true once the regex matched. Drop it, or keep it as a deliberate belt-and-braces with a comment.
+
+## Review TASK-16 - 2026-11-19
+Result: APPROVED
+Round 1. Branch `task-16-broken-link-guard` (8b1be17), diffed against site-v1. I ran the whole suite once with `--workers=2`, in 2 chunks: 351 passed, 3 skipped (the same device skips as before), 0 failed. The task-12/13/14/16 chunk passed 200/200.
+- **No write after a broken link:**
+  - `run()` reads the tree (after the stale check) and then calls `brokenPhotoLinks` + `brokenSitePhotoLinks`. It throws before `removalCandidates`, the guard, the dialog and the first `POST`.
+  - Try again calls `publish()`, so it goes through the same path. The "hold" test shows that no write happens while the tree read is held.
+  - The "already published" early exit only returns when every JSON text and file is already on GitHub byte for byte. Nothing is written, so it can't publish a new broken link. This matches the plan.
+  - Site-only publishes: events.json is not in the commit, so it is live and not checked (per plan). The site JSON texts in `data` are always checked.
+  - Truncated tree: any path that is not new gives `unchecked` (stop), even if it appears in the partial listing.
+  - I found no bypass.
+- **False positives:**
+  - These all pass and are tested: files in this publish (`newPaths`), files already in the repo, events with no photo, `img/...` outside `media/events/`, deleted events (not in the text, still removal candidates), and a portrait that is already on GitHub.
+  - Sample events have no photo, so they pass.
+- **False negatives:**
+  - Only `type: "blob"` entries count. A folder (`tree`) or submodule (`commit`) entry at that path gives `missing`.
+  - The match is exact, so a case difference (`Old.webp` vs `old.webp`) gives `missing`. That is correct for GitHub Pages.
+  - Every non-plain form stops at `isCanonicalPath` before the tree lookup.
+  - Plain paths outside `media/events/` are not checked for events. That is the plan's explicit choice (TASK-15 guard).
+- **`revertPair` / `revertPhoto`:**
+  - It finds the event by id and only acts when the draft `photo` equals the pair's `photo` and `photoFull` equals the pair's (or is empty). This matches the criterion.
+  - It runs synchronously on the click and reads the current draft, so an earlier undo can never overwrite a later saved edit.
+  - The button is disabled while publishing.
+  - `revertPhoto` touches only that event's two photo fields plus the open form's photo fields and preview.
+  - When several pairs share one file, each is reverted under the same rule. This is correct, because the file is gone for all of them.
+- **Messages:**
+  - The wording and the two-line split match the plan.
+  - Problems are listed in the order of `exportText`: newest first, then portrait, then reels.
+  - "(and N more)" counts distinct `who` values, and `who` includes the event or reel id. So it counts events and site photos, not each path.
+  - Every message names the event (short, year, id) or the file.
+- **TASK-13 test changes:** justified.
+  - The unusual-path tests still prove that nothing was removed and the files are still there, now with "no write". The pure `isCanonicalPath`/`allPathsCanonical` test is unchanged.
+  - The truncated test was split, so the TASK-13 "Could not list all old photos" note is still covered when there are no photo references.
+  - Removing `notCanonical` from `run()` loses no protection: removals only happen when `withEvents` is true, and in that case every non-plain event path has already thrown.
+- **Programmer's decisions:**
+  - (1) Site links checked under every prefix: accepted (plan (3)).
+  - (2) The truncated stop shows no "(and N more)": accepted.
+  - (3) Reverting every pair of the removed file: accepted.
+  - (4) The last note wins: accepted.
+  - (5) `notCanonical` dropped from `run()`, with `allPathsCanonical` kept for the pending preview: accepted (see above).
+  - (6) The TASK-13 truncated test split into two: accepted.
+  - (7) `#pub-note` is a new element with `role="status"`, styled with tokens only: accepted.
+  - (8) BUG-4 marked `fixed (TASK-16)` on the task branch: accepted. It only reaches site-v1/main with the merge, which is what the plan asks. QA must re-run the BUG-4 steps, and if QA fails, the status goes back to open.
+- [nice-to-have] js/admin/manager.js:457 - `revertPhoto` does not restore `sample`.
+  - `attachPhoto` deletes `sample` (manager.js:442), so after attach + Remove on a published sample event, the draft still differs from live. The button stays enabled, and the next publish drops the "Sample" tag.
+  - Today all 8 live events are samples (none has a photo), so this is the first realistic use.
+  - Suggestion: restore `sample: true` from the published event when the event is otherwise unchanged. This is a behaviour change, so it is for the planner to decide. Nothing is lost or broken; the change shows as "events.json changed".
+- [nice-to-have] js/admin/manager.js:466 - if X is open in the form and the user typed a different photo path without saving, Remove overwrites that unsaved field. Consider leaving the form fields alone when they differ from the pair.
+- [nice-to-have] js/admin/publish.js:850 - the check runs against the tree before removals. A hand-edited live `portrait`/`thumb` pointing into `media/events/` (unused by events) could pass the check and then be removed in the same commit. This is a pre-existing TASK-13 rule and out of scope. Suggest the planner adds site JSON links to `used` later.
+- [nice-to-have] js/admin/publish.js:404 - when the first problem is `unchecked` but a later one is `form`, the user only sees "can't be checked". This only happens with a truncated tree, so it is very unlikely.
+- [nice-to-have] tests/task-16.spec.js:401 - the "folder" case uses `media/events` (outside the prefix). Add `media/events/<id>` with a `tree` entry, plus a case-difference path (`Old.webp`), to pin the "missing" result for both.
