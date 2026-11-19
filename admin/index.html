@@ -33,7 +33,7 @@
 
     <aside class="help-box" aria-label="How publishing works">
       <p><strong>How it works.</strong> Changes stay on this browser until you press Publish to GitHub. Export events.json is a backup you can commit by hand. Only commit photo files that came out of the uploader.</p>
-      <p>Photos: use the media uploader below. It makes two watermarked files per photo (full size + 1200px display copy). Attach them to an event, or download them and save them into the repo at the paths it shows.</p>
+      <p>Photos: use the media uploader below. It makes two watermarked files per photo (full size + 1200px display copy). Attach them to an event, or download them and save them into the repo at the paths it shows. Site photos (portrait, reel covers, share image) are at the end of the uploader.</p>
     </aside>
 
     <p class="source-banner" id="source-banner" role="status"></p>
@@ -245,6 +245,47 @@
         <button type="button" class="btn btn-primary btn-sm" id="wm-download-all" disabled>Download all</button>
       </div>
       <ul class="wm-list" id="wm-previews" aria-label="Processed photos"></ul>
+
+      <div class="site-photos" id="site-photos" role="group" aria-labelledby="sp-title">
+        <h3 id="sp-title" class="panel-subtitle">Site photos</h3>
+        <p class="panel-hint">Portrait (Home guest pass and About), the 5 reel covers and the share image. One image at a time, one watermarked file each, with the same watermark text and opacity as above. A new upload replaces the old file.</p>
+        <div class="sp-row">
+          <div class="field">
+            <label for="sp-target">Site photo target</label>
+            <select id="sp-target">
+              <option value="portrait">Portrait</option>
+              <option value="reel" data-kana="さ">Reel cover: さ sa</option>
+              <option value="reel" data-kana="し">Reel cover: し shi</option>
+              <option value="reel" data-kana="す">Reel cover: す su</option>
+              <option value="reel" data-kana="せ">Reel cover: せ se</option>
+              <option value="reel" data-kana="そ">Reel cover: そ so</option>
+              <option value="share">Share image</option>
+            </select>
+          </div>
+          <div class="sp-pick">
+            <label class="btn btn-secondary btn-sm file-button" for="sp-file">Choose image</label>
+            <input type="file" id="sp-file" accept="image/*" class="visually-hidden">
+          </div>
+        </div>
+        <div class="sp-now-row">
+          <p class="mono sp-now" id="sp-now" role="status"></p>
+          <button type="button" class="btn btn-secondary btn-sm" id="sp-clear" disabled>Clear portrait</button>
+        </div>
+        <div class="sp-card" id="sp-card" hidden>
+          <figure class="sp-thumb" id="sp-figure">
+            <img id="sp-img" alt="">
+            <figcaption><span class="chip chip-display">SITE PHOTO</span><br><span class="wm-size" id="sp-size"></span></figcaption>
+          </figure>
+          <p class="wm-name" id="sp-name"> <span class="wm-status" id="sp-status" role="status"></span></p>
+          <div class="wm-ibar" id="sp-bar" aria-hidden="true" hidden></div>
+          <p class="wm-error" id="sp-error" role="alert" hidden></p>
+          <p class="wm-path" id="sp-path"></p>
+          <div class="wm-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="sp-use" disabled>Use for Portrait</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="sp-download" disabled>Download</button>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -252,5 +293,6 @@
   <script type="module" src="../js/admin/watermark.js"></script>
   <script type="module" src="../js/admin/github-panel.js"></script>
   <script type="module" src="../js/admin/publish.js"></script>
+  <script type="module" src="../js/admin/site-photos.js"></script>
 </body>
 </html>

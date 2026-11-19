@@ -347,7 +347,7 @@ async function loadFromRepo() {
 }
 
 async function discardDraft() {
-  if (!window.confirm('Discard your browser draft and reload the published data/events.json?')) return;
+  if (!window.confirm('Discard your browser draft (events and site photos) and reload the published data/events.json?')) return;
   localStorage.removeItem(DRAFT_KEY);
   // While the published copy loads, Publish, Import and Discard are locked so nothing races the swap.
   draftLoading = true;
@@ -362,11 +362,26 @@ async function discardDraft() {
     state.base = published.base;
     setBanner(fromRepo ? 'Source: published data/events.json (newest copy from GitHub)' : 'Source: published data/events.json');
     clearForm();
+    // Other drafts (TASK-14 site photos) start again too, still inside the lock.
+    for (const hook of discardHooks) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await hook();
+      } catch (error) {
+        console.error(error);
+      }
+    }
   } finally {
     draftLoading = false;
     lockFileActions(false);
     draftChanged();
   }
+}
+
+const discardHooks = [];
+/** `fn` (async) runs when Discard draft is confirmed, after the events reload, while Publish is still locked. */
+export function addDiscardHook(fn) {
+  discardHooks.push(fn);
 }
 
 /** True while Discard draft is loading the published events.json. */

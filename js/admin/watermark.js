@@ -143,12 +143,17 @@ function newCanvas(width, height) {
   return { canvas, ctx };
 }
 
-/** The photo scaled to width x height with the watermark on top (one layer, one opacity). */
-export function renderWatermarked(source, width, height, { text, opacity }) {
+/**
+ * The photo scaled to width x height with the watermark on top (one layer, one opacity).
+ * `crop` (optional, TASK-14 share image) = the source rectangle { sx, sy, sw, sh } to fill the canvas with.
+ * The lattice is always drawn after the photo, over the whole width x height output.
+ */
+export function renderWatermarked(source, width, height, { text, opacity }, crop = null) {
   const { canvas, ctx } = newCanvas(width, height);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(source, 0, 0, width, height);
+  if (crop) ctx.drawImage(source, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, width, height);
+  else ctx.drawImage(source, 0, 0, width, height);
   const layer = newCanvas(width, height);
   drawLattice(layer.ctx, width, height, text);
   ctx.globalAlpha = Math.min(1, Math.max(0.1, opacity));
@@ -158,22 +163,22 @@ export function renderWatermarked(source, width, height, { text, opacity }) {
   return canvas;
 }
 
-function toBlob(canvas, quality) {
+function toBlob(canvas, quality, type = 'image/webp') {
   return new Promise((resolve) => {
     try {
-      canvas.toBlob(resolve, 'image/webp', quality);
+      canvas.toBlob(resolve, type, quality);
     } catch {
       resolve(null);
     }
   });
 }
 
-async function encode(source, size, opts, quality) {
-  const canvas = renderWatermarked(source, size.width, size.height, opts);
-  const blob = await toBlob(canvas, quality);
+async function encode(source, size, opts, quality, { type = 'image/webp', crop = null } = {}) {
+  const canvas = renderWatermarked(source, size.width, size.height, opts, crop);
+  const blob = await toBlob(canvas, quality, type);
   canvas.width = 0;
   if (!blob) throw new UploadError('tooLarge');
-  if (blob.type !== 'image/webp') throw new UploadError('noWebp');
+  if (blob.type !== type) throw new UploadError(type === 'image/webp' ? 'noWebp' : 'tooLarge');
   // TASK-15: the hidden "made by the uploader" marker, added after the watermark is drawn and before the
   // file is previewed, downloaded, attached or listed. Marking makes a new Blob, and only that marked Blob
   // is registered as a pipeline file (TASK-13): the unmarked encoder output can never be published.
@@ -183,13 +188,58 @@ async function encode(source, size, opts, quality) {
       f: watermarkLayout(size.width, size.height).f,
       div: WM_DIVISOR,
     });
-    marked = new Blob([bytes], { type: 'image/webp' });
+    marked = new Blob([bytes], { type });
   } catch (error) {
     console.error(error);
-    throw new UploadError('noWebp');
+    throw new UploadError(type === 'image/webp' ? 'noWebp' : 'tooLarge');
   }
   markPipelineFile(marked); // only blobs registered here can be published (TASK-13)
   return { blob: marked, width: size.width, height: size.height };
+}
+
+/* ---------- Site photos (TASK-14): one file per target ---------- */
+
+/** Share image: exactly this size, centre-cropped to fill. */
+export const SHARE_WIDTH = 1200;
+export const SHARE_HEIGHT = 630;
+export const SHARE_MAX_BYTES = 5 * 1024 * 1024;
+
+/** The centred source rectangle with the ratio of outW x outH that fills it (no stretching). */
+export function coverCrop(width, height, outW, outH) {
+  const scale = Math.max(outW / width, outH / height);
+  const sw = Math.min(width, outW / scale);
+  const sh = Math.min(height, outH / scale);
+  return { sx: (width - sw) / 2, sy: (height - sh) / 2, sw, sh };
+}
+
+/**
+ * One watermarked + marked site photo from an image file, through the same pipeline as event photos
+ * (renderWatermarked -> drawLattice -> watermarkLayout, then addWatermarkMarker, then markPipelineFile).
+ * kind 'webp': longest side 1200px, ratio kept, never enlarged (portrait, reel covers).
+ * kind 'share': PNG, exactly 1200 x 630, centre-cropped, the lattice drawn after cropping.
+ * Resolves { blob, width, height } or throws an Error with a user message.
+ */
+export async function makeSitePhoto(file, kind, opts = watermarkOptions()) {
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new UploadError('read');
+  }
+  try {
+    await fontsReady;
+    if (kind === 'share') {
+      const crop = coverCrop(bitmap.width, bitmap.height, SHARE_WIDTH, SHARE_HEIGHT);
+      return await encode(bitmap, { width: SHARE_WIDTH, height: SHARE_HEIGHT }, opts, undefined, { type: 'image/png', crop });
+    }
+    return await encode(bitmap, displaySize(bitmap.width, bitmap.height), opts, DISPLAY_QUALITY);
+  } catch (error) {
+    if (error instanceof UploadError) throw error;
+    console.error(error);
+    throw new UploadError('tooLarge');
+  } finally {
+    bitmap.close();
+  }
 }
 
 /* ---------- Uploader UI ---------- */
@@ -229,9 +279,11 @@ export function formatBytes(bytes) {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-function options() {
+/** The text and opacity controls of the uploader (shared by the Site photos panel). */
+export function watermarkOptions() {
   return { text: $('wm-text').value, opacity: Number($('wm-opacity').value) / 100 };
 }
+const options = watermarkOptions;
 
 function paths(item) {
   const dir = `media/events/${eventId || '<event-id>'}`;

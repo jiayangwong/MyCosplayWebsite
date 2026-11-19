@@ -71,9 +71,42 @@ export function pendingPaths() {
   return new Set(pairs.flatMap((p) => [p.photo, p.photoFull]));
 }
 
-/** True while a pending pair has a file that was neither published nor downloaded. */
+/* ---------- Site photos (TASK-14): one file per target ---------- */
+
+// { target, label, path, out } - out = { blob, width, height, downloaded } from the Site photos panel.
+const siteFiles = [];
+
+/** Adds a site photo file. One file per path: a newer "Use for ..." replaces the older pending file. */
+export function addPendingSiteFile(entry) {
+  const old = siteFiles.findIndex((f) => f.path === entry.path);
+  if (old !== -1) siteFiles.splice(old, 1);
+  siteFiles.push(entry);
+  changed();
+}
+
+export function removePendingSiteFile(path) {
+  const i = siteFiles.findIndex((f) => f.path === path);
+  if (i === -1) return;
+  siteFiles.splice(i, 1);
+  changed();
+}
+
+/** Removes exactly these entries (after a successful publish). A file used again meanwhile stays. */
+export function clearPendingSiteFiles(done) {
+  const gone = new Set(done);
+  const before = siteFiles.length;
+  for (let i = siteFiles.length - 1; i >= 0; i -= 1) if (gone.has(siteFiles[i])) siteFiles.splice(i, 1);
+  if (siteFiles.length !== before) changed();
+}
+
+export function pendingSiteFiles() {
+  return siteFiles.slice();
+}
+
+/** True while a pending pair or site photo has a file that was neither published nor downloaded. */
 export function hasUnsavedFiles() {
-  return pairs.some((p) => !(p.item.downloaded.display && p.item.downloaded.master));
+  return pairs.some((p) => !(p.item.downloaded.display && p.item.downloaded.master))
+    || siteFiles.some((f) => !f.out.downloaded);
 }
 
 window.addEventListener('beforeunload', (e) => {

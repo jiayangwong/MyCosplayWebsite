@@ -79,8 +79,10 @@
     import { mountChrome } from './js/nav.js';
     import { mountHall } from './js/hall.js';
     import { mountReels } from './js/reels.js';
+    import { mountPortrait } from './js/portrait.js';
 
     mountChrome('home');
+    mountPortrait(document.querySelector('.pass-photo'));
     mountHall({
       hallList: document.getElementById('hall-list'),
       timelineSlot: document.getElementById('timeline-slot'),

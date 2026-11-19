@@ -43,3 +43,12 @@
 - Status: verified (QA 2026-11-19: task-10/11/12 --repeat-each=3 261 passed 3 skipped 0 failed; full suite 189 passed 3 skipped 0 failed; mock still strict; 10 of 10 real phone taps on Save event and Publish worked with smooth scrolling)
 - Cause: (1) the lock/busy checks raced fixed mock delays (600ms Publish, and the same pattern in the Discard lock test's 1200ms and task-11's 400ms "Testing..."), so under load the request finished before the checks ran; (2) `addEvent` lost its Save click: on the phone layout the page smooth-scrolls (`scroll-behavior: smooth`) to the far-down Save button, and under load mouse-up landed after the scroll moved it (Save stayed focused, no submit, status empty for 30s) - a race, not slowness; (3) the task-10 full-size swap (fetch + decode a 2400x1600 PNG, cross-fade, then src swap) can take over the default 5s under load. No product bug.
 - Fix: tests/github-mock.js - new strict `github.hold(match)` that keeps one matching request open until the test calls `release()` (`arrived` resolves when it reaches the mock; an unreleased hold fails the test). tests/task-12.spec.js - double-click Publish and Discard-lock tests hold the GitHub read until the locked state (and the forced click) is checked, then release; `addEvent` uses the keyboard (Enter on New event, Enter in the name field) and the 15s result wait. tests/task-11.spec.js - Test connection holds the request until "Testing..." is checked. tests/task-10.spec.js - the swap wait after release() is 15s. Runs: task-12 + task-10 --repeat-each=3: 198 passed, 0 failed; full suite twice: 189 passed, 3 skipped, 0 failed each (4.3m, 4.6m).
+
+## BUG-4: A reload loses the pending site photo but keeps the draft choice (Publish can send a portrait path with no file)
+- Found by: QA
+- Task: TASK-14
+- Severity: minor (already noted by the reviewer as a nice-to-have)
+- Steps to reproduce: 1. In /admin/ Site photos, make a Portrait and click "Use for Portrait". 2. Reload the page. 3. Look at the Publish panel.
+- Expected: the pending list and the draft agree (either the photo is still pending, or the draft choice is reset).
+- Actual: the pending file is gone (in memory only), but `puzzkezz.site.draft` still has `portrait: "media/site/portrait.webp"`. The Publish panel shows "~ data/site.json changed" and the Publish button is enabled, so a publish would point `data/site.json` at a file that is not in the repo (the public page then falls back to the placeholder). Not reproduced: "a pending share image survives Discard" was not separately checked.
+- Status: open

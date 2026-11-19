@@ -172,7 +172,7 @@
 /* One white card per photo: MASTER and DISPLAY thumbnails side by side (stacked on phone). */
 .wm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-4); }
 
-.wm-card {
+.wm-card, .sp-card {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -182,12 +182,12 @@
   border-radius: var(--radius-card);
   background: var(--color-surface);
 }
-.wm-card.is-err { border-color: var(--color-error); }
+.wm-card.is-err, .sp-card.is-err { border-color: var(--color-error); }
 
 .wm-pair { display: flex; flex-wrap: wrap; gap: var(--space-4); }
 .wm-pair[hidden] { display: none; }
-.wm-thumb { margin: 0; min-width: 0; max-width: 100%; }
-.wm-thumb img {
+.wm-thumb, .sp-thumb { margin: 0; min-width: 0; max-width: 100%; }
+.wm-thumb img, .sp-thumb img {
   display: block;
   width: auto;
   height: auto;
@@ -197,7 +197,7 @@
   border: 1px solid var(--color-ink);
   border-radius: var(--radius-sm);
 }
-.wm-thumb figcaption { margin-top: var(--space-1); font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
+.wm-thumb figcaption, .sp-thumb figcaption { margin-top: var(--space-1); font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
 
 .chip { display: inline-block; padding: 1px var(--space-2); border: 1px solid var(--color-ink); border-radius: var(--radius-sm); font: 700 var(--fs-small) var(--font-mono); }
 .chip-master { background: var(--color-ink); color: var(--color-surface); }
@@ -223,6 +223,17 @@
 @media (max-width: 767px) {
   .wm-pair { flex-direction: column; }
 }
+
+/* Site photos (TASK-14): one target, one file, same card look as the uploader. */
+.site-photos { margin-top: var(--space-6); padding-top: var(--space-2); border-top: 1px solid var(--color-line); }
+.site-photos .panel-subtitle { margin-top: var(--space-4); }
+.sp-row { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: flex-end; }
+.sp-row .field { flex: 1 1 240px; margin-bottom: 0; }
+.sp-pick { padding-bottom: 2px; }
+.file-button:has(+ #sp-file:focus-visible) { outline: var(--focus-ring); outline-offset: 2px; }
+.sp-now-row { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; justify-content: space-between; margin: var(--space-4) 0; }
+.sp-now { font-size: var(--fs-small); color: var(--color-text-2); overflow-wrap: anywhere; min-width: 0; }
+.sp-now-row [hidden], .sp-card[hidden] { display: none; }
 
 /* GitHub + Publish panels (TASK-11, style guide v2). Status is never colour alone: icon + text. */
 .gh-panel, .pub-panel { max-width: 720px; margin-bottom: var(--space-6); }
