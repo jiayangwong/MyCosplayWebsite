@@ -1,15 +1,205 @@
-// Media uploader: resize to max 2000px, draw the watermark, export WebP. Runs only in the browser;
-// redrawing on a canvas also drops EXIF data (GPS location, camera details).
+// Media uploader (TASK-7): every photo becomes two watermarked WebP files, a full-resolution
+// master and a 1200px display copy. The watermark is the white dashed diagonal lattice from
+// docs/style-guide.md ("Lattice watermark"): +45 and -45 degree dashed lines, a small heart at every
+// crossing and the name written along the up-right lines. Everything runs in this browser; drawing
+// on a canvas also drops EXIF data (GPS location, camera details).
 import { SITE } from '../site-config.js';
 import { slugify } from '../events-data.js';
-import { onEventChange, attachPhoto } from './manager.js';
+import { onEventChange, attachPhoto, usedPhotoPaths } from './manager.js';
+import { addPendingPair, removePendingItem, pendingPaths } from './pending.js';
 
-export const MAX_SIDE = 2000;
-export const QUALITY = 0.85;
+/** Watermark density: f = round(shorter side / WM_DIVISOR). 80 = "2x" (user decision 2026-11-18). */
+export const WM_DIVISOR = 80;
+export const WM_MIN_F = 8;
+export const DEFAULT_OPACITY = 0.4;
+export const DISPLAY_MAX_SIDE = 1200;
+export const WEBP_MAX_SIDE = 16383;
+export const MASTER_QUALITY = 0.95;
+export const DISPLAY_QUALITY = 0.85;
+export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+export const IOS_CANVAS_PIXELS = 16777216;
+
+const FONT_FAMILY = '"Space Mono", ui-monospace, monospace';
+const WHITE = '#FFFFFF';
+
+export const MESSAGES = {
+  read: 'Could not read this file. Is it a JPG, PNG or WebP?',
+  tooLarge: 'Too large for this browser. Please use a desktop browser (Chrome, Edge or Firefox).',
+  noWebp: "This browser can't make WebP files. Please use Chrome, Edge or Firefox.",
+  tooBig: 'This photo is too big to publish (over 25 MB). Please use a smaller original.',
+};
+
+/* ---------- Pure helpers ---------- */
+
+/** Layout of the lattice for an image of this size. Everything is relative to the unit f. */
+export function watermarkLayout(width, height) {
+  const f = Math.max(WM_MIN_F, Math.round(Math.min(width, height) / WM_DIVISOR));
+  return {
+    f,
+    cell: 14 * f,
+    lineWidth: Math.max(1, 0.1 * f),
+    dash: [0.5 * f, 0.35 * f],
+    gap: 0.5 * f,
+    heart: 0.3 * f,
+  };
+}
+
+/** Size with the longest side at most `max`, keeping the ratio. Never enlarges. */
+export function fitSize(width, height, max) {
+  const scale = Math.min(1, max / Math.max(width, height));
+  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+}
+
+/** Master: original pixels, only scaled down when a side is over the WebP limit. */
+export const masterSize = (w, h) => fitSize(w, h, WEBP_MAX_SIDE);
+/** Display copy: longest side 1200px. */
+export const displaySize = (w, h) => fitSize(w, h, DISPLAY_MAX_SIDE);
+
+/** "<slug>" of the original file name (without extension). */
+export function baseName(fileName) {
+  return slugify(fileName.replace(/\.[^.]+$/, '')) || 'photo';
+}
+
+function isIOS() {
+  const ua = navigator.userAgent;
+  return /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+/* ---------- Drawing ---------- */
+
+/** Small upright heart centred on (x, y). The context is rotated -45deg, so the heart turns +45deg back. */
+function drawHeart(ctx, x, y, s) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.PI / 4);
+  ctx.beginPath();
+  ctx.moveTo(0, 0.9 * s);
+  ctx.bezierCurveTo(-1.6 * s, -0.2 * s, -0.6 * s, -1.4 * s, 0, -0.5 * s);
+  ctx.bezierCurveTo(0.6 * s, -1.4 * s, 1.6 * s, -0.2 * s, 0, 0.9 * s);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Draws the lattice in solid white (full opacity) on `ctx`, covering a width x height area.
+ * The caller puts this layer on the photo at the chosen opacity, so overlaps are never brighter.
+ */
+export function drawLattice(ctx, width, height, text) {
+  const { f, cell, lineWidth, dash, gap, heart } = watermarkLayout(width, height);
+  const n = Math.ceil(Math.sqrt(width * width + height * height) / 2 / cell) + 1;
+  const span = n * cell;
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate(-Math.PI / 4); // x axis now rises left to right: the up-right lines are horizontal here
+  ctx.strokeStyle = WHITE;
+  ctx.fillStyle = WHITE;
+  ctx.lineWidth = lineWidth;
+  ctx.setLineDash(dash);
+  ctx.font = `700 ${f}px ${FONT_FAMILY}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const label = (text || '').trim();
+  const half = label ? ctx.measureText(label).width / 2 + gap : 0;
+
+  ctx.beginPath();
+  for (let i = -n; i <= n; i += 1) {
+    const p = i * cell;
+    ctx.moveTo(p, -span); // up-left lines: unbroken
+    ctx.lineTo(p, span);
+    for (let j = -n; j < n; j += 1) { // up-right lines: broken around the name
+      const x0 = j * cell;
+      const mid = x0 + cell / 2;
+      if (half > 0 && half < cell / 2) {
+        ctx.moveTo(x0, p); ctx.lineTo(mid - half, p);
+        ctx.moveTo(mid + half, p); ctx.lineTo(x0 + cell, p);
+      } else if (half === 0) {
+        ctx.moveTo(x0, p); ctx.lineTo(x0 + cell, p);
+      } // a name longer than a cell: no line on this up-right segment, only the text
+    }
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  for (let i = -n; i <= n; i += 1) {
+    for (let j = -n; j <= n; j += 1) {
+      drawHeart(ctx, j * cell, i * cell, heart);
+      if (label && j < n) ctx.fillText(label, j * cell + cell / 2, i * cell);
+    }
+  }
+  ctx.restore();
+}
+
+class UploadError extends Error {
+  constructor(kind) { super(MESSAGES[kind]); this.kind = kind; }
+}
+
+function newCanvas(width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx || canvas.width !== width || canvas.height !== height) throw new UploadError('tooLarge');
+  return { canvas, ctx };
+}
+
+/** The photo scaled to width x height with the watermark on top (one layer, one opacity). */
+export function renderWatermarked(source, width, height, { text, opacity }) {
+  const { canvas, ctx } = newCanvas(width, height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(source, 0, 0, width, height);
+  const layer = newCanvas(width, height);
+  drawLattice(layer.ctx, width, height, text);
+  ctx.globalAlpha = Math.min(1, Math.max(0.1, opacity));
+  ctx.drawImage(layer.canvas, 0, 0);
+  ctx.globalAlpha = 1;
+  layer.canvas.width = 0; // free the layer's memory now, big masters use a lot
+  return canvas;
+}
+
+function toBlob(canvas, quality) {
+  return new Promise((resolve) => {
+    try {
+      canvas.toBlob(resolve, 'image/webp', quality);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function encode(source, size, opts, quality) {
+  const canvas = renderWatermarked(source, size.width, size.height, opts);
+  const blob = await toBlob(canvas, quality);
+  canvas.width = 0;
+  if (!blob) throw new UploadError('tooLarge');
+  if (blob.type !== 'image/webp') throw new UploadError('noWebp');
+  return { blob, width: size.width, height: size.height };
+}
+
+/* ---------- Uploader UI ---------- */
 
 const $ = (id) => document.getElementById(id);
-const items = []; // { file, bitmap, blob, url, outName, card }
+const items = [];
 let eventId = null;
+let chain = Promise.resolve();
+let rerenderQueued = false;
+let rerenderTimer = 0;
+
+/** Space Mono must be loaded before drawing, or the canvas silently uses the fallback font. */
+const fontsReady = (async () => {
+  if (document.readyState !== 'complete') await new Promise((r) => window.addEventListener('load', r, { once: true }));
+  if (!document.fonts || !document.fonts.load) return;
+  await Promise.race([
+    document.fonts.load(`700 20px "Space Mono"`).catch(() => {}),
+    new Promise((r) => setTimeout(r, 4000)),
+  ]);
+})();
+
+/** Runs uploader work one step at a time (one photo after the other, never in parallel). */
+function enqueue(task) {
+  chain = chain.then(task).catch((error) => console.error(error));
+  return chain;
+}
 
 function make(tag, className, text) {
   const node = document.createElement(tag);
@@ -18,168 +208,250 @@ function make(tag, className, text) {
   return node;
 }
 
-function token(name, fallback) {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return value || fallback;
-}
-
-/** Output size: longest side at most MAX_SIDE, never enlarged. */
-export function fitSize(width, height, max = MAX_SIDE) {
-  const scale = Math.min(1, max / Math.max(width, height));
-  return { width: Math.round(width * scale), height: Math.round(height * scale) };
-}
-
-/**
- * Draws `source` (ImageBitmap / image / canvas) with the watermark onto a new canvas.
- * opts: { text, position: br|bl|tr|tl|c, opacity: 0.1..1 }
- */
-export function renderWatermark(source, opts) {
-  const { width, height } = fitSize(source.width, source.height);
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(source, 0, 0, width, height);
-
-  const text = (opts.text || '').trim();
-  if (!text) return canvas;
-  const size = Math.max(14, Math.round(Math.min(width, height) * 0.035));
-  const pad = Math.round(size * 0.9);
-  ctx.font = `700 ${size}px "Space Mono", ui-monospace, monospace`;
-  ctx.textBaseline = 'alphabetic';
-  const metrics = ctx.measureText(text);
-  const textW = metrics.width;
-  const pos = opts.position || 'br';
-  let x;
-  let y;
-  if (pos === 'c') {
-    x = (width - textW) / 2;
-    y = height / 2 + size / 3;
-  } else {
-    x = pos.endsWith('r') ? width - pad - textW : pad;
-    y = pos.startsWith('b') ? height - pad : pad + size;
-  }
-
-  ctx.save();
-  ctx.globalAlpha = Math.min(1, Math.max(0.1, opts.opacity ?? 0.6));
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = Math.max(2, Math.round(size * 0.14));
-  ctx.strokeStyle = token('--color-ink', '#1D1A24');
-  ctx.strokeText(text, x, y);
-  ctx.fillStyle = token('--color-surface', '#FFFFFF');
-  ctx.fillText(text, x, y);
-  ctx.restore();
-  return canvas;
-}
-
-export function outputName(fileName) {
-  const base = fileName.replace(/\.[^.]+$/, '');
-  return `${slugify(base)}-wm.webp`;
-}
-
-function canvasToBlob(canvas) {
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', QUALITY));
+export function formatBytes(bytes) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 function options() {
-  return {
-    text: $('wm-text').value,
-    position: $('wm-pos').value,
-    opacity: Number($('wm-opacity').value) / 100,
-  };
+  return { text: $('wm-text').value, opacity: Number($('wm-opacity').value) / 100 };
 }
 
-function repoPath(item) {
-  return `media/events/${eventId || '<event-id>'}/${item.outName}`;
+function paths(item) {
+  const dir = `media/events/${eventId || '<event-id>'}`;
+  return { display: `${dir}/${item.name}.webp`, master: `${dir}/${item.name}-full.webp` };
 }
 
-function download(item) {
+/** Gives each card a file name that is not used yet for the selected event ("-2", "-3" ...). */
+function assignNames() {
+  const taken = eventId ? new Set([...usedPhotoPaths(), ...pendingPaths()]) : new Set();
+  for (const item of items) {
+    if (item.attached && item.attached.eventId === eventId) {
+      item.name = item.attached.name;
+    } else {
+      const base = baseName(item.file.name);
+      let name = base;
+      for (let n = 2; ; n += 1) {
+        item.name = name;
+        const p = paths(item);
+        if (!taken.has(p.display) && !taken.has(p.master)) break;
+        name = `${base}-${n}`;
+      }
+    }
+    const p = paths(item);
+    taken.add(p.display);
+    taken.add(p.master);
+    updatePaths(item);
+  }
+}
+
+function updatePaths(item) {
+  const p = paths(item);
+  item.ui.paths.replaceChildren(p.display, make('br'), p.master);
+}
+
+function setState(item, state, message) {
+  const { ui } = item;
+  item.state = state;
+  ui.card.dataset.state = state;
+  ui.card.classList.toggle('is-err', state === 'error' || item.tooBig);
+  ui.status.replaceChildren();
+  ui.bar.hidden = state !== 'processing';
+  if (state === 'processing') {
+    ui.status.textContent = 'Processing...';
+  } else if (state === 'ready') {
+    const icon = make('span', 'wm-check', '✓');
+    icon.setAttribute('aria-hidden', 'true');
+    ui.status.append(icon, ' Ready');
+  }
+  const errorText = message || (item.tooBig && state === 'ready' ? MESSAGES.tooBig : '');
+  ui.error.hidden = !errorText;
+  ui.error.textContent = errorText ? `! ${errorText}` : '';
+  const hasFiles = state === 'ready';
+  ui.downloadDisplay.disabled = !hasFiles;
+  ui.downloadMaster.disabled = !hasFiles;
+  ui.attach.disabled = !hasFiles || item.tooBig;
+  ui.remove.hidden = !(state === 'error' || item.tooBig);
+  ui.pair.hidden = !(item.display && state !== 'error');
+  $('wm-download-all').disabled = !items.some((i) => i.state === 'ready');
+}
+
+function showOutput(item, which, out) {
+  const fig = item.ui[which];
+  if (item.urls[which]) URL.revokeObjectURL(item.urls[which]);
+  item.urls[which] = URL.createObjectURL(out.blob);
+  fig.img.src = item.urls[which];
+  fig.img.width = out.width;
+  fig.img.height = out.height;
+  fig.size.textContent = `${out.width} x ${out.height} · ${formatBytes(out.blob.size)}`;
+  fig.root.dataset.width = String(out.width);
+  fig.root.dataset.height = String(out.height);
+  fig.root.dataset.bytes = String(out.blob.size);
+}
+
+async function processItem(item) {
+  if (!items.includes(item)) return; // removed while waiting
+  setState(item, 'processing');
+  if (!item.bitmap) {
+    try {
+      item.bitmap = await createImageBitmap(item.file);
+    } catch {
+      setState(item, 'error', MESSAGES.read);
+      return;
+    }
+  }
+  await fontsReady;
+  const opts = options();
+  const { width, height } = item.bitmap;
+  const m = masterSize(width, height);
+  const d = displaySize(width, height);
+  try {
+    if (m.width * m.height > IOS_CANVAS_PIXELS && isIOS()) throw new UploadError('tooLarge');
+    const display = await encode(item.bitmap, d, opts, DISPLAY_QUALITY);
+    const master = await encode(item.bitmap, m, opts, MASTER_QUALITY);
+    item.display = display;
+    item.master = master;
+    item.downloaded = { display: false, master: false };
+    item.tooBig = display.blob.size > MAX_FILE_BYTES || master.blob.size > MAX_FILE_BYTES;
+    if (item.tooBig) removePendingItem(item);
+    showOutput(item, 'display', display);
+    showOutput(item, 'master', master);
+    setState(item, 'ready');
+  } catch (error) {
+    if (!(error instanceof UploadError)) console.error(error);
+    item.display = null;
+    item.master = null;
+    removePendingItem(item);
+    setState(item, 'error', error instanceof UploadError ? error.message : MESSAGES.tooLarge);
+  }
+}
+
+function download(item, which) {
+  const p = paths(item);
   const a = make('a');
-  a.href = item.url;
-  a.download = item.outName;
+  a.href = item.urls[which];
+  a.download = (which === 'display' ? p.display : p.master).split('/').pop();
   document.body.append(a);
   a.click();
   a.remove();
+  item.downloaded[which] = true;
 }
 
-function formatKb(bytes) {
-  return `${Math.round(bytes / 1024)} KB`;
+function attach(item) {
+  if (!eventId) {
+    item.ui.error.hidden = false;
+    item.ui.error.textContent = '! Pick or fill in an event first (date + short form).';
+    return;
+  }
+  if (item.state !== 'ready' || item.tooBig) return;
+  item.attached = { eventId, name: item.name };
+  const p = paths(item);
+  addPendingPair({ eventId, photo: p.display, photoFull: p.master, item });
+  attachPhoto(p.display, p.master);
+  assignNames();
 }
 
-async function renderItem(item) {
-  const canvas = renderWatermark(item.bitmap, options());
-  const blob = await canvasToBlob(canvas);
-  if (item.url) URL.revokeObjectURL(item.url);
-  item.blob = blob;
-  item.url = URL.createObjectURL(blob);
-  item.width = canvas.width;
-  item.height = canvas.height;
-  if (blob.type !== 'image/webp') item.outName = item.outName.replace(/\.webp$/, '.png');
+function removeItem(item) {
+  const i = items.indexOf(item);
+  if (i !== -1) items.splice(i, 1);
+  removePendingItem(item);
+  Object.values(item.urls).forEach((u) => u && URL.revokeObjectURL(u));
+  if (item.bitmap) item.bitmap.close();
+  item.ui.card.remove();
+  assignNames();
+  $('wm-download-all').disabled = !items.some((x) => x.state === 'ready');
+}
 
-  const { card } = item;
-  card.querySelector('img').src = item.url;
-  card.querySelector('.wm-meta').textContent = `${canvas.width} × ${canvas.height} · ${formatKb(blob.size)} · ${blob.type.replace('image/', '').toUpperCase()}`;
-  card.querySelector('.wm-path').textContent = repoPath(item);
-  card.dataset.width = String(canvas.width);
-  card.dataset.height = String(canvas.height);
+function buildFigure(kind, chipText) {
+  const root = make('figure', `wm-thumb wm-thumb-${kind}`);
+  const img = make('img');
+  img.alt = `${chipText} copy with the watermark`;
+  const cap = make('figcaption');
+  const chip = make('span', `chip chip-${kind}`, chipText);
+  const size = make('span', 'wm-size');
+  cap.append(chip, make('br'), size);
+  root.append(img, cap);
+  return { root, img, size };
+}
+
+function button(className, label, onClick) {
+  const b = make('button', `btn ${className} btn-sm`, label);
+  b.type = 'button';
+  b.addEventListener('click', onClick);
+  return b;
 }
 
 function buildCard(item) {
-  const li = make('li', 'wm-card');
-  const img = make('img');
-  img.alt = `Watermarked preview of ${item.file.name}`;
-  li.append(img, make('p', 'wm-name', item.outName), make('p', 'wm-meta', 'Working…'), make('p', 'wm-path'));
+  const card = make('li', 'wm-card');
+  const pair = make('div', 'wm-pair');
+  const master = buildFigure('master', 'MASTER');
+  const display = buildFigure('display', 'DISPLAY');
+  pair.append(master.root, display.root);
+  const nameRow = make('p', 'wm-name', item.file.name);
+  const status = make('span', 'wm-status');
+  status.setAttribute('role', 'status');
+  nameRow.append(' ', status);
+  const bar = make('div', 'wm-ibar');
+  bar.setAttribute('aria-hidden', 'true');
+  const error = make('p', 'wm-error');
+  error.setAttribute('role', 'alert');
+  const pathsBox = make('p', 'wm-path');
   const actions = make('div', 'wm-actions');
-  const dl = make('button', 'btn btn-primary btn-sm', 'Download');
-  dl.type = 'button';
-  dl.addEventListener('click', () => download(item));
-  const attach = make('button', 'btn btn-secondary btn-sm', 'Attach to selected event');
-  attach.type = 'button';
-  attach.addEventListener('click', () => {
-    if (!eventId) {
-      li.querySelector('.wm-path').textContent = 'Pick or fill in an event first (date + short form).';
-      return;
-    }
-    attachPhoto(repoPath(item));
-  });
-  actions.append(dl, attach);
-  li.append(actions);
-  return li;
+  const ui = {
+    card, pair, master, display, status, bar, error, paths: pathsBox,
+    downloadDisplay: button('btn-secondary', 'Download display', () => download(item, 'display')),
+    downloadMaster: button('btn-secondary', 'Download full size', () => download(item, 'master')),
+    attach: button('btn-primary', 'Attach to selected event', () => attach(item)),
+    remove: button('btn-secondary', 'Remove', () => removeItem(item)),
+  };
+  actions.append(ui.attach, ui.downloadDisplay, ui.downloadMaster, ui.remove);
+  card.append(pair, nameRow, bar, error, pathsBox, actions);
+  return ui;
 }
 
-async function addFiles(fileList) {
-  const files = [...fileList].filter((f) => f.type.startsWith('image/') || /\.(heic|heif|avif)$/i.test(f.name));
-  for (const file of files) {
-    const item = { file, outName: outputName(file.name) };
-    item.card = buildCard(item);
-    $('wm-previews').append(item.card);
-    try {
-      item.bitmap = await createImageBitmap(file);
-      items.push(item);
-      await renderItem(item);
-    } catch (error) {
-      item.card.querySelector('.wm-meta').textContent = `Could not open this image in this browser (${error.message}).`;
-    }
+function addFiles(fileList) {
+  for (const file of [...fileList]) {
+    const item = { file, name: baseName(file.name), urls: {}, downloaded: { display: false, master: false }, state: 'queued', tooBig: false };
+    item.ui = buildCard(item);
+    items.push(item);
+    $('wm-previews').append(item.ui.card);
+    setState(item, 'processing');
+    enqueue(() => processItem(item));
   }
-  $('wm-download-all').disabled = items.length === 0;
+  assignNames();
 }
 
-async function rerenderAll() {
+function scheduleRerender() {
   $('wm-opacity-out').textContent = `${$('wm-opacity').value}%`;
-  for (const item of items) await renderItem(item);
+  clearTimeout(rerenderTimer);
+  rerenderTimer = setTimeout(() => {
+    if (rerenderQueued) return;
+    rerenderQueued = true;
+    enqueue(async () => {
+      rerenderQueued = false;
+      for (const item of items.slice()) {
+        if (item.bitmap) await processItem(item); // re-render every photo that could be read
+      }
+    });
+  }, 200);
 }
 
 async function downloadAll() {
-  for (const item of items) {
-    download(item);
+  for (const item of items.filter((i) => i.state === 'ready')) {
+    download(item, 'display');
+    await new Promise((r) => setTimeout(r, 300));
+    download(item, 'master');
     await new Promise((r) => setTimeout(r, 300));
   }
 }
 
 function init() {
   $('wm-text').value = SITE.watermark;
+  $('wm-opacity').value = String(Math.round(DEFAULT_OPACITY * 100));
+  $('wm-opacity-out').textContent = `${$('wm-opacity').value}%`;
   $('wm-files').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
-  ['wm-text', 'wm-pos', 'wm-opacity'].forEach((id) => $(id).addEventListener('input', rerenderAll));
+  $('wm-text').addEventListener('input', scheduleRerender);
+  $('wm-opacity').addEventListener('input', scheduleRerender);
   $('wm-download-all').addEventListener('click', downloadAll);
 
   const zone = $('drop-zone');
@@ -194,9 +466,8 @@ function init() {
   onEventChange((id) => {
     eventId = id;
     $('wm-event-id').textContent = id || '(fill in date + short form, or edit an event)';
-    items.forEach((item) => { item.card.querySelector('.wm-path').textContent = repoPath(item); });
+    assignNames();
   });
-  if (document.fonts && document.fonts.load) document.fonts.load('700 20px "Space Mono"').then(rerenderAll).catch(() => {});
   document.documentElement.dataset.uploaderReady = 'true';
 }
 

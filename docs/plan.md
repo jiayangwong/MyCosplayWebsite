@@ -410,7 +410,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Download buttons: the Playwright download event gives `flat-2400x1600.webp` and `flat-2400x1600-full.webp`.
     - Attach: `#f-photo` = `media/events/<id>/flat-2400x1600.webp`, `#f-photo-full` = `media/events/<id>/flat-2400x1600-full.webp`, and both are in the localStorage draft.
     - `page.on('request')` records no request other than same-origin page assets during processing.
-- Status: todo
+- Status: ready for review (built 2026-11-19 on branch task-7-lattice-watermark)
 - Review: pending
 - QA: pending
 

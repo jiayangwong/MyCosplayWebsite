@@ -14,5 +14,5 @@ export const SITE = {
     { label: 'Instagram', url: 'https://www.instagram.com/notpuzzkezz/' },
     { label: 'Facebook', url: 'https://www.facebook.com/felix.jiang.376' },
   ],
-  watermark: 'PUZZ KEZZ · @notpuzzkezz',
+  watermark: '@notpuzzkezz', // default text of the lattice watermark (admin uploader)
 };
