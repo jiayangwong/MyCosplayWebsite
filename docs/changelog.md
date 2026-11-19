@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0 - PROPOSED, not released yet (date is set at deploy)
+## v1.0.0 - released 2026-11-19
 First public version. Release notes are in docs/release.md. Entries below were made while building it.
 
 ## Unreleased
