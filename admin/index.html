@@ -179,7 +179,13 @@
         <span class="msg-icon" aria-hidden="true">!</span>
         <div class="msg-body">
           <p class="msg-text">The site changed since you started editing (maybe from another device). Export a backup, then reload this page.</p>
-          <p class="msg-next">Nothing was changed on GitHub.</p>
+          <p class="msg-next">Nothing was changed on GitHub. To go on:</p>
+          <ol class="msg-next msg-steps">
+            <li>Export backup.</li>
+            <li>Discard draft (this loads the newest events.json from GitHub).</li>
+            <li>Import your backup, or redo your edits, and check the other change is still there.</li>
+            <li>Publish.</li>
+          </ol>
           <div class="msg-actions">
             <button type="button" class="btn btn-secondary" id="pub-export">Export backup</button>
             <button type="button" class="btn btn-secondary" id="pub-reload">Reload</button>

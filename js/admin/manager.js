@@ -5,6 +5,8 @@
 import { EVENTS_URL, sortEvents, validateEvent, makeEventId, formatDate } from '../events-data.js';
 import { renderMedia } from '../embed.js';
 import { gitBlobSha } from './git-blob.js';
+import { githubFetch, readToken } from './github-token.js';
+import { GITHUB } from './github-config.js';
 
 export const DRAFT_KEY = 'puzzkezz.events.draft';
 const FIELDS = ['date', 'short', 'name', 'venue', 'link', 'photo', 'photoFull'];
@@ -314,13 +316,37 @@ async function importEvents(file) {
   }
 }
 
+/** data/events.json as it is on GitHub right now (newer than the site copy for 1-2 minutes after a push).
+ *  Needs a saved token. Returns { events, base } or null if there is no token or GitHub can't be read. */
+async function loadFromRepo() {
+  const token = readToken();
+  if (!token) return null;
+  try {
+    const path = `/repos/${GITHUB.owner}/${GITHUB.repo}/contents/data/events.json?ref=${encodeURIComponent(GITHUB.branch)}`;
+    const response = await githubFetch(path, { token });
+    if (!response.ok) return null;
+    const file = await response.json();
+    if (file.encoding !== 'base64' || typeof file.content !== 'string' || typeof file.sha !== 'string') return null;
+    const binary = atob(file.content.replace(/\s/g, ''));
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    const events = Array.isArray(data.events) ? data.events : [];
+    return { events, base: { sha: file.sha, text: exportText(events) } };
+  } catch {
+    return null;
+  }
+}
+
 async function discardDraft() {
   if (!window.confirm('Discard your browser draft and reload the published data/events.json?')) return;
   localStorage.removeItem(DRAFT_KEY);
-  const published = await loadPublished();
+  // With a token, start again from the copy on GitHub itself, so its SHA is the new base and a backup
+  // imported after this can be published (the stale check compares against GitHub, not the site copy).
+  const fromRepo = await loadFromRepo();
+  const published = fromRepo || await loadPublished();
   state.events = sortEvents(published.events);
   state.base = published.base;
-  setBanner('Source: published data/events.json');
+  setBanner(fromRepo ? 'Source: published data/events.json (newest copy from GitHub)' : 'Source: published data/events.json');
   clearForm();
   draftChanged();
 }
@@ -429,8 +455,9 @@ async function init() {
   const draft = readDraft();
   if (draft) {
     state.events = sortEvents(draft.events);
-    // A draft from before Publish existed has no base: use the published file this page can see now.
-    state.base = draft.base || (await loadPublished()).base;
+    // A draft from before Publish existed has no base. Its start point is unknown, so the first Publish
+    // stops as stale and the page explains how to go on (Export, Discard, Import, Publish).
+    state.base = draft.base || { sha: null, text: '' };
     setBanner(BANNER_DRAFT);
   } else {
     const published = await loadPublished();

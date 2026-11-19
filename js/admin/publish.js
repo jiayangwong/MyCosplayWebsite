@@ -5,6 +5,7 @@
 import { GITHUB } from './github-config.js';
 import { githubFetch, readToken, MESSAGES as TOKEN_MESSAGES, TOKEN_EVENT, TOKEN_KEY } from './github-token.js';
 import { PUBLISH_BUSY_EVENT } from './github-panel.js';
+import { gitBlobSha } from './git-blob.js';
 import {
   managerReady, draftText, eventCount, baseEvents, draftDiffersFromBase, setBase, onDraftChange,
   lockFileActions, exportEvents,
@@ -21,7 +22,7 @@ export const PUBLISH_MESSAGES = Object.freeze({
   ready: `Makes one commit on ${GITHUB.owner}/${GITHUB.repo} (${GITHUB.branch}).`,
   success: 'Published. The site updates in about 1-2 minutes.',
   stale: 'The site changed since you started editing (maybe from another device). Export a backup, then reload this page.',
-  staleNext: 'Nothing was changed on GitHub.',
+  staleNext: 'Nothing was changed on GitHub. To go on: 1. Export backup. 2. Discard draft (this loads the newest events.json from GitHub). 3. Import your backup, or redo your edits, and check the other change is still there. 4. Publish.',
   nothingChanged: 'Nothing was changed on GitHub.',
   network: TOKEN_MESSAGES.network,
   unauthorized: 'Your GitHub token is wrong or has expired.',
@@ -201,6 +202,8 @@ async function run(token) {
     if (error.status === 404) throw new PublishError('stale', PUBLISH_MESSAGES.stale, PUBLISH_MESSAGES.staleNext);
     throw error;
   }
+  // GitHub already has exactly this text (for example a Try again after an unsure result): done, no writes.
+  if (current.sha && current.sha === await gitBlobSha(text)) return { commitSha: head, blobSha: current.sha, text };
   if (!base.sha || current.sha !== base.sha) {
     throw new PublishError('stale', PUBLISH_MESSAGES.stale, PUBLISH_MESSAGES.staleNext);
   }
@@ -233,7 +236,8 @@ async function run(token) {
     } catch {
       throw new PublishError('unsure', PUBLISH_MESSAGES.unsure, PUBLISH_MESSAGES.unsureNext);
     }
-    if (now.object.sha !== made.sha) throw error;
+    // Not visible yet does not prove it failed: the PATCH may still be applied, or the read may lag.
+    if (now.object.sha !== made.sha) throw new PublishError('unsure', PUBLISH_MESSAGES.unsure, PUBLISH_MESSAGES.unsureNext);
   }
   return { commitSha: made.sha, blobSha: blob.sha, text };
 }
