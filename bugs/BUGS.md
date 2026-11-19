@@ -61,7 +61,9 @@
 - Steps to reproduce: 1. Published event X has `sample: true` (all 8 live events do). 2. In /admin/ attach a new photo pair to X (this drops `sample` from the draft). 3. Press "Remove from publish" on the pair.
 - Expected: X is back to what is live, including its SAMPLE tag; the button reads "Nothing to publish".
 - Actual: the note says "Photo for CF 2026 set back to the published photo." and the photo is back, but the event row no longer shows "SAMPLE" and the Publish button stays enabled ("Publish to GitHub"). The next publish drops `sample` from the live event.
-- Status: open
+- Status: fixed
+- Cause: `revertPhoto` only put back `photo` / `photoFull`; the `sample` flag that `attachPhoto` deletes was never restored from the published events.json.
+- Fix: `revertPair` (js/admin/publish.js) passes the published event's `sample` value (looked up in the same base events.json as the photo, both the "published photo" and "no published photo" branches) and `revertPhoto` (js/admin/manager.js) sets it back. Tests in tests/task-16.spec.js.
 
 ## BUG-6: "Remove from publish" overwrites an unsaved typed photo path in the open form
 - Found by: QA
@@ -70,4 +72,6 @@
 - Steps to reproduce: 1. Attach a pair to published event X (form open). 2. Type another path into Display photo without saving. 3. Press "Remove from publish".
 - Expected: the unsaved typed path is kept (or at least the user is warned).
 - Actual: the draft matched the pair so it is reverted, and the form field is replaced by the published path; the typed text is lost. The note is shown.
-- Status: open
+- Status: fixed
+- Cause: `revertPhoto` always wrote the reverted paths into the open form's Display / Full-size photo fields, whatever they held.
+- Fix: `revertPair` passes the pair's own paths; `revertPhoto` only updates the form fields (and preview) while both still hold exactly those paths. Otherwise the typed text is left alone and the saved draft is still set back (the note is shown as before). Files: js/admin/manager.js, js/admin/publish.js; test in tests/task-16.spec.js.

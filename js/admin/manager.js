@@ -453,17 +453,23 @@ export function attachPhoto(path, fullPath) {
  * TASK-16: "Remove from publish" sets an event's photo paths back (the published ones, or none when `photo`
  * is ''). `photoFull` is only kept together with a `photo`. Saves the draft; if the event is open in the
  * form, its photo fields and preview follow. Returns false when the event is not in the draft.
+ * BUG-5: `sample` (when not undefined) is the published event's "Sample" tag, put back since attaching drops it.
+ * BUG-6: `formPaths` ({ photo, photoFull }) are the pair's own paths; the open form's photo fields are only
+ * updated while they still hold exactly those (an unsaved typed path is left alone; the draft is reverted).
  */
-export function revertPhoto(eventId, photo, photoFull) {
+export function revertPhoto(eventId, photo, photoFull, { sample, formPaths } = {}) {
   const event = state.events.find((e) => e.id === eventId);
   if (!event) return false;
   if (photo) event.photo = photo;
   else delete event.photo;
   if (photo && photoFull) event.photoFull = photoFull;
   else delete event.photoFull;
+  if (sample !== undefined) event.sample = sample;
   saveDraft();
   renderList();
-  if (state.editingId === eventId) {
+  const formUntouched = !formPaths || ($('f-photo').value.trim() === (formPaths.photo || '')
+    && $('f-photo-full').value.trim() === (formPaths.photoFull || ''));
+  if (state.editingId === eventId && formUntouched) {
     $('f-photo').value = event.photo || '';
     $('f-photo-full').value = event.photoFull || '';
     updatePreview();
