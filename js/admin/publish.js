@@ -574,12 +574,17 @@ function revertPair(pair) {
   if (!event || event.photo !== pair.photo) return '';
   if (event.photoFull && event.photoFull !== pair.photoFull) return '';
   const published = eventsOf(baseEvents().text).find((e) => e.id === pair.eventId);
+  // BUG-5: the attach dropped the "Sample" tag; put back the published one. BUG-6: keep a typed form path.
+  const options = {
+    sample: published && published.sample !== undefined ? published.sample : undefined,
+    formPaths: { photo: pair.photo, photoFull: pair.photoFull },
+  };
   if (published && typeof published.photo === 'string' && published.photo) {
     const full = typeof published.photoFull === 'string' ? published.photoFull : '';
-    revertPhoto(pair.eventId, published.photo, full);
+    revertPhoto(pair.eventId, published.photo, full, options);
     return PUBLISH_MESSAGES.revertedBase(eventName(event));
   }
-  revertPhoto(pair.eventId, '', '');
+  revertPhoto(pair.eventId, '', '', options);
   return PUBLISH_MESSAGES.revertedNone(eventName(event));
 }
 

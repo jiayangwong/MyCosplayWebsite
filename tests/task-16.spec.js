@@ -260,6 +260,54 @@ test('form open: Remove from publish updates the open form\'s photo fields and p
   await expect(page.locator('#wm-event-id')).toHaveText(X); // still editing X
 });
 
+test('BUG-5: Remove from publish on a published SAMPLE event puts back the "Sample" tag; nothing to publish', async ({ page, github }) => {
+  await setup(page, github, {
+    events: [ev(X, { ...OLD, sample: true }), ev(Y, { sample: true })],
+    files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
+  });
+  await expect(row(page, X)).toContainText('SAMPLE');
+  await attach(page, X);
+  await expectResult(row(page, X)).not.toContainText('SAMPLE'); // attaching drops the tag
+  await page.locator('#pub-pending .pend-remove').press('Enter');
+  await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
+  expect(await draftEvent(page, X)).toEqual(ev(X, { ...OLD, sample: true }));
+  await expect(row(page, X)).toContainText('SAMPLE');
+  await expect(page.locator('#pub-pending')).toHaveText('No pending changes.');
+  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+  await expect(page.locator('#publish-btn')).toBeDisabled();
+  expect(await page.evaluate(async () => (await import('/js/admin/manager.js')).draftDiffersFromBase())).toBe(false);
+  expect(writes(github)).toEqual([]);
+});
+
+test('BUG-5: a published event with no photo gets its "Sample" tag back when the photo is removed', async ({ page, github }) => {
+  await setup(page, github, { events: [ev(X, { sample: true }), ev(Y)] });
+  await attach(page, X);
+  await page.locator('#pub-pending .pend-remove').press('Enter');
+  await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 removed from the event (it has no published photo).');
+  expect(await draftEvent(page, X)).toEqual(ev(X, { sample: true }));
+  await expect(row(page, X)).toContainText('SAMPLE');
+  await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
+});
+
+test('BUG-6: an unsaved typed path in the open form is kept; the draft is still set back', async ({ page, github }) => {
+  await setup(page, github, {
+    events: [ev(X, OLD), ev(Y)],
+    files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
+  });
+  await attach(page, X); // leaves X open in the form
+  const pairFull = `media/events/${X}/flat-800x600-full.webp`;
+  await expect(page.locator('#f-photo-full')).toHaveValue(pairFull);
+  const typed = `media/events/${X}/typed.webp`;
+  await page.fill('#f-photo', typed); // not saved
+  await page.locator('#pub-pending .pend-remove').press('Enter');
+  await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
+  expect(await draftEvent(page, X)).toMatchObject(OLD);
+  await expect(page.locator('#f-photo')).toHaveValue(typed);
+  await expect(page.locator('#f-photo-full')).toHaveValue(pairFull);
+  await expect(page.locator('#wm-event-id')).toHaveText(X); // still editing X
+  expect(writes(github)).toEqual([]);
+});
+
 /* ---------- (1) Event photo link check ---------- */
 
 test('broken link (the reload / import case): stops naming X and the path; no POST/PATCH, repo unchanged, no dialog', async ({ page, github }) => {
