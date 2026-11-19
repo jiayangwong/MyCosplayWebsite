@@ -153,6 +153,10 @@ test('CSP allows only self + api.github.com for fetch, referrer is off', async (
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
   const connect = csp.split(';').map((d) => d.trim()).find((d) => d.startsWith('connect-src'));
   expect(connect).toBe("connect-src 'self' https://api.github.com");
+  const directives = csp.split(';').map((d) => d.trim()).filter(Boolean);
+  for (const d of ["object-src 'none'", "base-uri 'none'", "form-action 'self'"]) expect(directives).toContain(d);
+  // Nothing else may widen what the page can connect to.
+  expect(directives.filter((d) => /^(default-src|connect-src)\b/.test(d))).toEqual([connect]);
   await expect(page.locator('meta[name="referrer"]')).toHaveAttribute('content', 'no-referrer');
   // If CSP did not block it, this fake answer would make the fetch succeed and the test fail.
   await page.route('https://example.com/**', (route) => route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*' }, body: 'ok' }));
@@ -200,4 +204,50 @@ test('repo scan: no real-looking GitHub token in any non-test file', async ({}, 
     }
   }
   expect(hits).toEqual([]);
+});
+
+test('fake GitHub behaves like GitHub: unknown refs 404, bad tree entries and missing parents 422', async ({ page, github }) => {
+  const head = github.repo.head;
+  const results = await page.evaluate(async ({ token, head }) => {
+    const base = 'https://api.github.com/repos/jiayangwong/MyCosplayWebsite';
+    const call = async (method, p, body) => {
+      const r = await fetch(base + p, {
+        method,
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return { status: r.status, body: await r.json() };
+    };
+    const out = {};
+    out.noRef = await call('GET', '/contents/data/events.json');
+    out.branch = await call('GET', '/contents/data/events.json?ref=main');
+    out.sha = await call('GET', `/contents/data/events.json?ref=${head}`);
+    out.undef = await call('GET', '/contents/data/events.json?ref=undefined');
+    out.unknownSha = await call('GET', `/contents/data/events.json?ref=${'0'.repeat(40)}`);
+    out.encoded = await call('GET', '/contents/data%2Fevents.json');
+    const blob = await call('POST', '/git/blobs', { content: 'x', encoding: 'utf-8' });
+    const commit = await call('GET', `/git/commits/${head}`);
+    const tree = commit.body.tree.sha;
+    out.badMode = await call('POST', '/git/trees', { base_tree: tree, tree: [{ path: 'a.txt', mode: '100666', type: 'blob', sha: blob.body.sha }] });
+    out.badType = await call('POST', '/git/trees', { base_tree: tree, tree: [{ path: 'a.txt', mode: '100644', type: 'file', sha: blob.body.sha }] });
+    out.goodTree = await call('POST', '/git/trees', { base_tree: tree, tree: [{ path: 'a.txt', mode: '100644', type: 'blob', sha: blob.body.sha }] });
+    out.badParent = await call('POST', '/git/commits', { message: 'm', tree: out.goodTree.body.sha, parents: ['f'.repeat(40)] });
+    out.goodCommit = await call('POST', '/git/commits', { message: 'm', tree: out.goodTree.body.sha, parents: [head] });
+    return out;
+  }, { token: FAKE_TOKEN, head });
+  for (const k of ['noRef', 'branch', 'sha']) {
+    expect(results[k].status, k).toBe(200);
+    expect(results[k].body.path).toBe('data/events.json');
+  }
+  expect(results.undef.status).toBe(404);
+  expect(results.unknownSha.status).toBe(404);
+  expect(results.encoded.status).toBe(200);
+  expect(results.encoded.body.path).toBe('data/events.json');
+  expect(results.badMode.status).toBe(422);
+  expect(results.badType.status).toBe(422);
+  expect(results.goodTree.status).toBe(201);
+  expect(results.badParent.status).toBe(422);
+  expect(results.goodCommit.status).toBe(201);
+  expect(github.repo.head).toBe(head); // nothing moved the branch
+  expect(github.repo.read('data/events.json')).toBe(fs.readFileSync(path.join(__dirname, '..', 'data', 'events.json'), 'utf8'));
 });

@@ -487,7 +487,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - The draft in localStorage and an exported `events.json` do not contain the token string.
     - The CSP meta tag is present with the `connect-src` value above. A `fetch` from the admin page to another origin (for example `https://example.com`) is blocked.
     - A scan of every non-test file in the repo (`*.html`, `*.js`, `*.json`) finds no string matching `ghp_[A-Za-z0-9]{20,}` or `github_pat_[A-Za-z0-9_]{20,}`.
-- Status: ready for review (built 2026-11-19 on branch task-11-github-panel)
+- Status: ready for re-review (round 1 fixes 2026-11-19 on branch task-11-github-panel: must-fix + nice-to-haves in docs/reviews.md)
 - Review: changes requested
 - QA: pending
 

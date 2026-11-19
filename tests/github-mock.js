@@ -6,6 +6,8 @@
 //   shows up anywhere except the Authorization header of a request to https://api.github.com.
 const base = require('@playwright/test');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 const { expect } = base;
 const FAKE_TOKEN = 'github_pat_TESTONLY_not_a_real_token';
@@ -80,6 +82,16 @@ class FakeRepo {
   }
 }
 
+const TREE_MODES = { blob: ['100644', '100755', '120000'], tree: ['040000'], commit: ['160000'] };
+/** Why a POST /git/trees entry would be refused by GitHub (422), or '' if it is fine. */
+function treeEntryProblem(e) {
+  if (!e || typeof e.path !== 'string' || !e.path || e.path.startsWith('/') || e.path.endsWith('/')) return 'bad path';
+  if (!TREE_MODES[e.type]) return `bad type ${e.type}`;
+  if (!TREE_MODES[e.type].includes(e.mode)) return `mode ${e.mode} does not fit type ${e.type}`;
+  if (e.sha !== null && typeof e.sha !== 'string') return 'sha must be a string or null';
+  return '';
+}
+
 function json(route, status, body, headers = {}) {
   return route.fulfill({ status, headers: { ...CORS, 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
 }
@@ -87,7 +99,9 @@ function json(route, status, body, headers = {}) {
 class FakeGitHub {
   constructor(options = {}) {
     this.token = options.token || FAKE_TOKEN;
-    this.repo = new FakeRepo(options);
+    // By default the fake repo holds the real data/events.json from this checkout.
+    const files = options.files || { 'data/events.json': fs.readFileSync(path.join(__dirname, '..', 'data', 'events.json')) };
+    this.repo = new FakeRepo({ ...options, files });
     this.requests = []; // { method, path, query, headers, body }
     this.unhandled = [];
     this.overrides = []; // { method, test, response, once }
@@ -183,12 +197,17 @@ class FakeGitHub {
       return json(route, 200, { sha: x[1], tree, truncated: false });
     }
     if (req.method === 'GET' && (x = m(/^\/contents\/(.+)$/))) {
-      const ref = req.query.ref || repo.head;
-      const commit = repo.commits.get(ref) ? ref : repo.head;
-      const entry = repo.filesAt(commit).get(decodeURIComponent(x[1]));
+      // Like GitHub: no ref or the branch name = head, a known commit SHA = that commit, anything else = 404.
+      const ref = req.query.ref;
+      let commit;
+      if (ref === undefined || ref === repo.branch || ref === `heads/${repo.branch}` || ref === `refs/heads/${repo.branch}`) commit = repo.head;
+      else if (repo.commits.has(ref)) commit = ref;
+      else return json(route, 404, { message: `No commit found for the ref ${ref}` });
+      const filePath = decodeURIComponent(x[1]);
+      const entry = repo.filesAt(commit).get(filePath);
       if (!entry) return json(route, 404, { message: 'Not Found' });
       const buf = repo.blobs.get(entry.sha);
-      return json(route, 200, { type: 'file', path: x[1], sha: entry.sha, size: buf.length, encoding: 'base64', content: buf.toString('base64') });
+      return json(route, 200, { type: 'file', path: filePath, name: filePath.split('/').pop(), sha: entry.sha, size: buf.length, encoding: 'base64', content: buf.toString('base64') });
     }
     if (req.method === 'POST' && sub === '/git/blobs') {
       const b = req.body || {};
@@ -201,6 +220,8 @@ class FakeGitHub {
       const entries = b.base_tree ? new Map(repo.trees.get(b.base_tree) || []) : new Map();
       if (b.base_tree && !repo.trees.has(b.base_tree)) return json(route, 422, { message: 'base_tree not found' });
       for (const e of b.tree || []) {
+        const bad = treeEntryProblem(e);
+        if (bad) return json(route, 422, { message: `Invalid tree entry ${JSON.stringify(e.path)}: ${bad}` });
         if (e.sha === null) entries.delete(e.path);
         else if (!repo.blobs.has(e.sha)) return json(route, 422, { message: `blob ${e.sha} not found` });
         else entries.set(e.path, { sha: e.sha, mode: e.mode, type: e.type });
@@ -211,6 +232,9 @@ class FakeGitHub {
     if (req.method === 'POST' && sub === '/git/commits') {
       const b = req.body || {};
       if (!repo.trees.has(b.tree)) return json(route, 422, { message: 'tree not found' });
+      if (!Array.isArray(b.parents)) return json(route, 422, { message: 'parents must be an array' });
+      const missing = b.parents.find((p) => !repo.commits.has(p));
+      if (missing !== undefined) return json(route, 422, { message: `parent ${missing} not found` });
       const sha = repo.addCommit({ tree: b.tree, parents: b.parents || [], message: b.message || '' });
       return json(route, 201, { sha, tree: { sha: b.tree }, parents: (b.parents || []).map((p) => ({ sha: p })) });
     }

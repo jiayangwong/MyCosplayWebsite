@@ -204,11 +204,12 @@
 .wm-actions [hidden] { display: none; }
 
 /* Processing: pink indeterminate bar */
-.wm-ibar { position: relative; height: 3px; overflow: hidden; background: color-mix(in srgb, var(--color-line) 30%, transparent); }
-.wm-ibar[hidden] { display: none; }
-.wm-ibar::after { content: ""; position: absolute; top: 0; bottom: 0; left: -35%; width: 35%; background: var(--color-pink); animation: wm-slide 1.1s linear infinite; }
+/* Shared by the uploader (.wm-ibar) and the GitHub panel (.ibar). */
+.wm-ibar, .ibar { position: relative; height: 3px; overflow: hidden; background: color-mix(in srgb, var(--color-line) 30%, transparent); }
+.wm-ibar[hidden], .ibar[hidden] { display: none; }
+.wm-ibar::after, .ibar::after { content: ""; position: absolute; top: 0; bottom: 0; left: -35%; width: 35%; background: var(--color-pink); animation: wm-slide 1.1s linear infinite; }
 @keyframes wm-slide { from { left: -35%; } to { left: 100%; } }
-@media (prefers-reduced-motion: reduce) { .wm-ibar::after { animation: none; left: 0; width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .wm-ibar::after, .ibar::after { animation: none; left: 0; width: 100%; } }
 
 @media (max-width: 767px) {
   .wm-pair { flex-direction: column; }
@@ -258,9 +259,6 @@
 .msg[data-state="ok"] .msg-icon { color: var(--color-purple-deep); }
 .msg[data-state="err"] { border-left-color: var(--color-error); color: var(--color-error); font-weight: 700; }
 
-.ibar { position: relative; height: 3px; margin-top: var(--space-2); overflow: hidden; background: color-mix(in srgb, var(--color-line) 30%, transparent); }
-.ibar[hidden] { display: none; }
-.ibar::after { content: ""; position: absolute; top: 0; bottom: 0; left: -35%; width: 35%; background: var(--color-pink); animation: wm-slide 1.1s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .ibar::after { animation: none; left: 0; width: 100%; } }
+.ibar { margin-top: var(--space-2); }
 
 .pub-panel .panel-hint { margin-top: var(--space-2); }
