@@ -681,7 +681,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Public pages with mocked `data/site.json` and `data/reels.json`: the portrait `<img>` with the right alt shows on Home and About; a reel card shows its cover; routing the portrait to 404 shows the placeholder; `portrait: null` shows the placeholder.
     - After the publish test, the TASK-15 repo guard logic run on the fake repo's files reports no problems.
 - Status: ready for review (built 2026-11-19 by the programmer on branch `task-14-site-photos`)
-- Review: pending
+- Review: approved 2026-11-19
 - QA: pending
 
 Suggested build order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9. TASK-6 and TASK-7 only depend on 1 and 2.
