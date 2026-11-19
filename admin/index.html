@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <!-- The GitHub token lives on this page: fetch may only reach this site and the GitHub API. -->
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://api.github.com">
+  <meta name="referrer" content="no-referrer">
   <title>Event manager · Puzz Kezz</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -113,6 +116,46 @@
       </section>
     </div>
 
+    <section class="panel gh-panel" id="gh-panel" aria-labelledby="gh-title">
+      <h2 id="gh-title" class="panel-title">GitHub</h2>
+      <p class="panel-hint">The token stays in this browser only.</p>
+      <details class="gh-help">
+        <summary>How to get a token</summary>
+        <ol>
+          <li>On GitHub open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Settings &rsaquo; Developer settings &rsaquo; Fine-grained tokens &rsaquo; Generate new token</a>. Use a <strong>fine-grained</strong> token, not a classic one.</li>
+          <li>Repository access: <strong>Only select repositories</strong> &rsaquo; <span class="mono">jiayangwong/MyCosplayWebsite</span> (only this repo).</li>
+          <li>Permissions: <strong>Contents: Read and write</strong>. Nothing else.</li>
+          <li>Set an <strong>expiry date</strong> (for example 90 days), generate it, copy it and paste it below.</li>
+        </ol>
+      </details>
+      <div class="field gh-field">
+        <label for="gh-token">Token</label>
+        <input type="password" id="gh-token" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="gh-token-help gh-token-error">
+        <p class="panel-hint" id="gh-token-help">Fine-grained token, Contents: read and write, this repository only.</p>
+        <p class="field-error" id="gh-token-error" role="alert" hidden></p>
+      </div>
+      <p class="gh-saved mono" id="gh-saved" hidden></p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" id="gh-save">Save token</button>
+        <button type="button" class="btn btn-secondary" id="gh-test" disabled>Test connection</button>
+        <button type="button" class="btn btn-secondary is-danger" id="gh-forget" disabled>Forget token</button>
+      </div>
+      <div class="msg" id="gh-status" role="status" data-state="none">
+        <span class="msg-icon" aria-hidden="true">&ndash;</span>
+        <div class="msg-body"><p class="msg-text">No token saved. Paste one above.</p><div class="ibar" hidden></div></div>
+      </div>
+      <div class="msg" id="gh-alert" role="alert" data-state="err" hidden>
+        <span class="msg-icon" aria-hidden="true">!</span>
+        <div class="msg-body"><p class="msg-text"></p></div>
+      </div>
+    </section>
+
+    <section class="panel pub-panel" id="publish-panel" aria-labelledby="pub-title">
+      <h2 id="pub-title" class="panel-title">Publish</h2>
+      <button type="button" class="btn btn-accent" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
+      <p class="panel-hint mono" id="publish-hint">Add a GitHub token to publish</p>
+    </section>
+
     <section class="panel uploader" aria-labelledby="wm-title">
       <h2 id="wm-title" class="panel-title">Media uploader · automatic watermark</h2>
       <p class="panel-hint">Everything happens in this browser. Nothing is uploaded anywhere.</p>
@@ -149,5 +192,6 @@
 
   <script type="module" src="../js/admin/manager.js"></script>
   <script type="module" src="../js/admin/watermark.js"></script>
+  <script type="module" src="../js/admin/github-panel.js"></script>
 </body>
 </html>

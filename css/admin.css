@@ -213,3 +213,54 @@
 @media (max-width: 767px) {
   .wm-pair { flex-direction: column; }
 }
+
+/* GitHub + Publish panels (TASK-11, style guide v2). Status is never colour alone: icon + text. */
+.gh-panel, .pub-panel { max-width: 720px; margin-bottom: var(--space-6); }
+.gh-help { margin: var(--space-3) 0 var(--space-4); font-size: 0.875rem; }
+.gh-help summary { cursor: pointer; font-weight: 700; display: list-item; padding: var(--space-3) 0; }
+.gh-help ol { margin: 0; padding-left: var(--space-6); display: grid; gap: var(--space-1); }
+.gh-help a { color: var(--color-purple-deep); text-decoration: underline; }
+.gh-field { margin-top: var(--space-3); }
+.gh-field input { font-family: var(--font-mono); }
+.gh-saved { margin: 0 0 var(--space-3); font-size: 0.8125rem; }
+.gh-saved[hidden] { display: none; }
+.btn.is-danger { border-color: var(--color-error); color: var(--color-error); }
+.btn.is-danger:disabled { border-color: var(--color-line); color: var(--color-muted); }
+
+.msg {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border-left: 2px solid var(--color-line);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--color-muted);
+}
+.msg[hidden] { display: none; }
+.msg-body { min-width: 0; flex: 1; }
+.msg-text { margin: 0; overflow-wrap: anywhere; }
+.msg-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font: 700 0.75rem var(--font-mono);
+}
+.msg[data-state="testing"] { color: var(--color-ink); }
+.msg[data-state="testing"] .msg-text { font-family: var(--font-mono); }
+.msg[data-state="ok"] { border-left-color: var(--color-purple-deep); color: var(--color-ink); }
+.msg[data-state="ok"] .msg-icon { color: var(--color-purple-deep); }
+.msg[data-state="err"] { border-left-color: var(--color-error); color: var(--color-error); font-weight: 700; }
+
+.ibar { position: relative; height: 3px; margin-top: var(--space-2); overflow: hidden; background: color-mix(in srgb, var(--color-line) 30%, transparent); }
+.ibar[hidden] { display: none; }
+.ibar::after { content: ""; position: absolute; top: 0; bottom: 0; left: -35%; width: 35%; background: var(--color-pink); animation: wm-slide 1.1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .ibar::after { animation: none; left: 0; width: 100%; } }
+
+.pub-panel .panel-hint { margin-top: var(--space-2); }
