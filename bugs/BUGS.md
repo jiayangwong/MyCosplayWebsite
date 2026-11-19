@@ -51,4 +51,23 @@
 - Steps to reproduce: 1. In /admin/ Site photos, make a Portrait and click "Use for Portrait". 2. Reload the page. 3. Look at the Publish panel.
 - Expected: the pending list and the draft agree (either the photo is still pending, or the draft choice is reset).
 - Actual: the pending file is gone (in memory only), but `puzzkezz.site.draft` still has `portrait: "media/site/portrait.webp"`. The Publish panel shows "~ data/site.json changed" and the Publish button is enabled, so a publish would point `data/site.json` at a file that is not in the repo (the public page then falls back to the placeholder). Not reproduced: "a pending share image survives Discard" was not separately checked.
+- Status: verified (TASK-16, QA 2026-11-19: repro by hand now stops with the message naming media/site/portrait.webp, no write)
+- Fix: Publish now checks the `portrait` in the data/site.json and every reel `thumb` in the data/reels.json of the commit against the repo tree (after the tree read, before the removal dialog and any write; also on Try again). A path that is neither a file on GitHub nor a file of this publish stops the publish with "Portrait points at a photo that is not on GitHub and not in this publish: media/site/portrait.webp." (reels: "Reel cover <kana> (<id>) ..."), with no POST or PATCH (`brokenSitePhotoLinks` in js/admin/publish.js). Repro test: tests/task-16.spec.js "BUG-4 repro" (Use for Portrait, reload, Publish).
+
+## BUG-5: Undoing an attach on a published SAMPLE event does not bring back its "Sample" tag
+- Found by: QA
+- Task: TASK-16
+- Severity: minor (known nice-to-have from the reviewer; reproduced)
+- Steps to reproduce: 1. Published event X has `sample: true` (all 8 live events do). 2. In /admin/ attach a new photo pair to X (this drops `sample` from the draft). 3. Press "Remove from publish" on the pair.
+- Expected: X is back to what is live, including its SAMPLE tag; the button reads "Nothing to publish".
+- Actual: the note says "Photo for CF 2026 set back to the published photo." and the photo is back, but the event row no longer shows "SAMPLE" and the Publish button stays enabled ("Publish to GitHub"). The next publish drops `sample` from the live event.
+- Status: open
+
+## BUG-6: "Remove from publish" overwrites an unsaved typed photo path in the open form
+- Found by: QA
+- Task: TASK-16
+- Severity: minor (known nice-to-have from the reviewer; reproduced)
+- Steps to reproduce: 1. Attach a pair to published event X (form open). 2. Type another path into Display photo without saving. 3. Press "Remove from publish".
+- Expected: the unsaved typed path is kept (or at least the user is warned).
+- Actual: the draft matched the pair so it is reverted, and the form field is replaced by the published path; the typed text is lost. The note is shown.
 - Status: open

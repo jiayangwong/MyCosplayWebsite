@@ -449,6 +449,28 @@ export function attachPhoto(path, fullPath) {
   }
 }
 
+/**
+ * TASK-16: "Remove from publish" sets an event's photo paths back (the published ones, or none when `photo`
+ * is ''). `photoFull` is only kept together with a `photo`. Saves the draft; if the event is open in the
+ * form, its photo fields and preview follow. Returns false when the event is not in the draft.
+ */
+export function revertPhoto(eventId, photo, photoFull) {
+  const event = state.events.find((e) => e.id === eventId);
+  if (!event) return false;
+  if (photo) event.photo = photo;
+  else delete event.photo;
+  if (photo && photoFull) event.photoFull = photoFull;
+  else delete event.photoFull;
+  saveDraft();
+  renderList();
+  if (state.editingId === eventId) {
+    $('f-photo').value = event.photo || '';
+    $('f-photo-full').value = event.photoFull || '';
+    updatePreview();
+  }
+  return true;
+}
+
 /* ---------- API for Publish ---------- */
 /** The events.json text Publish would commit (same as Export). */
 export function draftText() {
