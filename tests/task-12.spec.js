@@ -3,14 +3,14 @@
 // a test on any unhandled api.github.com call, and if the token shows up anywhere except the Authorization
 // header of a request to https://api.github.com.
 const fs = require('fs');
-const { test, expect, API, FAKE_TOKEN, gitBlobSha } = require('./github-mock');
+const { test, expect, BRANCH, API, FAKE_TOKEN, gitBlobSha } = require('./github-mock');
 
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
-const REF_GET = `GET ${REPO}/git/ref/heads/main`;
+const REF_GET = `GET ${REPO}/git/ref/heads/${BRANCH}`;
 const BLOB_POST = `POST ${REPO}/git/blobs`;
 const TREE_POST = `POST ${REPO}/git/trees`;
 const COMMIT_POST = `POST ${REPO}/git/commits`;
-const REF_PATCH = `PATCH ${REPO}/git/refs/heads/main`;
+const REF_PATCH = `PATCH ${REPO}/git/refs/heads/${BRANCH}`;
 const STALE = 'The site changed since you started editing (maybe from another device). Export a backup, then reload this page.';
 const SUCCESS = 'Published. The site updates in about 1-2 minutes.';
 const UNSURE = 'The connection dropped while the site was being updated.';
@@ -435,7 +435,7 @@ test('unsure, but the PATCH was applied later -> Try again finds the text on Git
   const head = github.repo.head;
   github.respond(REF_PATCH, async (req, route) => {
     // The re-read still sees the old head (lag)...
-    github.respond(REF_GET, { status: 200, body: { ref: 'refs/heads/main', object: { sha: head, type: 'commit' } } });
+    github.respond(REF_GET, { status: 200, body: { ref: `refs/heads/${BRANCH}`, object: { sha: head, type: 'commit' } } });
     // ...but GitHub applies the update a moment later.
     github.repo.head = req.body.sha;
     return route.abort('failed');

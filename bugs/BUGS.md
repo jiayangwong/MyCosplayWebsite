@@ -75,3 +75,14 @@
 - Status: verified (QA 2026-11-19). Note: if the user then saves the form, the typed path is saved with the pair's old full-size path (file no longer pending), and the Sample tag is not restored; Publish then stops with the TASK-16 "not on GitHub" message, no write. Safe, minor.
 - Cause: `revertPhoto` always wrote the reverted paths into the open form's Display / Full-size photo fields, whatever they held.
 - Fix: `revertPair` passes the pair's own paths; `revertPhoto` only updates the form fields (and preview) while both still hold exactly those paths. Otherwise the typed text is left alone and the saved draft is still set back (the note is shown as before). Files: js/admin/manager.js, js/admin/publish.js; test in tests/task-16.spec.js.
+
+## BUG-7: /admin/ Publish targets branch `main`, but GitHub Pages serves `site-v1`
+- Found by: release-manager (release check for v1.0.0, 2026-11-19)
+- Task: TASK-11, TASK-12
+- Severity: major (release blocker)
+- Steps to reproduce: 1. Open js/admin/github-config.js: `branch: 'main'`. 2. On origin the only branch is `site-v1` (the default branch, served by GitHub Pages). 3. In /admin/ with a real token press "Publish to GitHub".
+- Expected: Publish reads `git/ref/heads/site-v1` and moves `refs/heads/site-v1`, so the live site updates; Test connection says "(site-v1)".
+- Actual: Publish reads `git/ref/heads/main`, which does not exist on origin (404), so it fails; if a `main` branch existed, the commit would go to a branch the live site does not serve. Discard / Test connection also read `?ref=main`.
+- Status: fixed
+- Cause: the publish branch in js/admin/github-config.js was set to `main` while the repo's default and Pages branch is `site-v1`; the tests hard-coded `main` too, so they could not catch it.
+- Fix: js/admin/github-config.js now has `branch: 'site-v1'` with a comment that it must match the branch GitHub Pages serves (all API paths and the UI text already read `GITHUB.branch`). tests/github-mock.js reads the branch from that config file and exports `BRANCH`; tests/task-11..16 specs use `BRANCH` for `heads/...`, `ref=...` and the "Connected to ... (branch)" text, so they cannot drift again. Wording updated in docs/plan.md, docs/style-guide.md and storyboard/admin/index.html.

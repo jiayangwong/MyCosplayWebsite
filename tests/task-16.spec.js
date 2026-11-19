@@ -4,13 +4,13 @@
 // or a leaked token fails the test. Buttons are pressed with the keyboard (no lost clicks on the phone layout).
 const fs = require('fs');
 const path = require('path');
-const { test, expect, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
 
 const ROOT = path.join(__dirname, '..');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
 const TREE_POST = `POST ${REPO}/git/trees`;
-const REF_PATCH = `PATCH ${REPO}/git/refs/heads/main`;
+const REF_PATCH = `PATCH ${REPO}/git/refs/heads/${BRANCH}`;
 const SUCCESS = 'Published. The site updates in about 1-2 minutes.';
 const SITE_TEXT = fs.readFileSync(path.join(ROOT, 'data', 'site.json'), 'utf8');
 const REELS_TEXT = fs.readFileSync(path.join(ROOT, 'data', 'reels.json'), 'utf8');

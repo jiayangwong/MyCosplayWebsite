@@ -3,7 +3,7 @@
 export const GITHUB = Object.freeze({
   owner: 'jiayangwong',
   repo: 'MyCosplayWebsite',
-  branch: 'main',
+  branch: 'site-v1', // Must match the branch GitHub Pages serves (the repo's default branch).
   apiBase: 'https://api.github.com',
 });
 

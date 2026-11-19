@@ -4,7 +4,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { test, expect, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
 const guard = require('./wm-guard');
 
 const ROOT = path.join(__dirname, '..');
@@ -253,7 +253,7 @@ test('Publish all three: one commit with exactly the 5 paths, no removals, blobs
   await use(page, 'Share image');
   await expect(page.locator('#pub-total')).toHaveText(/^Adds 3 photos, 3 files, /);
 
-  const refUpdate = github.hold(`PATCH ${REPO}/git/refs/heads/main`);
+  const refUpdate = github.hold(`PATCH ${REPO}/git/refs/heads/${BRANCH}`);
   await page.locator('#publish-btn').press('Enter');
   await refUpdate.arrived;
   await expect(page.locator('#publish-btn')).toHaveText('Publishing...');
@@ -267,7 +267,7 @@ test('Publish all three: one commit with exactly the 5 paths, no removals, blobs
   const entries = trees[0].body.tree;
   expect(entries.map((e) => e.path).sort()).toEqual(['data/reels.json', 'data/site.json', 'media/reels/sugoi.webp', 'media/site/portrait.webp', 'og-image.png']);
   expect(entries.every((e) => typeof e.sha === 'string')).toBe(true);
-  expect(github.calls().filter((c) => c === `PATCH ${REPO}/git/refs/heads/main`)).toHaveLength(1);
+  expect(github.calls().filter((c) => c === `PATCH ${REPO}/git/refs/heads/${BRANCH}`)).toHaveLength(1);
   const commit = github.repo.commits.get(github.repo.head);
   expect(commit.parents).toEqual([head]);
   expect(commit.message).toBe('Update site photos from /admin/ (3 photos)');

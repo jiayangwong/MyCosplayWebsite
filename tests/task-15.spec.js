@@ -4,7 +4,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { test, expect, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
 const guard = require('./wm-guard');
 
 const BIG = path.join(__dirname, 'fixtures', 'flat-2400x1600.png');
@@ -375,7 +375,7 @@ test('Publish refuses an unmarked WebP in the pending list, names the path, send
     pair.item.master = pair.item.realMaster;
     pending.addPendingPair(pair);
   });
-  const refUpdate = github.hold(`PATCH ${REPO}/git/refs/heads/main`);
+  const refUpdate = github.hold(`PATCH ${REPO}/git/refs/heads/${BRANCH}`);
   await page.locator('#pub-retry').press('Enter');
   await refUpdate.arrived;
   await expect(page.locator('#publish-btn')).toHaveText('Publishing...');

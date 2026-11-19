@@ -93,7 +93,7 @@ Reuses `.panel`, `.field`, buttons. Order inside the panel: title "GitHub", help
 - **Token field**: label "TOKEN" (mono 12px uppercase), `type="password"`, `autocomplete="off"`, white input, 2px ink border, 44px high. Helper line (muted): "Fine-grained token, Contents: read and write, this repository only."
 - **Buttons row**: Save (primary), Test connection (secondary), Forget token (secondary with error-colour border and text, like `.icon-btn.is-danger`). Disabled when nothing to do: `--color-line` border, muted text. Forget asks no dialog, but shows the not-connected message after.
 - **Status message** below the buttons, one line in a box with a 2px left bar, `role="status"` (errors `role="alert"`), icon + text:
-  - Success: check icon, text ink, left bar `--color-purple-deep`, e.g. "Connected to owner/repo (branch main)."
+  - Success: check icon, text ink, left bar `--color-purple-deep`, e.g. "Connected to owner/repo (site-v1)."
   - Error: "!" icon, text `--color-error` bold, left bar `--color-error`, e.g. "GitHub said no (401). Check the token and try again."
   - Not connected: dash icon, muted text, left bar `--color-line`, "No token saved. Paste one above."
   - Testing: mono "Testing..." with the pink indeterminate bar.
