@@ -32,7 +32,7 @@
     </div>
 
     <aside class="help-box" aria-label="How publishing works">
-      <p><strong>How it works.</strong> Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.</p>
+      <p><strong>How it works.</strong> Changes stay on this browser until you press Publish to GitHub. Export events.json is a backup you can commit by hand.</p>
       <p>Photos: use the media uploader below. It makes two watermarked files per photo (full size + 1200px display copy). Attach them to an event, or download them and save them into the repo at the paths it shows.</p>
     </aside>
 
@@ -152,8 +152,40 @@
 
     <section class="panel pub-panel" id="publish-panel" aria-labelledby="pub-title">
       <h2 id="pub-title" class="panel-title">Publish</h2>
+      <p class="panel-hint">One press makes one commit on GitHub. Nothing goes live unless every step works.</p>
+      <ul class="pend" id="pub-pending" aria-label="Pending changes"></ul>
       <button type="button" class="btn btn-accent" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
-      <p class="panel-hint mono" id="publish-hint">Add a GitHub token to publish</p>
+      <p class="panel-hint mono" id="publish-hint" role="status">Add a GitHub token to publish</p>
+      <div class="pub-progress" id="pub-progress" hidden>
+        <p class="mono pub-step" id="pub-step"></p>
+        <div class="pbar" id="pub-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="pub-step"><i></i></div>
+      </div>
+      <div class="msg" id="pub-ok" role="status" data-state="ok" hidden>
+        <span class="msg-icon" aria-hidden="true">&#10003;</span>
+        <div class="msg-body">
+          <p class="msg-text">Published. The site updates in about 1-2 minutes.</p>
+          <p class="msg-link"><a id="pub-commit" href="#" target="_blank" rel="noopener noreferrer">View commit</a></p>
+        </div>
+      </div>
+      <div class="msg" id="pub-err" role="alert" data-state="err" hidden>
+        <span class="msg-icon" aria-hidden="true">!</span>
+        <div class="msg-body">
+          <p class="msg-text" id="pub-err-text"></p>
+          <p class="msg-next" id="pub-err-next"></p>
+          <div class="msg-actions"><button type="button" class="btn btn-secondary" id="pub-retry">Try again</button></div>
+        </div>
+      </div>
+      <div class="msg" id="pub-stale" role="alert" data-state="err" hidden>
+        <span class="msg-icon" aria-hidden="true">!</span>
+        <div class="msg-body">
+          <p class="msg-text">The site changed since you started editing (maybe from another device). Export a backup, then reload this page.</p>
+          <p class="msg-next">Nothing was changed on GitHub.</p>
+          <div class="msg-actions">
+            <button type="button" class="btn btn-secondary" id="pub-export">Export backup</button>
+            <button type="button" class="btn btn-secondary" id="pub-reload">Reload</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="panel uploader" aria-labelledby="wm-title">
@@ -193,5 +225,6 @@
   <script type="module" src="../js/admin/manager.js"></script>
   <script type="module" src="../js/admin/watermark.js"></script>
   <script type="module" src="../js/admin/github-panel.js"></script>
+  <script type="module" src="../js/admin/publish.js"></script>
 </body>
 </html>

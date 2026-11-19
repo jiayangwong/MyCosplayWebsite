@@ -4,7 +4,10 @@ import { readToken, saveToken, forgetToken, tokenTail, testConnection, TOKEN_EVE
 
 const $ = (id) => document.getElementById(id);
 const ICONS = { none: '–', saved: '–', testing: '...', ok: '✓', err: '!' };
+/** Sent by publish.js when a publish starts or ends (detail.busy). Forget token is locked meanwhile. */
+export const PUBLISH_BUSY_EVENT = 'publish-busy-change';
 let testing = false;
+let publishing = false;
 
 /** Shows one status box. `kind` is none | saved | testing | ok | err. */
 function showStatus(kind, text) {
@@ -31,22 +34,10 @@ function syncButtons() {
   const saved = readToken() !== '';
   $('gh-save').disabled = testing;
   $('gh-test').disabled = !saved || testing;
-  $('gh-forget').disabled = !saved || testing;
+  $('gh-forget').disabled = !saved || testing || publishing;
   const tail = $('gh-saved');
   tail.hidden = !saved;
   tail.textContent = saved ? `Token saved, ends in ...${tokenTail(readToken())}` : '';
-}
-
-/** Publish button (TASK-12 adds the publishing itself). Without a token it is disabled with a hint. */
-function syncPublish() {
-  const btn = $('publish-btn');
-  const hint = $('publish-hint');
-  if (!btn || !hint) return;
-  const saved = readToken() !== '';
-  btn.disabled = true;
-  hint.textContent = saved
-    ? 'Publishing from this page is not available yet. Use Export events.json for now.'
-    : 'Add a GitHub token to publish';
 }
 
 function idleState() {
@@ -80,7 +71,7 @@ async function onTest() {
 }
 
 function onForget() {
-  if (!readToken()) return;
+  if (!readToken() || publishing) return;
   if (!window.confirm('Forget the GitHub token on this browser? You will need to paste it again to publish.')) return;
   forgetToken();
   syncButtons();
@@ -98,19 +89,18 @@ export function initGithubPanel() {
   });
   $('gh-test').addEventListener('click', onTest);
   $('gh-forget').addEventListener('click', onForget);
-  window.addEventListener(TOKEN_EVENT, () => {
+  window.addEventListener(TOKEN_EVENT, syncButtons);
+  window.addEventListener(PUBLISH_BUSY_EVENT, (e) => {
+    publishing = Boolean(e.detail && e.detail.busy);
     syncButtons();
-    syncPublish();
   });
   // Another tab saved or forgot the token.
   window.addEventListener('storage', (e) => {
     if (e.key !== null && e.key !== TOKEN_KEY) return;
     syncButtons();
-    syncPublish();
     if (!testing) idleState();
   });
   syncButtons();
-  syncPublish();
   idleState();
   document.documentElement.dataset.githubReady = 'true';
 }

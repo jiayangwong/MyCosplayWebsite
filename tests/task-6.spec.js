@@ -12,7 +12,8 @@ test('noindex, not linked from public pages, loads published data first', async 
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
   await expect(page.locator('#source-banner')).toContainText('published data/events.json');
   await expect(page.locator('.event-row')).toHaveCount(8);
-  await expect(page.locator('.help-box')).toContainText('Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.');
+  // Help text replaced by TASK-12 (Publish to GitHub).
+  await expect(page.locator('.help-box')).toContainText('Changes stay on this browser until you press Publish to GitHub. Export events.json is a backup you can commit by hand.');
   for (const p of ['index.html', 'events.html', 'gallery.html']) {
     await page.goto(p);
     await expect(page.locator('a[href*="admin"]')).toHaveCount(0);
