@@ -21,6 +21,14 @@ const CORS = {
   'access-control-expose-headers': 'Retry-After, X-RateLimit-Remaining, X-RateLimit-Reset',
 };
 
+// The publish branch, read from js/admin/github-config.js so the tests can never drift from the app.
+const BRANCH = (() => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'admin', 'github-config.js'), 'utf8');
+  const m = src.match(/\bbranch:\s*'([^']+)'/);
+  if (!m) throw new Error('github-mock: no branch found in js/admin/github-config.js');
+  return m[1];
+})();
+
 const sha1 = (data) => crypto.createHash('sha1').update(data).digest('hex');
 /** Git blob SHA: SHA-1 of "blob <length>\0<content>". */
 function gitBlobSha(content) {
@@ -30,7 +38,7 @@ function gitBlobSha(content) {
 
 /** In-memory repo: blobs, trees and commits keyed by SHA, one branch. */
 class FakeRepo {
-  constructor({ owner = 'jiayangwong', repo = 'MyCosplayWebsite', branch = 'main', files = {} } = {}) {
+  constructor({ owner = 'jiayangwong', repo = 'MyCosplayWebsite', branch = BRANCH, files = {} } = {}) {
     Object.assign(this, { owner, repo, branch });
     this.blobs = new Map(); // sha -> Buffer
     this.trees = new Map(); // sha -> Map(path -> { sha, mode, type })
@@ -363,4 +371,4 @@ async function saveFakeToken(page, token = FAKE_TOKEN) {
   await page.click('#gh-save');
 }
 
-module.exports = { test, expect, FAKE_TOKEN, API, FakeRepo, FakeGitHub, installGitHubMock, watchTokenLeaks, gitBlobSha, saveFakeToken };
+module.exports = { test, expect, FAKE_TOKEN, API, BRANCH, FakeRepo, FakeGitHub, installGitHubMock, watchTokenLeaks, gitBlobSha, saveFakeToken };

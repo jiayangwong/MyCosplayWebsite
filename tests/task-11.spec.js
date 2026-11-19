@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { test, expect, FAKE_TOKEN, saveFakeToken } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, saveFakeToken } = require('./github-mock');
 
 const TOKEN_KEY = 'puzzkezz.github.token';
 const REPO_PATH = '/repos/jiayangwong/MyCosplayWebsite';
@@ -78,7 +78,7 @@ test('Test connection: 200 / 401 / 404 / network abort show their messages', asy
   await expect(page.locator('#gh-status')).toContainText('Testing...');
   await expect(page.locator('#gh-status .ibar')).toBeVisible();
   check.release();
-  await expect(page.locator('#gh-status')).toHaveText(/Connected to jiayangwong\/MyCosplayWebsite \(main\)\. Write access is checked when you publish\./);
+  await expect(page.locator('#gh-status')).toContainText(`Connected to jiayangwong/MyCosplayWebsite (${BRANCH}). Write access is checked when you publish.`);
   await expect(page.locator('#gh-status')).toHaveAttribute('data-state', 'ok');
 
   github.respond(`GET ${REPO_PATH}`, { status: 401 });
@@ -211,7 +211,7 @@ test('repo scan: no real-looking GitHub token in any non-test file', async ({}, 
 
 test('fake GitHub behaves like GitHub: unknown refs 404, bad tree entries and missing parents 422', async ({ page, github }) => {
   const head = github.repo.head;
-  const results = await page.evaluate(async ({ token, head }) => {
+  const results = await page.evaluate(async ({ token, head, branch }) => {
     const base = 'https://api.github.com/repos/jiayangwong/MyCosplayWebsite';
     const call = async (method, p, body) => {
       const r = await fetch(base + p, {
@@ -223,7 +223,7 @@ test('fake GitHub behaves like GitHub: unknown refs 404, bad tree entries and mi
     };
     const out = {};
     out.noRef = await call('GET', '/contents/data/events.json');
-    out.branch = await call('GET', '/contents/data/events.json?ref=main');
+    out.branch = await call('GET', `/contents/data/events.json?ref=${branch}`);
     out.sha = await call('GET', `/contents/data/events.json?ref=${head}`);
     out.undef = await call('GET', '/contents/data/events.json?ref=undefined');
     out.unknownSha = await call('GET', `/contents/data/events.json?ref=${'0'.repeat(40)}`);
@@ -237,7 +237,7 @@ test('fake GitHub behaves like GitHub: unknown refs 404, bad tree entries and mi
     out.badParent = await call('POST', '/git/commits', { message: 'm', tree: out.goodTree.body.sha, parents: ['f'.repeat(40)] });
     out.goodCommit = await call('POST', '/git/commits', { message: 'm', tree: out.goodTree.body.sha, parents: [head] });
     return out;
-  }, { token: FAKE_TOKEN, head });
+  }, { token: FAKE_TOKEN, head, branch: BRANCH });
   for (const k of ['noRef', 'branch', 'sha']) {
     expect(results[k].status, k).toBe(200);
     expect(results[k].body.path).toBe('data/events.json');

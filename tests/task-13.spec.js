@@ -3,16 +3,16 @@
 // any unhandled api.github.com call, an unreleased hold() or a leaked token fails the test.
 const fs = require('fs');
 const path = require('path');
-const { test, expect, FAKE_TOKEN, FakeRepo, gitBlobSha } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, gitBlobSha } = require('./github-mock');
 
 const BIG = path.join(__dirname, 'fixtures', 'flat-2400x1600.png');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
-const REF_GET = `GET ${REPO}/git/ref/heads/main`;
+const REF_GET = `GET ${REPO}/git/ref/heads/${BRANCH}`;
 const BLOB_POST = `POST ${REPO}/git/blobs`;
 const TREE_POST = `POST ${REPO}/git/trees`;
 const COMMIT_POST = `POST ${REPO}/git/commits`;
-const REF_PATCH = `PATCH ${REPO}/git/refs/heads/main`;
+const REF_PATCH = `PATCH ${REPO}/git/refs/heads/${BRANCH}`;
 const SUCCESS = 'Published. The site updates in about 1-2 minutes.';
 const CANCELLED = 'Publish cancelled. Nothing was changed.';
 const STALE = 'The site changed since you started editing (maybe from another device). Export a backup, then reload this page.';
@@ -715,9 +715,9 @@ test('"already published" with photos: Try again after an unsure result finds ev
   await setup(page, github, { events: [ev(X), ev(Y)] });
   await attach(page, X);
   const head = github.repo.head;
-  github.respond(`PATCH ${REPO}/git/refs/heads/main`, async (req, route) => {
+  github.respond(`PATCH ${REPO}/git/refs/heads/${BRANCH}`, async (req, route) => {
     // The re-read still sees the old head (lag), but GitHub applies the update a moment later.
-    github.respond(REF_GET, { status: 200, body: { ref: 'refs/heads/main', object: { sha: head, type: 'commit' } } });
+    github.respond(REF_GET, { status: 200, body: { ref: `refs/heads/${BRANCH}`, object: { sha: head, type: 'commit' } } });
     github.repo.head = req.body.sha;
     return route.abort('failed');
   });
