@@ -310,6 +310,25 @@ export function onEventChange(fn) {
   fn(currentEventId());
 }
 
+/** True while the form edits an event that is already in the draft (its id is fixed). */
+export function isEditingSavedEvent() {
+  return state.editingId !== null;
+}
+
+/** Every photo / photoFull path used by an event in the draft or typed into the form. */
+export function usedPhotoPaths() {
+  const used = new Set();
+  for (const event of state.events) {
+    if (event.photo) used.add(event.photo);
+    if (event.photoFull) used.add(event.photoFull);
+  }
+  for (const id of ['f-photo', 'f-photo-full']) {
+    const value = $(id).value.trim();
+    if (value) used.add(value);
+  }
+  return used;
+}
+
 /** Puts a photo path (display copy) and, optionally, the full-size path into the form.
  *  When editing an existing event it is saved to the draft right away. */
 export function attachPhoto(path, fullPath) {

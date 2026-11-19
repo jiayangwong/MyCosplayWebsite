@@ -30,7 +30,7 @@
 
     <aside class="help-box" aria-label="How publishing works">
       <p><strong>How it works.</strong> Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.</p>
-      <p>Photos: use the media uploader below. It adds your watermark, then save the files into the repo at the path it shows.</p>
+      <p>Photos: use the media uploader below. It makes two watermarked files per photo (full size + 1200px display copy). Attach them to an event, or download them and save them into the repo at the paths it shows.</p>
     </aside>
 
     <p class="source-banner" id="source-banner" role="status"></p>
@@ -115,40 +115,35 @@
 
     <section class="panel uploader" aria-labelledby="wm-title">
       <h2 id="wm-title" class="panel-title">Media uploader · automatic watermark</h2>
-      <p class="panel-hint">Everything happens in this browser. Nothing is uploaded anywhere. The output removes the photo's location and camera data (EXIF).</p>
+      <p class="panel-hint">Everything happens in this browser. Nothing is uploaded anywhere.</p>
 
-      <label class="drop-zone" id="drop-zone" for="wm-files">
-        <span class="drop-zone-title">Drop photos here or choose files</span>
-        <span class="panel-hint">JPG, PNG, WebP, HEIC (if your browser can open it). Resized to max 2000px, saved as WebP.</span>
-      </label>
-      <input type="file" id="wm-files" accept="image/*" multiple class="visually-hidden">
-
-      <div class="wm-controls">
-        <div class="field field-grow">
-          <label for="wm-text">Watermark text</label>
-          <input type="text" id="wm-text">
+      <div class="up-grid">
+        <div>
+          <label class="drop-zone" id="drop-zone" for="wm-files">
+            <span class="drop-zone-title">Drop images here</span>
+            <span class="panel-hint mono">or choose files (multiple, image/*)</span>
+            <span class="btn btn-secondary btn-sm" aria-hidden="true">Choose files</span>
+          </label>
+          <input type="file" id="wm-files" accept="image/*" multiple class="visually-hidden">
         </div>
-        <div class="field">
-          <label for="wm-pos">Position</label>
-          <select id="wm-pos">
-            <option value="br">Bottom right</option>
-            <option value="bl">Bottom left</option>
-            <option value="tr">Top right</option>
-            <option value="tl">Top left</option>
-            <option value="c">Center</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="wm-opacity">Opacity <output id="wm-opacity-out" for="wm-opacity">60%</output></label>
-          <input type="range" id="wm-opacity" min="10" max="100" step="5" value="60">
+        <div class="wm-controls">
+          <div class="field">
+            <label for="wm-text">Watermark text (along the diagonal lattice)</label>
+            <input type="text" id="wm-text">
+          </div>
+          <div class="field">
+            <label for="wm-opacity">Opacity: <output id="wm-opacity-out" for="wm-opacity">40%</output></label>
+            <input type="range" id="wm-opacity" min="10" max="100" step="5" value="40">
+          </div>
+          <p class="panel-hint mono wm-note" id="wm-note">Each photo makes two files: MASTER (original size, nothing shrunk) and DISPLAY (1200px longest side). Both get the watermark. The output removes the photo's location and camera data. Full-size photos are best processed on a computer.</p>
         </div>
       </div>
 
       <div class="wm-target">
         <p>Files will be saved for event: <strong id="wm-event-id">(fill in date + short form, or edit an event)</strong></p>
-        <button type="button" class="btn btn-accent btn-sm" id="wm-download-all" disabled>Download all</button>
+        <button type="button" class="btn btn-primary btn-sm" id="wm-download-all" disabled>Download all</button>
       </div>
-      <ul class="wm-grid" id="wm-previews"></ul>
+      <ul class="wm-list" id="wm-previews" aria-label="Processed photos"></ul>
     </section>
   </main>
 
