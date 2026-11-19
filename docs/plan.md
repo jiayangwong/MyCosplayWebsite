@@ -680,7 +680,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Stale: the mock's `data/reels.json` SHA differs from the draft's base -> stale message, no `POST`/`PATCH`.
     - Public pages with mocked `data/site.json` and `data/reels.json`: the portrait `<img>` with the right alt shows on Home and About; a reel card shows its cover; routing the portrait to 404 shows the placeholder; `portrait: null` shows the placeholder.
     - After the publish test, the TASK-15 repo guard logic run on the fake repo's files reports no problems.
-- Status: ready for review (built 2026-11-19 by the programmer on branch `task-14-site-photos`)
+- Status: done (merged into site-v1 on 2026-11-19; review approved round 1, QA passed; BUG-4 minor open)
 - Review: approved 2026-11-19
 - QA: passed 2026-11-19 (tests/task-14.spec.js 20 passed; full suite 305 passed, 3 skipped, 0 failed at --workers=2; minor BUG-4 logged, not blocking)
 
