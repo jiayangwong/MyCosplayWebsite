@@ -173,3 +173,84 @@ Result: APPROVED
   - This is test-only. The lock and the one-commit result were not wrong; the run never got that far. It is a single assertion, not the systematic 5s problem from round 2, so it does not block approval. It should be fixed before or during QA (see below).
 - [nice-to-have, fix before QA] tests/task-12.spec.js:463,474 - Hold the first `REF_GET` on a gate the test releases (for example a promise resolved after the lock assertions) instead of `{ delay: 600 }`. Or assert `/Step [1-7] of 7/`. Then the transient "Step 1" state cannot be missed. If QA hits it first, log it as a test-only bug for the bugfixer.
 - [nice-to-have, TASK-11 follow-up, not a bug] admin/index.html:137-139 - The "Token saved" line appears above Save / Test / Forget and pushes them down 32px right after a save. A quick second tap aimed at Test connection could land on the wrong spot. Consider putting `#gh-saved` below the button row or reserving its height.
+
+## Review TASK-13 - 2026-11-19
+Result: CHANGES REQUESTED
+- Branch `task-13-photo-publish` (17b3382), diffed against `site-v1`. Full suite: 229 passed, 3 skipped, 0 failed (same as the programmer's numbers).
+- Data safety, checked and OK:
+  - One atomic commit: every image blob, the events.json blob and every `sha: null` entry go in one `POST git/trees` (`base_tree` = head's tree), then one commit (parent = head), then `PATCH ref` with `force: false`. The ref is the last call, so a failure at any blob, tree or commit step leaves the ref where it was. The 500, network-abort and branch-moved-mid-upload tests prove this.
+  - Deletions: `removalCandidates` only takes `type: 'blob'` tree entries that pass `isRemovable` (prefix `media/events/`, exact lowercase `.webp`, no empty, `.` or `..` segments, not used in the committed text, not a new path). A truncated listing gives an empty list. The guard runs before the dialog and again right before the tree POST, and it uses local Sets nothing else can change. The untouchable-files test covers `.WEBP`, `.webp.png`, `media/eventsx/`, `media/events.webp`, `img/` and `favicon.svg`. (Exception: the must-fix below.)
+  - `publishHooks.editRemovals` is only ever set by the tests through `import()`. Nothing in the app sets it, and page content cannot reach it without running same-origin script (which would already mean XSS). It also cannot widen deletions: whatever it returns still has to pass both guard runs and the confirm dialog. Sound as a test seam.
+  - WeakSet: only `encode()` in watermark.js marks blobs, right after `renderWatermarked` draws the lattice and `toBlob` returns. The original `File` never passes through `encode`, and the set cannot be listed or forged. `prepare()` refuses any file whose blob is not in the set, before any request. Sound. TASK-15 must mark the new marked blob too (marking makes a new Blob).
+  - Limits: `prepare()` runs before `run()`, so the 20-pair limit, the 25 MB check, the allowed paths, the pipeline check and the extra checks all happen with no request sent. The button is also disabled for limit problems.
+  - Base64: `readAsDataURL` with the `data:...,` prefix cut off is correct for binary. The test that re-hashes the decoded content against the tree SHA proves the bytes survive.
+  - "Already published" shortcut: with photos it returns success only if the listing is not truncated and every pending file's git blob SHA (from its bytes) matches the tree entry at that exact path. Otherwise it falls through to the stale check. No false success found.
+  - Token: every new request goes through `api()` -> `githubFetch`. The only `fetch(` calls outside github-token.js are the existing same-origin data reads.
+- Rulings on the programmer's decisions:
+  1. 8 steps, stale check before the tree read (except on the already-published path, which only reads), TASK-12 tests updated from 7 to 8 calls: approved.
+  2. WeakSet pipeline marker plus the `addFileCheck` hook for TASK-15: approved.
+  3. All refusals happen before any request: approved.
+  4. `isRemovable` rules: approved as rules for the path itself, but `used` must be normalised (must-fix 1).
+  5. Only photos used by saved draft events are published: approved (matches the criteria; unsaved form pairs wait for Save).
+  6. Pending list layout (pairs with sizes, `~ data/events.json`, predicted `-` rows marked "(no event uses it)", total line): approved. It matches the storyboard order (+, ~, -), and the dialog stays the source of truth.
+  7. Native `<dialog>`, Cancel first and focused, Esc as Cancel, phone stacks the buttons with Cancel last: approved. Matches the style guide and the storyboard.
+  8. Progress text "Step 5 of 8: Uploading file N of M" (M counts events.json): approved. It meets the plan's "Uploading file 3 of 9".
+  9. Mock `recursive` / `treeTruncated` (top level without `recursive`, half the list with `truncated: true`): approved.
+  10. A draft that still references a pair after "Remove from publish": **not a must-fix for TASK-13**. The criteria define the button and say nothing about the draft paths, so the code matches the spec. It is a real product gap, though, and worse than a missing image: if the pair replaced an older photo, the predicted `-` rows still remove the old, working files, so the event goes live with a broken image and its old photo deleted. This needs a design decision (block Publish, warn, or put the old paths back in the form), so it goes to the **idea-collector -> planner** as a new idea. It should be decided before the release, not after.
+- [must-fix] js/admin/publish.js:154-166 (`usedPathsIn`) together with js/events-data.js:59 (`photoPathError`) - "Used" is an exact string match, but the validator accepts paths the public site still loads as the same file:
+  - `./media/events/X/old.webp`
+  - `media/events/X/./old.webp`
+  - `media/events/X/old.webp?v=2` or `...#x`
+  - `siteUrl()` resolves each of these with `new URL(path, ROOT)`, so the site shows `media/events/X/old.webp`. But `isRemovable` decides that file is unused and deletes it, and the image breaks on the live site. A path like this can come from the form or from Import. This breaks "nothing still used is ever removed".
+  - Fix (pick one): (a) in `usedPathsIn`, also add each path's resolved form, for example `decodeURIComponent(new URL(p, 'https://x.invalid/').pathname.slice(1))`, so every way of writing a path protects the file; or (b) remove nothing (as with a truncated tree, with a clear note) when any event's `photo` / `photoFull` is not already in canonical form.
+  - Add a test: event X uses `./media/events/X/old.webp` (and one with `?v=2`), the repo has `media/events/X/old.webp`, and Publish lists and removes nothing.
+- [nice-to-have] js/admin/publish.js:587-605 (`confirmRemovals`) - It only resolves on the buttons or on `cancel`. Chrome's close-watcher rules can close a modal dialog on Esc *without* firing `cancel` when there was no user activation since it opened. Then the promise never settles and Publish stays "Publishing..." until a reload. No data risk (nothing has been written yet), but listen for `close` too and resolve `false` unless Yes was pressed.
+- [nice-to-have] js/admin/publish.js:333,335 - `path === EVENTS_PATH` and `rest.length < 1` can never be true after the prefix check (split always returns at least one item). It is harmless defence in depth; drop it or leave a one-line comment.
+- [nice-to-have] tests/task-13.spec.js - There is no test for the "already published" shortcut *with photos* (unsure PATCH that was applied later, then Try again finds the text and both images on GitHub -> success with reads only, no second commit). The logic is right, but this is the path most likely to regress.
+
+## Review TASK-13 (round 2) - 2026-11-19
+Result: CHANGES REQUESTED
+- Commit e330c4c re-reviewed. Full suite: 243 passed, 3 skipped, 0 failed.
+- Round-1 must-fix is mostly resolved:
+  - `usedPathsIn` adds both the raw and the resolved form of each path.
+  - `allPathsCanonical` makes Publish remove nothing when a path is written in an unusual form, and the guard uses the same extended set.
+  - The new tests cover `./`, `/./`, `?v=2` and `#x`, both as unit checks and end to end.
+- Round-1 nice-to-haves are done:
+  - `close` counts as Cancel, and `settled` stops a second answer: the `close` event that follows Yes is ignored.
+  - The "already published" shortcut with photos now has a test.
+- Removing the 2 checks from `isRemovable` was safe:
+  - `path === EVENTS_PATH` can never be true, because `data/events.json` fails the `startsWith('media/events/')` check first.
+  - `rest.length < 1` can never be true, because `split` always returns at least one item.
+  - The segment checks that matter (`''`, `.`, `..`, a bare `.webp`) are still there.
+- Other ways of writing a path, run through `resolvedPath` and `allPathsCanonical` in Node:
+  - Percent-encoding (`old%2Ewebp`, `%2e%2e`, `%6F`): resolves to a different string, so it counts as not plain and nothing is removed. A bad escape (`%zz`) makes `decodeURIComponent` throw, which gives null, which also counts as not plain. Safe.
+  - Leading `/`: refused by `photoPathError`. Even if one got past it (for example a hand-edited events.json in the repo), it counts as not plain. Safe.
+  - Backslash: refused by `photoPathError`. The URL parser also turns `\` into `/`, so it counts as not plain. Safe.
+  - Leading or trailing spaces, tabs or newlines: the URL parser strips them, so they count as not plain. Safe.
+  - Case differences (`Media/events/...`): counts as plain and does not protect `media/events/...`. Correct: GitHub Pages paths are case-sensitive, so that reference never loaded the lowercase file.
+  - **Doubled slash (`media//events/X/old.webp`, `media/events/X//old.webp`): still counts as plain**, because the URL parser keeps empty segments. See must-fix 1.
+- Rulings from round 1 stand. Item 10 ("Remove from publish" leaves the draft pointing at missing photos) stays a new idea for the idea-collector, to be decided before the release.
+- [must-fix] js/admin/publish.js `allPathsCanonical` - A photo value with an empty segment (`//`) passes as plain form.
+  - Many web servers merge doubled slashes. If GitHub Pages does, `media//events/X/old.webp` shows `media/events/X/old.webp` on the live site, but Publish treats that file as unused and removes it. We cannot check how Pages behaves from here, so fail safe.
+  - Fix: also require no empty segment, for example `resolvedPath(value) === value && !value.split('/').includes('')`.
+  - Add `media//events/X/old.webp` and `media/events/X//old.webp` to `UNUSUAL` in tests/task-13.spec.js. A one-line fix plus 2 test rows.
+
+## Review TASK-13 (round 3) - 2026-11-19
+Result: APPROVED
+- Commit 69865fe re-reviewed.
+- Tests:
+  - My run: tests/task-12.spec.js plus tests/task-13.spec.js with `--workers=2`: 134 passed, 0 failed.
+  - I did not run the full suite this round, because memory on the machine is tight. The programmer reports 271 passed, 3 skipped, 0 failed, and the coordinator's task-13 run with `--repeat-each=3` gave 246 passed, 0 failed.
+- The round-2 must-fix is resolved. `isCanonicalPath` requires all of these:
+  - the allowlist regex `^[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$`, which rules out empty segments (so no `//`, no leading or trailing `/`), and any `%`, `?`, `#`, `;`, `\`, `:`, whitespace or non-ASCII character;
+  - no `.` or `..` segment;
+  - `resolvedPath(v) === v`.
+- If any event's path is not canonical, nothing is removed. Both `//` forms are now covered by unit tests and end-to-end tests.
+- The allowlist is correct. The only forms that still count as canonical name a genuinely different file on a case-sensitive host that does not trim dots: uppercase letters, a trailing `.`, and `...`, `~` or `.hidden` names (checked in Node). `photoPathError` also still refuses any `..` substring.
+- The deletion guards are still airtight:
+  - `isRemovable` is unchanged apart from the 2 dead checks removed in round 2.
+  - The used set holds both the raw and the resolved form of each path.
+  - The not-canonical fail-safe, like the truncated-tree one, sets the list to `[]` before the hook and before both guard runs.
+- No false fail-safe in normal use. Uploader paths are `media/events/<date>-<slugify(short)>/<slugify(name)>[-n][-full].webp`, and `slugify` only gives `[a-z0-9-]` (it applies NFKD and strips accents and other non-ASCII). I checked awkward inputs (`IMG_2024 (1).JPG`, Japanese-only names, `Café Ünïcode.heic`, `a.b.c.png`, a short form of `C.F! 冬`): every resulting path is canonical. The current data/events.json has no photo paths. Only hand-typed unusual paths turn removals off, and then the note says why.
+- Earlier rulings stand.
+- Follow-up for idea-collector (not blocking): "Remove from publish" leaves the draft pointing at photos that are not on GitHub. Because removals are still predicted, an event that replaced its photo could go live with a broken image and its old photo deleted. It should be decided before the release.
