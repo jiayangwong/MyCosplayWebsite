@@ -83,6 +83,7 @@
 - Steps to reproduce: 1. Open js/admin/github-config.js: `branch: 'main'`. 2. On origin the only branch is `site-v1` (the default branch, served by GitHub Pages). 3. In /admin/ with a real token press "Publish to GitHub".
 - Expected: Publish reads `git/ref/heads/site-v1` and moves `refs/heads/site-v1`, so the live site updates; Test connection says "(site-v1)".
 - Actual: Publish reads `git/ref/heads/main`, which does not exist on origin (404), so it fails; if a `main` branch existed, the commit would go to a branch the live site does not serve. Discard / Test connection also read `?ref=main`.
-- Status: fixed
+- Status: verified
 - Cause: the publish branch in js/admin/github-config.js was set to `main` while the repo's default and Pages branch is `site-v1`; the tests hard-coded `main` too, so they could not catch it.
 - Fix: js/admin/github-config.js now has `branch: 'site-v1'` with a comment that it must match the branch GitHub Pages serves (all API paths and the UI text already read `GITHUB.branch`). tests/github-mock.js reads the branch from that config file and exports `BRANCH`; tests/task-11..16 specs use `BRANCH` for `heads/...`, `ref=...` and the "Connected to ... (branch)" text, so they cannot drift again. Wording updated in docs/plan.md, docs/style-guide.md and storyboard/admin/index.html.
+- QA re-test (2026-11-19): verified. Full publish (events + photo pair + portrait) only requested git/ref/heads/site-v1 and PATCH git/refs/heads/site-v1; "Connected to ... (site-v1)" and the Publish hint name site-v1; no heads/main or ref=main in js/admin/tests/storyboard; with the app set to main and the tests expecting site-v1, task-11/12 tests fail; full suite 359 passed, 3 skipped.
