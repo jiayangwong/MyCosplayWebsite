@@ -411,7 +411,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Attach: `#f-photo` = `media/events/<id>/flat-2400x1600.webp`, `#f-photo-full` = `media/events/<id>/flat-2400x1600-full.webp`, and both are in the localStorage draft.
     - `page.on('request')` records no request other than same-origin page assets during processing.
 - Status: ready for review (built 2026-11-19 on branch task-7-lattice-watermark)
-- Review: changes requested
+- Review: approved 2026-11-19
 - QA: pending
 
 ### TASK-8: Gallery, About, Contact (simple v1 pages)
