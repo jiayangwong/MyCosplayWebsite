@@ -682,7 +682,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - After the publish test, the TASK-15 repo guard logic run on the fake repo's files reports no problems.
 - Status: ready for review (built 2026-11-19 by the programmer on branch `task-14-site-photos`)
 - Review: approved 2026-11-19
-- QA: pending
+- QA: passed 2026-11-19 (tests/task-14.spec.js 20 passed; full suite 305 passed, 3 skipped, 0 failed at --workers=2; minor BUG-4 logged, not blocking)
 
 Suggested build order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9. TASK-6 and TASK-7 only depend on 1 and 2.
 Build order for the 2026-11-18 additions: TASK-10 -> TASK-7 (revised) -> TASK-11 -> TASK-12 -> TASK-13. TASK-11 can be built in parallel with TASK-10 and TASK-7. The shared mock `tests/github-mock.js` is created in TASK-11 and extended in TASK-12 and TASK-13.
