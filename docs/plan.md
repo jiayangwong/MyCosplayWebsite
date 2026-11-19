@@ -644,7 +644,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - **`tests/task-13.spec.js` updates:** the "unusual path" tests now expect the publish to stop with the "not in the usual form" message and no write (instead of success with the note). The "truncated tree" test now expects the "can't be checked" stop when the events reference existing photos. Every other TASK-13 test still passes unchanged. The full suite passes (TASK-14 and TASK-15 tests included).
 - Status: ready for review (built on branch task-16-broken-link-guard, 2026-11-19)
 - Review: approved 2026-11-19
-- QA: pending
+- QA: passed 2026-11-19 (BUG-4 re-checked by hand: verified; minor nice-to-haves logged as BUG-5, BUG-6)
 
 ### TASK-17: Repo guard accepts a marked file whose allowlist hash is stale (reports it) - APPROVED 2026-11-19
 - Linked idea(s): IDEA-10 (question 22, option (b), user answer 2026-11-19)
