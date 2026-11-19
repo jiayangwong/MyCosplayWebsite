@@ -664,7 +664,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - An allowlisted file with the right hash and no marker -> passes, not reported as stale.
   - A file with a broken or foreign marker (for example `wm: "other"`) and a wrong allowlist hash -> fails.
   - The existing TASK-15 self-test still reports exactly the same 3 bad files; the real repo scan still passes; the full suite passes.
-- Status: ready for review (built 2026-11-19 on branch task-17-guard-marked-stale-hash)
+- Status: done (merged into site-v1 on 2026-11-19; review approved round 1, QA passed)
 - Review: approved 2026-11-19
 - QA: passed 2026-11-19
 
