@@ -11,10 +11,11 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-18 by the planner for IDEA-10 (every photo of Puzz is watermarked, everywhere). New: section "IDEA-10 addition" (sitemap/flow additions, `data/site.json`, the watermark marker, the honest limit), TASK-14 (Site photos: portrait, reel covers, share image), TASK-15 (watermark marker + Publish check + repo guard test), open questions 15-18, and a new build-order line. Changed: the Media row and F9 now say the density is OPEN (2x or 3x); TASK-7 gets a density note and one-constant rule. The IDEA-10 part was approved by the user on 2026-11-18 (see the next line).
 - Revised: 2026-11-18 by the planner after the user answered questions 15-18 and wrote "Plan approved and storyboard approved". Density is **2x**: `WM_DIVISOR` = 80, so `f` = round(shorter side / 80), min 8px. Changed: F9, the Media row, TASK-7 criteria, note and test numbers, the build-order lines. Share image: the site screenshot stays until a photo is uploaded. Portrait and reel covers: one 1200px file each. GitHub Action check on every push: out of scope (future idea). Questions 15-18 moved to "Already decided". TASK-14 and TASK-15 are approved. Review/QA lines no longer wait for STORYBOARD APPROVED (docs/approval.md now contains it).
 - Revised: 2026-11-19 by the planner for IDEA-11 ("Remove from publish" can break an event photo and delete its old photo). New: TASK-16 (both protections, option (c)), open questions 19-20, and a new build-order line (TASK-16 before TASK-15). TASK-16 is **proposed, waiting for user approval**; the rest of the plan stays approved.
+- Revised: 2026-11-19 by the planner after the user wrote "TASK-16 approved, yes" (answers to questions 19, 20 and 22: yes to all). TASK-16 is **approved** and now also covers site photos (BUG-4: a portrait or reel cover link to a file that is not on GitHub). New: TASK-17 (repo guard accepts a marked file whose allowlist hash is stale, question 22 (b)). Build order: TASK-16 -> TASK-17. Questions 19, 20 and 22 moved to answered.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
-- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11, added 2026-11-19) is proposed and waiting for user approval** (see questions 19-20).
+- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11 + BUG-4) and TASK-17 (question 22) were approved by the user on 2026-11-19.**
 
 ### Branch note (this job only)
 The integration branch is **`site-v1`**. It takes the place of `main`, because the real `main` is checked out somewhere else. Each task branch (for example `task-3-home-hall`) is created from `site-v1` and merged back into `site-v1`. Wherever CLAUDE.md says "main", read `site-v1`.
@@ -577,9 +578,10 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Review: approved 2026-11-19
 - QA: passed 2026-11-19
 
-### TASK-16: Publish never commits a broken photo link; "Remove from publish" puts back the published photo - PROPOSED 2026-11-19, waiting for user approval
-- Linked idea(s): IDEA-11 (with IDEA-8, IDEA-9)
-- Depends on: TASK-13 (done)
+### TASK-16: Publish never commits a broken photo link (events and site photos); "Remove from publish" puts back the published photo - APPROVED 2026-11-19
+- Linked idea(s): IDEA-11 (with IDEA-8, IDEA-9, IDEA-10); fixes BUG-4
+- Approved by the user on 2026-11-19 ("TASK-16 approved, yes": both protections, put back the published photo; site photos added for BUG-4).
+- Depends on: TASK-13, TASK-14, TASK-15 (all done)
 - Goal: an event can never go live pointing at a photo file that is not on GitHub, and so its old photo can never be removed by mistake. Two protections (option (c) of IDEA-11): (1) Publish checks every photo link against the repo before any write; (2) "Remove from publish" undoes the attach in the draft, so the usual case never reaches the check.
 - Why both: (2) fixes the button the reviewer found, but the same broken state can also come from other paths that (2) does not see: a page reload (pending pairs live only in memory, while the draft stays in localStorage), an Import of an edited events.json, or a typed path. (1) catches all of them, at the last safe moment.
 - Choice for (2), planner's recommendation: **put back the photo paths from the published events.json** (not "clear the fields"). Reason: clearing would make the event's old photo unused, so the TASK-13 removal step would then offer to delete it - the exact data loss IDEA-11 is about, just behind a dialog. Putting back the published paths returns the event to what is live now, so nothing is broken and nothing is removed. It is barely more code: one lookup by event id in the base events.json text that the draft already keeps (`baseEvents().text`). When there is no published photo to put back, the fields are cleared, which is then also safe.
@@ -604,8 +606,19 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - The draft is saved (localStorage) like any other edit, the Publish panel re-renders, and if E is open in the edit form its Display photo / Full-size photo fields and preview show the new values.
     - The note is a short visible line under the pending list (`role="status"`), replaced by the next note and cleared on the next publish.
     - The draft change goes through one new function in `js/admin/manager.js` (for example `revertPhoto(eventId, photo, photoFull)`), so `publish.js` does not edit the draft state directly.
-  - Nothing else changes: the allowed-path rules, the removal rules, the dialog, the stale check and the commit layout of TASK-12/13 stay the same.
-- Files: `js/admin/publish.js` (the check, messages, note line, the Remove button handler), `js/admin/manager.js` (`revertPhoto`), `admin/index.html` (the note element, if not reused), `tests/task-16.spec.js`, `tests/task-13.spec.js` (expectations updated, see below), `tests/github-mock.js` only if needed.
+  - **(3) Site photo link check in Publish (BUG-4, same gap for site photos)**
+    - It runs at the same moment as (1): after the repo tree is read, before the removal dialog and before any write; also on "Try again".
+    - It checks the `data/site.json` and `data/reels.json` texts that are part of this commit (from `siteText()` / `reelsText()` in `js/admin/site-draft.js`). A JSON file that is not in this commit is already live and is not checked.
+    - Checked values: `portrait` in `data/site.json` and every reel's `thumb` in `data/reels.json`, when it is a non-empty string (`null`, missing and `""` pass).
+    - **Not in plain form** (`isCanonicalPath` false): stop with "Portrait has a photo path that is not in the usual form: <value>. Make the photo again or press \"Clear portrait\", then publish. Nothing was changed." (for a reel: "Reel cover <kana> (<reel-id>) has ..." and "Clear cover").
+    - **Not a `type: "blob"` entry with exactly that path in the tree and not one of the files in this publish:** stop with "Portrait points at a photo that is not on GitHub and not in this publish: <path>. Make the photo again or press \"Clear portrait\", then publish. Nothing was changed." (reel: "Reel cover <kana> (<reel-id>) points at ...", "Clear cover").
+    - The message names the file. Order: portrait first, then reels in `data/reels.json` order; the event problems of (1) come first; one message for all, with "(and N more)" counting both kinds.
+    - Truncated tree: same rule as (1) (stop with the "can't be checked" message if a checked site path is not a file of this publish).
+    - Built on the existing code: one pure exported function in `js/admin/publish.js`, for example `brokenSitePhotoLinks(siteText, reelsText, treeEntries, truncated, newPaths)`, returning `[]` or the list of problems; it never throws on bad JSON. `sitePathProblem` and the allowed-path rules of TASK-14 stay as they are (they check pending files; this checks the JSON links).
+    - On a stop: the same as (1) (no `POST` / `PATCH`, the draft, the site draft and the pending files kept, buttons enabled again, "Try again" shown).
+  - **BUG-4 closed:** the BUG-4 steps (Use for Portrait, reload, Publish) now stop with the message naming `media/site/portrait.webp` and no write. When the task is merged, `bugs/BUGS.md` BUG-4 gets `Status: fixed (TASK-16)`.
+  - Nothing else changes: the allowed-path rules, the removal rules, the dialog, the stale check and the commit layout of TASK-12/13/14 stay the same.
+- Files: `js/admin/publish.js` (both checks, messages, note line, the Remove button handler), `js/admin/manager.js` (`revertPhoto`), `js/admin/site-draft.js` (only if a small read helper is needed), `admin/index.html` (the note element, if not reused), `tests/task-16.spec.js`, `tests/task-13.spec.js` (expectations updated, see below), `tests/github-mock.js` only if needed, `bugs/BUGS.md` (BUG-4 status).
 - **Automated tests (`tests/task-16.spec.js`, fake repo + fake token, desktop + phone):**
   - IDEA-11 case, end to end: the fake repo has event X with `media/events/X/old.webp` / `old-full.webp`. Attach a new pair to X, press "Remove from publish". X's fields are back to the old paths, the "set back to the published photo" note shows, and the button reads "Nothing to publish" (the draft equals the published file again). Then rename another event Y and Publish: no removal dialog shows, the tree has only `data/events.json`, X's committed paths are the old ones, and `old.webp` / `old-full.webp` are still in the fake repo.
   - New event: attach a pair to an event that is not published yet, Remove from publish. Both fields are empty and the "no published photo" note shows.
@@ -619,8 +632,39 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - Deleted event: delete event X that has a published pair, Publish. No link error; the removal dialog lists X's 2 files as in TASK-13.
   - Try again: after a broken-link stop, fix the draft (Remove the photo from the event), press "Try again": it publishes with one commit.
   - Pure function: `brokenPhotoLinks` returns `[]` for a tree that has every path, the right problem for a missing path, a non-plain path, and a truncated tree; it never throws on bad JSON (returns `[]`; the publish of bad JSON is already impossible).
-  - **`tests/task-13.spec.js` updates:** the "unusual path" tests now expect the publish to stop with the "not in the usual form" message and no write (instead of success with the note). The "truncated tree" test now expects the "can't be checked" stop when the events reference existing photos. Every other TASK-13 test still passes unchanged. The full suite passes.
-- Status: proposed, waiting for user approval (then todo)
+  - **Site photos (BUG-4):**
+    - BUG-4 repro: Use for Portrait, reload the page, Publish (fake repo has no `media/site/portrait.webp`). The "not on GitHub and not in this publish" message names `media/site/portrait.webp`; the mock records no `POST` or `PATCH`; the fake repo head is unchanged.
+    - Same for a reel cover: Use for "Reel cover: す su", reload, Publish -> the message names "Reel cover す (sugoi)" and `media/reels/sugoi.webp`; no write.
+    - Without the reload (the file is pending), the same publish succeeds with one commit (the TASK-14 publish test still passes).
+    - Portrait set to a file already in the fake repo, with no pending file: publish succeeds.
+    - "Clear portrait" after the reload, then "Try again": it publishes with one commit and `portrait: null`.
+    - A non-plain `portrait` (for example `./media/site/portrait.webp`) stops with the "not in the usual form" message and no write.
+    - An event problem and a site problem together: the message names the event and says "(and 1 more)".
+    - Pure function: `brokenSitePhotoLinks` returns `[]` when every path is in the tree or in `newPaths`, the right problem for a missing portrait and a missing reel cover, and `[]` for bad JSON.
+  - **`tests/task-13.spec.js` updates:** the "unusual path" tests now expect the publish to stop with the "not in the usual form" message and no write (instead of success with the note). The "truncated tree" test now expects the "can't be checked" stop when the events reference existing photos. Every other TASK-13 test still passes unchanged. The full suite passes (TASK-14 and TASK-15 tests included).
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-17: Repo guard accepts a marked file whose allowlist hash is stale (reports it) - APPROVED 2026-11-19
+- Linked idea(s): IDEA-10 (question 22, option (b), user answer 2026-11-19)
+- Depends on: TASK-15 (done), TASK-16 (build after it)
+- Goal: after Puzz publishes a Share image over `og-image.png`, the test run does not fail on the old allowlist entry, while an unwatermarked file can still never slip through.
+- Acceptance criteria:
+  - In `tests/wm-guard.js`, exact-hash allowlisting stays: an allowlisted file whose SHA-256 matches passes, marked or not (as today).
+  - New narrow rule: an allowlisted file whose hash **no longer matches** but which carries a valid marker (`readWatermarkMarker` returns `wm: "puzzkezz-lattice"`, `v: 1`) passes, and the guard reports the allowlist entry as **stale**, naming the file (for example "Allowlist entry is stale (file changed, now carries the watermark marker): og-image.png. Remove it from tests/wm-allowlist.json."). A stale report is a note, not a failure.
+  - An allowlisted file whose hash no longer matches and which has **no** valid marker still fails exactly as today (same message naming the file).
+  - Nothing else in the guard changes (scanned extensions, skipped folders, fixtures rule, reference checks, SVG rule).
+  - In `tests/task-15.spec.js`, the assertion that expects `og-image.png` on the allowlist becomes "`og-image.png` is allowlisted **or** carries the marker". The stale notes are shown in the test output (for example as a test annotation or console line), so they are seen in QA.
+  - `tests/wm-allowlist.json` is not changed by this task.
+- Files: `tests/wm-guard.js`, `tests/task-15.spec.js`.
+- **Automated tests (in `tests/task-15.spec.js`, guard self-test on a temporary folder, not the repo):**
+  - An allowlisted file with a wrong hash and **no** marker -> fails, the message names the file (proves an unmarked changed file still fails).
+  - An allowlisted file with a wrong hash that **carries** the marker -> passes, and is reported as stale with its path.
+  - An allowlisted file with the right hash and no marker -> passes, not reported as stale.
+  - A file with a broken or foreign marker (for example `wm: "other"`) and a wrong allowlist hash -> fails.
+  - The existing TASK-15 self-test still reports exactly the same 3 bad files; the real repo scan still passes; the full suite passes.
+- Status: todo
 - Review: pending
 - QA: pending
 
@@ -687,7 +731,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 Suggested build order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9. TASK-6 and TASK-7 only depend on 1 and 2.
 Build order for the 2026-11-18 additions: TASK-10 -> TASK-7 (revised) -> TASK-11 -> TASK-12 -> TASK-13. TASK-11 can be built in parallel with TASK-10 and TASK-7. The shared mock `tests/github-mock.js` is created in TASK-11 and extended in TASK-12 and TASK-13.
 Build order including IDEA-10 (approved 2026-11-18): TASK-10 -> TASK-7 (revised, `WM_DIVISOR` = 80) -> TASK-11 -> TASK-12 -> TASK-13 -> **TASK-15** -> **TASK-14**. TASK-15 comes before TASK-14 because every site photo needs the marker. If the user wants the marker earlier, the marker part of TASK-15 (`wm-marker.js` + marking in the uploader) can be built right after TASK-7; the Publish check still waits for TASK-13.
-Build order including IDEA-11 (proposed 2026-11-19, once approved): TASK-13 (done) -> **TASK-16** -> TASK-15 -> TASK-14. TASK-16 goes first because it guards live data (a broken photo link and a removed old photo) and it is small. TASK-15 and TASK-14 then build on the safer Publish.
+Build order including IDEA-11 (approved 2026-11-19): TASK-15 and TASK-14 are already done, so the remaining order is **TASK-16** (event + site photo link checks, Remove from publish, closes BUG-4) -> **TASK-17** (repo guard stale-hash rule). TASK-16 goes first because it guards live data.
 
 ---
 
@@ -728,10 +772,12 @@ Already decided by you (2026-11-18, with "Plan approved and storyboard approved"
 
 No open questions remain for IDEA-10.
 
-### Questions for IDEA-11 (2026-11-19) - please answer to approve TASK-16
+### Questions for IDEA-11 (2026-11-19) - ANSWERED 2026-11-19 ("TASK-16 approved, yes")
 
 19. **Use both protections (option (c))?** The planner recommends yes: Publish checks every event photo link against GitHub before it writes anything and refuses with a message naming the event, **and** "Remove from publish" fixes the draft right away. The check also covers cases the button can't see (a page reload loses the pending photos but keeps the draft, an Import, a typed path). Side effect: an event photo path written in an unusual form (for example `./media/...` or `...webp?v=2`) now stops the publish with a message, instead of publishing with a note. Yes / only one of them?
 20. **What "Remove from publish" does to the event:** the planner recommends **putting back the photo that is live now** (from the published events.json), or clearing the photo when there is none. The other choice, always clearing the photo, would make the old photo unused, so the next Publish would offer to delete it. Put back (recommended) / always clear?
+    - **User answer to 19 (2026-11-19): yes, both protections (option (c)).** Extended the same day to site photos (portrait, reel covers) to close BUG-4. See TASK-16.
+    - **User answer to 20 (2026-11-19): yes, put back the published photo** (clear only when there is none). See TASK-16 (2).
 
 Detail decided by the planner (say if you disagree): if GitHub's file list is ever incomplete ("truncated", only at about 100,000 files), Publish refuses rather than guessing.
 
@@ -743,3 +789,6 @@ Detail decided by the planner (say if you disagree): if GitHub's file list is ev
 ### Question found while building TASK-14 (2026-11-19, programmer)
 
 22. **og-image.png allowlist entry after a Share image is published.** The repo guard (TASK-15) fails when an allowlisted file's SHA-256 changes, even if the new file carries the uploader's marker. So the first time Puzz publishes a Share image (a marked PNG written over `og-image.png`), the next test run fails on the old `og-image.png` entry in `tests/wm-allowlist.json` until that entry is removed by hand (the marked file then passes on its own), and the TASK-15 test line that expects `og-image.png` on the allowlist must change too. The programmer did not change the guard (that would weaken a TASK-15 rule). Options: (a) remove the entry by hand when the share image is published (current behaviour), (b) let the guard accept a marked file even when its allowlist hash is stale. Which one?
+    - **User answer (2026-11-19): yes, the narrow guard fix (b)** as the reviewer proposed: exact-hash allowlisting stays; a marked file with a stale hash passes and is reported as stale; an unmarked file with a stale hash still fails. See TASK-17.
+
+No open questions remain for IDEA-11 or the TASK-14 / TASK-15 follow-ups. Questions 1-12 above are still open.
