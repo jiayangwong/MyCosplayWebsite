@@ -10,6 +10,15 @@
   vertical-align: middle;
 }
 
+/* BUG-1: on narrow phones the badge sits under the wordmark so "View site" stays on screen (one header row, like the storyboard). */
+@media (max-width: 479px) {
+  .wordmark .admin-badge {
+    display: block;
+    width: fit-content;
+    margin: var(--space-1) 0 0;
+  }
+}
+
 .admin { padding-bottom: var(--space-16); }
 
 .help-box {

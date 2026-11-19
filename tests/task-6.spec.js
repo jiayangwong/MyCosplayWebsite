@@ -81,3 +81,11 @@ test('import replaces the draft; a bad file is rejected without changes', async 
   await expect(page.locator('.event-row')).toHaveCount(8);
   await expect(page.locator('#source-banner')).toContainText('published');
 });
+
+test('BUG-1: no sideways scroll at 375px; View site button stays on screen', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  const { sw, cw } = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
+  expect(sw).toBeLessThanOrEqual(cw);
+  const box = await page.locator('.site-header-inner > .btn').boundingBox();
+  expect(box.x + box.width).toBeLessThanOrEqual(cw);
+});
