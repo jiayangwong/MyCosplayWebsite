@@ -444,6 +444,11 @@ export function eventCount() {
   return state.events.length;
 }
 
+/** Ids of the events in the draft (saved events only, not an unsaved form). */
+export function draftEventIds() {
+  return new Set(state.events.map((e) => e.id));
+}
+
 /** The data/events.json this draft started from: { sha, text }. sha is null if it could not be read. */
 export function baseEvents() {
   return { ...state.base };

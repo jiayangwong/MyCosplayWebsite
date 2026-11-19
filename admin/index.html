@@ -153,7 +153,13 @@
     <section class="panel pub-panel" id="publish-panel" aria-labelledby="pub-title">
       <h2 id="pub-title" class="panel-title">Publish</h2>
       <p class="panel-hint">One press makes one commit on GitHub. Nothing goes live unless every step works.</p>
+      <p class="panel-hint" id="pub-help">Publish also removes photo files that no event uses any more. Old versions stay in the GitHub history.</p>
       <ul class="pend" id="pub-pending" aria-label="Pending changes"></ul>
+      <p class="mono pub-total" id="pub-total" hidden></p>
+      <div class="msg" id="pub-limit" role="alert" data-state="err" hidden>
+        <span class="msg-icon" aria-hidden="true">!</span>
+        <div class="msg-body"><p class="msg-text"></p></div>
+      </div>
       <button type="button" class="btn btn-accent" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
       <p class="panel-hint mono" id="publish-hint" role="status">Add a GitHub token to publish</p>
       <div class="pub-progress" id="pub-progress" hidden>
@@ -164,8 +170,13 @@
         <span class="msg-icon" aria-hidden="true">&#10003;</span>
         <div class="msg-body">
           <p class="msg-text">Published. The site updates in about 1-2 minutes.</p>
+          <p class="msg-next" id="pub-ok-note" hidden></p>
           <p class="msg-link"><a id="pub-commit" href="#" target="_blank" rel="noopener noreferrer">View commit</a></p>
         </div>
+      </div>
+      <div class="msg" id="pub-cancel" role="status" data-state="none" hidden>
+        <span class="msg-icon" aria-hidden="true">&ndash;</span>
+        <div class="msg-body"><p class="msg-text">Publish cancelled. Nothing was changed.</p></div>
       </div>
       <div class="msg" id="pub-err" role="alert" data-state="err" hidden>
         <span class="msg-icon" aria-hidden="true">!</span>
@@ -192,6 +203,15 @@
           </div>
         </div>
       </div>
+      <dialog class="confirm" id="pub-confirm" aria-modal="true" aria-labelledby="pub-confirm-title" aria-describedby="pub-confirm-note">
+        <h3 id="pub-confirm-title">These old files will be removed</h3>
+        <p class="panel-hint" id="pub-confirm-note">Old versions stay in the GitHub history.</p>
+        <ul class="confirm-list" id="pub-confirm-list" aria-label="Files to remove"></ul>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-secondary" id="pub-confirm-no" autofocus>Cancel</button>
+          <button type="button" class="btn btn-primary" id="pub-confirm-yes">Remove and publish</button>
+        </div>
+      </dialog>
     </section>
 
     <section class="panel uploader" aria-labelledby="wm-title">

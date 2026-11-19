@@ -1,6 +1,8 @@
 // Shared fake GitHub for tests (TASK-11, 12, 13).
 // - Every request to api.github.com is intercepted with page.route. Nothing reaches the real GitHub.
 // - A request the mock does not handle gets a 501 and is recorded; the `github` fixture then fails the test.
+// - GET git/trees/{sha} lists the top level; with ?recursive=1 every path (set treeTruncated for GitHub's
+//   truncated: true answer). POST git/trees applies `sha: null` entries as deletions.
 // - Only the obviously fake FAKE_TOKEN is accepted. A different Authorization header gets 401, like GitHub.
 // - The token-leak watcher records every request and console message and fails the test if the token
 //   shows up anywhere except the Authorization header of a request to https://api.github.com.
@@ -106,6 +108,7 @@ class FakeGitHub {
     this.unhandled = [];
     this.overrides = []; // { method, test, response, once }
     this.holds = []; // from hold(): { match, arrived, released, release }
+    this.treeTruncated = Boolean(options.treeTruncated); // GET git/trees?recursive=1 answers truncated: true
   }
 
   /**
@@ -215,7 +218,28 @@ class FakeGitHub {
     if (req.method === 'GET' && (x = m(/^\/git\/trees\/([0-9a-f]{40})$/))) {
       const t = repo.trees.get(x[1]);
       if (!t) return json(route, 404, { message: 'Not Found' });
-      const tree = [...t.entries()].map(([path, e]) => ({ path, ...e, size: repo.blobs.get(e.sha).length }));
+      const files = [...t.entries()].map(([path, e]) => ({ path, ...e, size: repo.blobs.get(e.sha).length }));
+      if (req.query.recursive === undefined) {
+        // Like GitHub without ?recursive: only the top level (files, plus one 'tree' entry per folder).
+        const top = new Map();
+        for (const f of files) {
+          const [first, ...rest] = f.path.split('/');
+          if (!rest.length) top.set(first, f);
+          else if (!top.has(first)) top.set(first, { path: first, mode: '040000', type: 'tree', sha: sha1(`dir ${x[1]} ${first}`) });
+        }
+        return json(route, 200, { sha: x[1], tree: [...top.values()], truncated: false });
+      }
+      // ?recursive=1: every file and folder. With treeTruncated set, GitHub's "too big" answer: part of the list.
+      const dirs = new Set();
+      for (const f of files) {
+        const parts = f.path.split('/');
+        for (let i = 1; i < parts.length; i += 1) dirs.add(parts.slice(0, i).join('/'));
+      }
+      const tree = [
+        ...[...dirs].map((d) => ({ path: d, mode: '040000', type: 'tree', sha: sha1(`dir ${x[1]} ${d}`) })),
+        ...files,
+      ].sort((a, b) => (a.path < b.path ? -1 : 1));
+      if (this.treeTruncated) return json(route, 200, { sha: x[1], tree: tree.slice(0, Math.ceil(tree.length / 2)), truncated: true });
       return json(route, 200, { sha: x[1], tree, truncated: false });
     }
     if (req.method === 'GET' && (x = m(/^\/contents\/(.+)$/))) {

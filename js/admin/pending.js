@@ -3,16 +3,63 @@
 // the files only live in this tab, so the page warns before it is closed while a pair is unsaved.
 
 const pairs = []; // { eventId, photo, photoFull, item } - item holds the current blobs (re-rendered on changes)
+const listeners = new Set();
+
+/**
+ * Files made by the TASK-7 watermark pipeline. watermark.js registers every blob it encodes, and Publish
+ * refuses any file that is not in this set, so nothing that skipped the watermark can be uploaded.
+ * (TASK-15 adds a second, content-based check on top: the watermark marker, see publish.js addFileCheck.)
+ */
+const pipelineFiles = new WeakSet();
+
+export function markPipelineFile(blob) {
+  if (blob) pipelineFiles.add(blob);
+  return blob;
+}
+
+export function isPipelineFile(blob) {
+  return Boolean(blob) && pipelineFiles.has(blob);
+}
+
+function changed() {
+  listeners.forEach((fn) => fn());
+}
+
+/** Calls `fn` whenever the pending list changes (add, remove, clear). */
+export function onPendingChange(fn) {
+  listeners.add(fn);
+}
 
 /** Adds a pair. An event shows one photo, so a newer attach replaces an older pending pair for the same event. */
 export function addPendingPair(pair) {
   const old = pairs.findIndex((p) => p.eventId === pair.eventId);
   if (old !== -1) pairs.splice(old, 1);
   pairs.push(pair);
+  changed();
 }
 
 export function removePendingItem(item) {
-  for (let i = pairs.length - 1; i >= 0; i -= 1) if (pairs[i].item === item) pairs.splice(i, 1);
+  let removed = false;
+  for (let i = pairs.length - 1; i >= 0; i -= 1) {
+    if (pairs[i].item === item) {
+      pairs.splice(i, 1);
+      removed = true;
+    }
+  }
+  if (removed) changed();
+}
+
+/** Removes exactly these pair objects (after a successful publish). A pair re-attached meanwhile stays. */
+export function clearPendingPairs(done) {
+  const gone = new Set(done);
+  let removed = false;
+  for (let i = pairs.length - 1; i >= 0; i -= 1) {
+    if (gone.has(pairs[i])) {
+      pairs.splice(i, 1);
+      removed = true;
+    }
+  }
+  if (removed) changed();
 }
 
 export function pendingPairs() {

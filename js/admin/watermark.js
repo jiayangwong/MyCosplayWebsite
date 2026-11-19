@@ -6,7 +6,7 @@
 import { SITE } from '../site-config.js';
 import { slugify } from '../events-data.js';
 import { onEventChange, attachPhoto, usedPhotoPaths, isEditingSavedEvent } from './manager.js';
-import { addPendingPair, removePendingItem, pendingPaths } from './pending.js';
+import { addPendingPair, removePendingItem, pendingPaths, markPipelineFile } from './pending.js';
 
 /** Watermark density: f = round(shorter side / WM_DIVISOR). 80 = "2x" (user decision 2026-11-18). */
 export const WM_DIVISOR = 80;
@@ -173,6 +173,7 @@ async function encode(source, size, opts, quality) {
   canvas.width = 0;
   if (!blob) throw new UploadError('tooLarge');
   if (blob.type !== 'image/webp') throw new UploadError('noWebp');
+  markPipelineFile(blob); // only blobs registered here can be published (TASK-13)
   return { blob, width: size.width, height: size.height };
 }
 

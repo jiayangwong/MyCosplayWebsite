@@ -16,7 +16,7 @@ const SUCCESS = 'Published. The site updates in about 1-2 minutes.';
 const UNSURE = 'The connection dropped while the site was being updated.';
 const UNSURE_NEXT = 'It is not clear if the change went live. Try again: it checks GitHub first and never publishes twice.';
 const JP_NAME = 'コミックフィエスタ 冬 ✨ Puzz';
-// A publish is 7 mocked round trips; on the phone project under full-suite load it can take just over the
+// A publish is 8 mocked round trips; on the phone project under full-suite load it can take just over the
 // default 5s. Every wait on a publish result (and on Discard reading GitHub) uses this longer timeout.
 const RESULT_TIMEOUT = 15000;
 const expectResult = expect.configure({ timeout: RESULT_TIMEOUT });
@@ -39,11 +39,12 @@ async function saveFakeToken(page) {
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
 }
 
-/** The 7 calls of one publish, in order, for a given head commit. */
-const sevenCalls = (head) => [
+/** The 8 calls of one publish, in order, for a given head commit (TASK-13 added the recursive tree read). */
+const eightCalls = (github, head) => [
   REF_GET,
   `GET ${REPO}/git/commits/${head}`,
   `GET ${REPO}/contents/data/events.json`,
+  `GET ${REPO}/git/trees/${github.repo.commits.get(head).tree}`,
   BLOB_POST,
   TREE_POST,
   COMMIT_POST,
@@ -88,7 +89,7 @@ test('panel: no token -> disabled with hint; token + no changes -> "Nothing to p
   expect(github.calls()).toEqual([]); // nothing is sent until Publish is pressed
 });
 
-test('happy path: exactly 7 calls in order, one-file tree, blob = Export, parents [head], force:false', async ({ page, github }) => {
+test('happy path: exactly 8 calls in order, one-file tree, blob = Export, parents [head], force:false', async ({ page, github }) => {
   await saveFakeToken(page);
   await addEvent(page, 'CFW', JP_NAME); // Japanese + emoji: the blob must keep non-ASCII text byte for byte
   const expected = await exportedText(page);
@@ -99,7 +100,7 @@ test('happy path: exactly 7 calls in order, one-file tree, blob = Export, parent
   await expectResult(page.locator('#pub-ok')).toBeVisible();
   await expectResult(page.locator('#pub-ok')).toContainText(SUCCESS);
 
-  expect(github.calls()).toEqual(sevenCalls(head));
+  expect(github.calls()).toEqual(eightCalls(github, head));
   const reqs = github.requests;
   expect(reqs[2].query.ref).toBe(head);
   const blob = reqs.find((r) => `${r.method} ${r.path}` === BLOB_POST).body;
@@ -130,7 +131,8 @@ test('happy path: exactly 7 calls in order, one-file tree, blob = Export, parent
   await expectResult(page.locator('#pub-progress')).toBeHidden();
   // Every request that carried the token went to the GitHub API (the fixture also checks for leaks).
   for (const r of github.requests) expect(r.headers.authorization).toMatch(/^Bearer /);
-  expect(github.requests.length).toBe(7);
+  expect(github.requests.length).toBe(8);
+  expect(reqs[3].query.recursive).toBe('1');
 });
 
 test('the draft remembers the base blob SHA of the events.json it started from', async ({ page, github }) => {
@@ -157,7 +159,7 @@ test('a second publish right after a success works without a reload', async ({ p
   expect(newCommits(github)).toBe(2);
   expect(github.repo.commits.get(github.repo.head).parents).toEqual([first]);
   expect(github.repo.read('data/events.json')).toContain('Second Publish');
-  expect(github.calls().slice(7)).toEqual(sevenCalls(first));
+  expect(github.calls().slice(8)).toEqual(eightCalls(github, first));
 });
 
 test('stale (blob): repo events.json changed elsewhere -> stale message, no POST/PATCH, Export backup works', async ({ page, github }) => {
@@ -170,7 +172,7 @@ test('stale (blob): repo events.json changed elsewhere -> stale message, no POST
   await expectResult(page.locator('#pub-stale')).toContainText('Nothing was changed on GitHub.');
   await expectResult(page.locator('#pub-ok')).toBeHidden();
   await expectResult(page.locator('#pub-err')).toBeHidden();
-  expect(github.calls()).toEqual(sevenCalls(outside).slice(0, 3));
+  expect(github.calls()).toEqual(eightCalls(github, outside).slice(0, 3));
   expect(writes(github)).toEqual([]);
   expect(github.repo.head).toBe(outside);
   // The draft is kept and can be saved as a backup.
@@ -218,7 +220,7 @@ test('stale recovery: Export backup -> Discard draft -> Import backup -> Publish
   await expectResult(page.locator('#pub-ok')).toBeVisible();
   await expectResult(page.locator('#pub-stale')).toBeHidden();
   expect(github.calls().filter((c) => c === REF_PATCH)).toHaveLength(1);
-  expect(github.calls().slice(before)).toEqual(sevenCalls(outside));
+  expect(github.calls().slice(before)).toEqual(eightCalls(github, outside));
   expect(github.repo.commits.get(github.repo.head).parents).toEqual([outside]);
   expect(newCommits(github)).toBe(2); // the outside push + exactly one publish
   const live = github.repo.read('data/events.json');
@@ -295,7 +297,7 @@ test('stale (ref): PATCH returns 422 -> stale message, fake repo head unchanged'
   await expectResult(page.locator('#pub-stale')).toBeVisible();
   await expectResult(page.locator('#pub-stale')).toContainText(STALE);
   expect(github.repo.head).toBe(head);
-  expect(github.calls()).toEqual(sevenCalls(head));
+  expect(github.calls()).toEqual(eightCalls(github, head));
   await expect(page.locator('#publish-btn')).toBeEnabled(); // draft kept, still pending
 });
 
@@ -392,7 +394,7 @@ for (const f of FAILURES) {
     await page.click('#pub-retry');
     await expectResult(page.locator('#pub-ok')).toBeVisible();
     await expectResult(page.locator('#pub-err')).toBeHidden();
-    expect(github.calls().slice(before)).toEqual(sevenCalls(head));
+    expect(github.calls().slice(before)).toEqual(eightCalls(github, head));
     expect(github.calls().filter((c) => c === REF_PATCH)).toHaveLength(1);
     expect(github.repo.commits.get(github.repo.head).parents).toEqual([head]);
   });
@@ -408,8 +410,8 @@ test('PATCH connection drops and the ref did not move (yet) -> "not clear" messa
   await expectResult(page.locator('#pub-err-next')).toHaveText(UNSURE_NEXT);
   await expectResult(page.locator('#pub-err-next')).not.toContainText('Nothing was changed');
   expect(github.repo.head).toBe(head);
-  // Steps 1-7 plus one read of the ref to check whether the update happened.
-  expect(github.calls()).toEqual([...sevenCalls(head), REF_GET]);
+  // Steps 1-8 plus one read of the ref to check whether the update happened.
+  expect(github.calls()).toEqual([...eightCalls(github, head), REF_GET]);
   // It really did not go live: Try again publishes once.
   await page.click('#pub-retry');
   await expectResult(page.locator('#pub-ok')).toBeVisible();
@@ -445,7 +447,7 @@ test('unsure, but the PATCH was applied later -> Try again finds the text on Git
   await page.click('#pub-retry');
   await expectResult(page.locator('#pub-ok')).toBeVisible();
   await expectResult(page.locator('#pub-stale')).toBeHidden();
-  expect(github.calls().slice(before)).toEqual(sevenCalls(live).slice(0, 3)); // reads only
+  expect(github.calls().slice(before)).toEqual(eightCalls(github, live).slice(0, 3)); // reads only
   expect(github.repo.head).toBe(live);
   expect(newCommits(github)).toBe(1);
   await expectResult(page.locator('#publish-btn')).toHaveText('Nothing to publish');
@@ -480,7 +482,7 @@ test('double-clicking Publish makes only one commit; buttons are locked while pu
   await expect(page.locator('#gh-forget')).toBeDisabled();
   await expectResult(page.locator('#pub-progress')).toBeVisible();
   await expectResult(page.locator('#pub-bar')).toHaveAttribute('role', 'progressbar');
-  await expectResult(page.locator('#pub-step')).toContainText('Step 1 of 7');
+  await expectResult(page.locator('#pub-step')).toContainText('Step 1 of 8');
   // A click forced through the disabled state still cannot start a second publish.
   await page.evaluate(() => document.getElementById('publish-btn').click());
   firstRead.release();
