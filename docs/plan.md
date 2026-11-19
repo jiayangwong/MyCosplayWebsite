@@ -10,10 +10,11 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-18 by the planner (user-requested tweak): the lattice watermark is kept (hearts, up-right text direction confirmed) but made about 3 times as dense. Only the size rule changed: `f` = round(shorter side / 120), min 8px (was 2.5% of the shorter side, min 12px); everything else stays relative to `f`. Changed: F9, the Media row, TASK-7 criteria, note and test numbers. On the 1200px display copy the name is about 8px tall (a texture); it is readable on the full-size master (user informed). Spec matches docs/style-guide.md and storyboard/wm.js. Plan stays approved.
 - Revised: 2026-11-18 by the planner for IDEA-10 (every photo of Puzz is watermarked, everywhere). New: section "IDEA-10 addition" (sitemap/flow additions, `data/site.json`, the watermark marker, the honest limit), TASK-14 (Site photos: portrait, reel covers, share image), TASK-15 (watermark marker + Publish check + repo guard test), open questions 15-18, and a new build-order line. Changed: the Media row and F9 now say the density is OPEN (2x or 3x); TASK-7 gets a density note and one-constant rule. The IDEA-10 part was approved by the user on 2026-11-18 (see the next line).
 - Revised: 2026-11-18 by the planner after the user answered questions 15-18 and wrote "Plan approved and storyboard approved". Density is **2x**: `WM_DIVISOR` = 80, so `f` = round(shorter side / 80), min 8px. Changed: F9, the Media row, TASK-7 criteria, note and test numbers, the build-order lines. Share image: the site screenshot stays until a photo is uploaded. Portrait and reel covers: one 1200px file each. GitHub Action check on every push: out of scope (future idea). Questions 15-18 moved to "Already decided". TASK-14 and TASK-15 are approved. Review/QA lines no longer wait for STORYBOARD APPROVED (docs/approval.md now contains it).
+- Revised: 2026-11-19 by the planner for IDEA-11 ("Remove from publish" can break an event photo and delete its old photo). New: TASK-16 (both protections, option (c)), open questions 19-20, and a new build-order line (TASK-16 before TASK-15). TASK-16 is **proposed, waiting for user approval**; the rest of the plan stays approved.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
-- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density).
+- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11, added 2026-11-19) is proposed and waiting for user approval** (see questions 19-20).
 
 ### Branch note (this job only)
 The integration branch is **`site-v1`**. It takes the place of `main`, because the real `main` is checked out somewhere else. Each task branch (for example `task-3-home-hall`) is created from `site-v1` and merged back into `site-v1`. Wherever CLAUDE.md says "main", read `site-v1`.
@@ -576,6 +577,53 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Review: approved 2026-11-19
 - QA: passed 2026-11-19
 
+### TASK-16: Publish never commits a broken photo link; "Remove from publish" puts back the published photo - PROPOSED 2026-11-19, waiting for user approval
+- Linked idea(s): IDEA-11 (with IDEA-8, IDEA-9)
+- Depends on: TASK-13 (done)
+- Goal: an event can never go live pointing at a photo file that is not on GitHub, and so its old photo can never be removed by mistake. Two protections (option (c) of IDEA-11): (1) Publish checks every photo link against the repo before any write; (2) "Remove from publish" undoes the attach in the draft, so the usual case never reaches the check.
+- Why both: (2) fixes the button the reviewer found, but the same broken state can also come from other paths that (2) does not see: a page reload (pending pairs live only in memory, while the draft stays in localStorage), an Import of an edited events.json, or a typed path. (1) catches all of them, at the last safe moment.
+- Choice for (2), planner's recommendation: **put back the photo paths from the published events.json** (not "clear the fields"). Reason: clearing would make the event's old photo unused, so the TASK-13 removal step would then offer to delete it - the exact data loss IDEA-11 is about, just behind a dialog. Putting back the published paths returns the event to what is live now, so nothing is broken and nothing is removed. It is barely more code: one lookup by event id in the base events.json text that the draft already keeps (`baseEvents().text`). When there is no published photo to put back, the fields are cleared, which is then also safe.
+- Acceptance criteria:
+  - **(1) Photo link check in Publish**
+    - It runs inside the publish, after the repo tree is read (`GET .../git/trees/{baseTree}?recursive=1`, which comes after the stale check) and **before** the removal dialog and before any write (blob, tree, commit, ref). It also runs on "Try again". The early "GitHub already has exactly this" exit of TASK-12/13 stays as it is (nothing would change on the live site).
+    - For every event in the `events.json` text about to be committed, and for each of `photo` and `photoFull` that is a non-empty string:
+      - **Not in plain form** (`isCanonicalPath` from TASK-13 returns false, for example `./media/...`, `...webp?v=2`, `media//events/...`, `%2F`, a backslash, spaces): the publish stops with "Event \"<short> <year>\" (<id>) has a photo path that is not in the usual form: <value>. Attach the photo again or fix the path, then publish. Nothing was changed."
+      - **Starts with `media/events/`** and is neither a `type: "blob"` entry with exactly that path in the tree, nor one of the files in this publish: the publish stops with "Event \"<short> <year>\" (<id>) points at a photo that is not on GitHub and not in this publish: <path>. Attach the photo again, or remove it from the event, then publish. Nothing was changed."
+      - Plain paths outside `media/events/` are not checked here (the TASK-15 repo guard checks that every referenced file exists).
+    - Events with no `photo` / `photoFull` (missing or `""`) pass. Deleted events are not in the committed text, so they are never checked; their files are still removal candidates as in TASK-13.
+    - The message names the **first** problem in display order (date descending) and, when there are more, adds "(and N more)".
+    - **Truncated tree** (`truncated: true`): Publish cannot prove the files exist. If the committed text has at least one `media/events/` path that is not a file in this publish, the publish stops with "Could not list all files on GitHub, so the photo links can't be checked. Nothing was changed." If every such path is a new file of this publish (or there are none), it goes on as in TASK-13 (no removals, the "Could not list all old photos" note). Note: GitHub only truncates at about 100,000 files, far beyond this site.
+    - The check is a pure exported function in `js/admin/publish.js`, for example `brokenPhotoLinks(text, treeEntries, truncated, newPaths)` returning `[]` or the list of problems, so it can be tested without the network.
+    - Since every non-plain path now stops the publish, the TASK-13 "not in the usual form, so no old files were removed" note can no longer happen and is removed with its message.
+    - On a stop: no `POST` or `PATCH` request is made, the draft and the pending pairs are kept, the Publish / Import / Discard / Forget token buttons are enabled again, and "Try again" is shown.
+  - **(2) "Remove from publish" undoes the attach**
+    - Pressing it on a pair of event E removes the pair (as today) and then, only if E is still in the draft **and** E's draft `photo` still equals the pair's `photo` and E's `photoFull` still equals the pair's `photoFull` (or is empty):
+      - If the published events.json (`baseEvents().text`) has an event with id E and a `photo`, E's `photo` and `photoFull` are set to the published values (both together, `photoFull` cleared if the published one has none). Note: "Photo for <short> <year> set back to the published photo."
+      - Otherwise (new event, or no published photo): both fields are cleared. Note: "Photo for <short> <year> removed from the event (it has no published photo)."
+    - If E's paths were changed in the meantime (another attach, a typed path), the draft is not touched and no note shows.
+    - The draft is saved (localStorage) like any other edit, the Publish panel re-renders, and if E is open in the edit form its Display photo / Full-size photo fields and preview show the new values.
+    - The note is a short visible line under the pending list (`role="status"`), replaced by the next note and cleared on the next publish.
+    - The draft change goes through one new function in `js/admin/manager.js` (for example `revertPhoto(eventId, photo, photoFull)`), so `publish.js` does not edit the draft state directly.
+  - Nothing else changes: the allowed-path rules, the removal rules, the dialog, the stale check and the commit layout of TASK-12/13 stay the same.
+- Files: `js/admin/publish.js` (the check, messages, note line, the Remove button handler), `js/admin/manager.js` (`revertPhoto`), `admin/index.html` (the note element, if not reused), `tests/task-16.spec.js`, `tests/task-13.spec.js` (expectations updated, see below), `tests/github-mock.js` only if needed.
+- **Automated tests (`tests/task-16.spec.js`, fake repo + fake token, desktop + phone):**
+  - IDEA-11 case, end to end: the fake repo has event X with `media/events/X/old.webp` / `old-full.webp`. Attach a new pair to X, press "Remove from publish". X's fields are back to the old paths, the "set back to the published photo" note shows, and the button reads "Nothing to publish" (the draft equals the published file again). Then rename another event Y and Publish: no removal dialog shows, the tree has only `data/events.json`, X's committed paths are the old ones, and `old.webp` / `old-full.webp` are still in the fake repo.
+  - New event: attach a pair to an event that is not published yet, Remove from publish. Both fields are empty and the "no published photo" note shows.
+  - Changed meanwhile: attach a pair, then type another path into X's Display photo field and save, then Remove from publish. The draft keeps the typed path and no note shows.
+  - Form open: with X open in the edit form, Remove from publish updates the form's photo fields and preview.
+  - Broken link stop (the reload case): set the draft so X points at `media/events/X/new.webp` / `new-full.webp` with no pending pair and those files not in the fake repo. Publish shows the "not on GitHub and not in this publish" message naming X and the path; the mock records no `POST` or `PATCH`; the fake repo head and files are unchanged; no removal dialog shows.
+  - Two broken events: the message names the first one by display order and says "(and 1 more)".
+  - Non-plain path: X's `photo` = `./media/events/X/old.webp` (file exists). Publish stops with the "not in the usual form" message and no write.
+  - Truncated tree with an existing photo reference: stops with the "can't be checked" message and no write. Truncated tree where the only `media/events/` paths are new files of this publish: publish succeeds with the "Could not list all old photos" note.
+  - Events with no photo, plus a photo outside `media/events/` (for example `img/placeholder.webp`): publish succeeds (not stopped by this check).
+  - Deleted event: delete event X that has a published pair, Publish. No link error; the removal dialog lists X's 2 files as in TASK-13.
+  - Try again: after a broken-link stop, fix the draft (Remove the photo from the event), press "Try again": it publishes with one commit.
+  - Pure function: `brokenPhotoLinks` returns `[]` for a tree that has every path, the right problem for a missing path, a non-plain path, and a truncated tree; it never throws on bad JSON (returns `[]`; the publish of bad JSON is already impossible).
+  - **`tests/task-13.spec.js` updates:** the "unusual path" tests now expect the publish to stop with the "not in the usual form" message and no write (instead of success with the note). The "truncated tree" test now expects the "can't be checked" stop when the events reference existing photos. Every other TASK-13 test still passes unchanged. The full suite passes.
+- Status: proposed, waiting for user approval (then todo)
+- Review: pending
+- QA: pending
+
 ### TASK-15: Watermark marker in every uploader file + Publish check + repo guard test - APPROVED 2026-11-18
 - Linked idea(s): IDEA-10 (with IDEA-9, IDEA-8)
 - Depends on: TASK-7 (the pipeline, `WM_DIVISOR` = 80), TASK-13 (publishing photo files).
@@ -639,6 +687,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 Suggested build order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9. TASK-6 and TASK-7 only depend on 1 and 2.
 Build order for the 2026-11-18 additions: TASK-10 -> TASK-7 (revised) -> TASK-11 -> TASK-12 -> TASK-13. TASK-11 can be built in parallel with TASK-10 and TASK-7. The shared mock `tests/github-mock.js` is created in TASK-11 and extended in TASK-12 and TASK-13.
 Build order including IDEA-10 (approved 2026-11-18): TASK-10 -> TASK-7 (revised, `WM_DIVISOR` = 80) -> TASK-11 -> TASK-12 -> TASK-13 -> **TASK-15** -> **TASK-14**. TASK-15 comes before TASK-14 because every site photo needs the marker. If the user wants the marker earlier, the marker part of TASK-15 (`wm-marker.js` + marking in the uploader) can be built right after TASK-7; the Publish check still waits for TASK-13.
+Build order including IDEA-11 (proposed 2026-11-19, once approved): TASK-13 (done) -> **TASK-16** -> TASK-15 -> TASK-14. TASK-16 goes first because it guards live data (a broken photo link and a removed old photo) and it is small. TASK-15 and TASK-14 then build on the safer Publish.
 
 ---
 
@@ -678,3 +727,10 @@ Already decided by you (2026-11-18, with "Plan approved and storyboard approved"
 - (Was question 18) **Hand commits:** an automatic GitHub Action that runs the watermark guard on every push is a later idea, out of scope for this plan. Until then, hand-committed files are caught when the tests run (TASK-15).
 
 No open questions remain for IDEA-10.
+
+### Questions for IDEA-11 (2026-11-19) - please answer to approve TASK-16
+
+19. **Use both protections (option (c))?** The planner recommends yes: Publish checks every event photo link against GitHub before it writes anything and refuses with a message naming the event, **and** "Remove from publish" fixes the draft right away. The check also covers cases the button can't see (a page reload loses the pending photos but keeps the draft, an Import, a typed path). Side effect: an event photo path written in an unusual form (for example `./media/...` or `...webp?v=2`) now stops the publish with a message, instead of publishing with a note. Yes / only one of them?
+20. **What "Remove from publish" does to the event:** the planner recommends **putting back the photo that is live now** (from the published events.json), or clearing the photo when there is none. The other choice, always clearing the photo, would make the old photo unused, so the next Publish would offer to delete it. Put back (recommended) / always clear?
+
+Detail decided by the planner (say if you disagree): if GitHub's file list is ever incomplete ("truncated", only at about 100,000 files), Publish refuses rather than guessing.
