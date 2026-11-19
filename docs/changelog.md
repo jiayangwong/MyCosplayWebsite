@@ -11,3 +11,4 @@
 - 2026-11-17 TASK-8: Gallery, About, Contact pages (gallery.html, about.html, contact.html, js/gallery.js)
 - 2026-11-17 TASK-9: meta and Open Graph tags, favicon, og-image, 404 page, accessibility checks (404.html, favicon.svg, og-image.png)
 - 2026-11-17 Tests: Playwright tests/task-1..9.spec.js, 80 checks passing at PC and phone sizes
+- 2026-11-18 TASK-10: photo + photoFull data model (path checks, photoFull needs photo), admin Display photo / Full-size photo fields with export order photo -> photoFull, Gallery viewer that shows the display copy first and cross-fades in the full-size master with loading bar/label, quiet fallback, prev/next, focus return (js/events-data.js, js/admin/manager.js, admin/index.html, js/gallery.js, css/pages.css, css/tokens.css, tests/task-10.spec.js)

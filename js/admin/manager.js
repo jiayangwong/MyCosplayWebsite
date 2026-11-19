@@ -4,7 +4,11 @@ import { EVENTS_URL, sortEvents, validateEvent, makeEventId, formatDate } from '
 import { renderMedia } from '../embed.js';
 
 export const DRAFT_KEY = 'puzzkezz.events.draft';
-const FIELDS = ['date', 'short', 'name', 'venue', 'link', 'photo'];
+const FIELDS = ['date', 'short', 'name', 'venue', 'link', 'photo', 'photoFull'];
+/** Form input id for a data field ("photoFull" -> "f-photo-full"). */
+const inputId = (field) => `f-${field.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+/** Key order used by Export: photoFull is written right after photo. */
+const EXPORT_ORDER = ['id', 'date', 'short', 'name', 'venue', 'activities', 'link', 'photo', 'photoFull', 'sample'];
 
 const $ = (id) => document.getElementById(id);
 const state = { events: [], editingId: null };
@@ -134,7 +138,7 @@ function addActivityRow(value = '') {
 function readForm() {
   const event = {};
   for (const f of FIELDS) {
-    const v = $(`f-${f}`).value.trim();
+    const v = $(inputId(f)).value.trim();
     if (v) event[f] = v;
   }
   event.activities = [...$('activity-list').querySelectorAll('input')].map((i) => i.value.trim()).filter(Boolean);
@@ -144,7 +148,7 @@ function readForm() {
 function showErrors(errors) {
   for (const f of [...FIELDS, 'activities']) {
     const box = $(`err-${f}`);
-    const input = $(`f-${f}`);
+    const input = $(inputId(f));
     const err = errors.find((e) => e.field === f);
     if (box) {
       box.hidden = !err;
@@ -153,13 +157,13 @@ function showErrors(errors) {
     if (input) input.setAttribute('aria-invalid', err ? 'true' : 'false');
   }
   if (errors.length) {
-    const first = $(`f-${errors[0].field}`);
+    const first = $(inputId(errors[0].field));
     if (first) first.focus();
   }
 }
 
 function fillForm(event) {
-  for (const f of FIELDS) $(`f-${f}`).value = event[f] || '';
+  for (const f of FIELDS) $(inputId(f)).value = event[f] || '';
   $('activity-list').replaceChildren();
   (event.activities || []).forEach((a) => addActivityRow(a));
   if (!(event.activities || []).length) addActivityRow();
@@ -233,8 +237,16 @@ function updatePreview() {
 }
 
 /* ---------- Import / export ---------- */
+/** Copy of an event with its keys in EXPORT_ORDER (unknown keys keep their place at the end). */
+function orderedEvent(event) {
+  const out = {};
+  for (const key of EXPORT_ORDER) if (event[key] !== undefined) out[key] = event[key];
+  for (const key of Object.keys(event)) if (!(key in out)) out[key] = event[key];
+  return out;
+}
+
 function exportEvents() {
-  const json = `${JSON.stringify({ version: 1, events: sortEvents(state.events) }, null, 2)}\n`;
+  const json = `${JSON.stringify({ version: 1, events: sortEvents(state.events).map(orderedEvent) }, null, 2)}\n`;
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
   const a = make('a');
   a.href = url;
@@ -298,14 +310,18 @@ export function onEventChange(fn) {
   fn(currentEventId());
 }
 
-/** Puts a photo path into the form. When editing an existing event it is saved to the draft right away. */
-export function attachPhoto(path) {
+/** Puts a photo path (display copy) and, optionally, the full-size path into the form.
+ *  When editing an existing event it is saved to the draft right away. */
+export function attachPhoto(path, fullPath) {
   $('f-photo').value = path;
+  if (fullPath !== undefined) $('f-photo-full').value = fullPath || '';
   updatePreview();
   if (state.editingId) {
     const event = state.events.find((e) => e.id === state.editingId);
     if (event) {
       event.photo = path;
+      if (fullPath) event.photoFull = fullPath;
+      else if (fullPath !== undefined) delete event.photoFull;
       delete event.sample;
       saveDraft();
       renderList();

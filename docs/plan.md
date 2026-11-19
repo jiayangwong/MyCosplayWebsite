@@ -459,9 +459,9 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
     - Opening a Gallery tile requests the `photoFull` path, and after load the dialog image `src` ends with it.
     - With `photoFull` routed to a 404, the dialog image keeps the `photo` source.
     - Admin: fill both fields, Save, reload: both values are in the draft and in the exported file.
-- Status: todo
-- Review: pending
-- QA: pending
+- Status: in-progress, ready for review (built 2026-11-18 by the programmer on branch `task-10-photo-viewer`, not merged; tests/task-10.spec.js 14/14 passing, full suite 94 passed + 2 project skips; round-1 review fixes applied, PC + phone)
+- Review: approved 2026-11-18 (round 2, commit eff0502; see docs/reviews.md)
+- QA: passed 2026-11-18 (94 passed + 2 skips full suite PC + phone; exploratory: loading/failed/full states, swipe, Esc + focus return, rapid navigation, admin + import validation, no console errors besides expected 404)
 
 ### TASK-11: GitHub connection panel in `/admin/` (token save / test / forget)
 - Linked idea(s): IDEA-8
