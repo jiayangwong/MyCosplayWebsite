@@ -1,6 +1,7 @@
 // Watermark repo guard (TASK-15): every image file in the repo, and every image the site references, must
 // carry the hidden uploader marker (js/admin/wm-marker.js) or be on tests/wm-allowlist.json with a matching
-// SHA-256. Files under tests/fixtures/ may instead be synthetic (flat colours); that part needs a browser to
+// SHA-256 (TASK-17: an allowlisted file whose hash is stale but which now carries a valid marker passes, and
+// the entry is reported in `stale`). Files under tests/fixtures/ may instead be synthetic (flat colours); that part needs a browser to
 // decode, so checkRepo returns those files in `needsColourCheck` for the test to check.
 // Used by tests/task-15.spec.js on the real repo and on temporary folders (self-test).
 const crypto = require('crypto');
@@ -99,14 +100,21 @@ function siteReferences(root) {
   return refs;
 }
 
+/** True only for a real uploader marker: { wm: "puzzkezz-lattice", v: 1, ... } (TASK-17 stale-entry rule). */
+const isValidMarker = (m) => !!m && typeof m === 'object' && m.wm === 'puzzkezz-lattice' && m.v === 1;
+
 /**
- * Checks a repo folder. Returns { problems: [{ path, message }], needsColourCheck: [path], checked: [path] }.
- * Every message starts with the file path, so a failure says what to fix.
+ * Checks a repo folder. Returns { problems: [{ path, message }], needsColourCheck: [path], checked: [path],
+ * stale: [{ path, message }] }. Every problem message starts with the file path, so a failure says what to fix.
+ * `stale` lists allowlisted files whose hash no longer matches but which now carry a valid marker (TASK-17):
+ * they pass, and the entry is reported so it can be removed. An allowlisted file whose hash no longer matches
+ * and that has no valid marker is still a problem.
  * `readMarker` = readWatermarkMarker from js/admin/wm-marker.js.
  */
 function checkRepo(root, { readMarker }) {
   const problems = [];
   const needsColourCheck = [];
+  const stale = [];
   const problem = (p, message) => problems.push({ path: p, message: `${p}: ${message}` });
 
   const allowData = readJson(root, ALLOWLIST) || { files: [] };
@@ -126,8 +134,14 @@ function checkRepo(root, { readMarker }) {
     const entry = allow.get(rel);
     if (entry) {
       const hash = sha256(bytes);
-      if (hash === entry.sha256) ok.add(rel);
-      else problem(rel, `changed since it was put on ${ALLOWLIST} (SHA-256 is ${hash}, the list says ${entry.sha256}). A changed file needs the uploader's watermark, or a new reviewed allowlist entry.`);
+      if (hash === entry.sha256) {
+        ok.add(rel);
+      } else if (isValidMarker(readMarker(bytes))) {
+        // TASK-17: the file was replaced by a watermarked upload (for example a Share image over og-image.png).
+        // It passes on its marker; the old entry is only reported as stale (a note, not a failure).
+        ok.add(rel);
+        stale.push({ path: rel, message: `Allowlist entry is stale (file changed, now carries the watermark marker): ${rel}. Remove it from ${ALLOWLIST}.` });
+      } else problem(rel, `changed since it was put on ${ALLOWLIST} (SHA-256 is ${hash}, the list says ${entry.sha256}). A changed file needs the uploader's watermark, or a new reviewed allowlist entry.`);
     } else if (readMarker(bytes)) {
       ok.add(rel);
     } else if (rel.startsWith(FIXTURES)) {
@@ -149,7 +163,7 @@ function checkRepo(root, { readMarker }) {
       problem(ref.path, `is used by ${ref.where} as an image, but it is not an image file the guard scans (.webp .png .jpg .jpeg .gif .avif .heic, outside skipped folders)`);
     } // an existing image file was already checked by the scan above
   }
-  return { problems, needsColourCheck, checked: images };
+  return { problems, needsColourCheck, checked: images, stale };
 }
 
-module.exports = { ROOT, IMAGE_RE, SKIP, ALLOWLIST, loadMarker, sha256, listImages, siteReferences, checkRepo };
+module.exports = { ROOT, IMAGE_RE, SKIP, ALLOWLIST, loadMarker, sha256, listImages, siteReferences, checkRepo, isValidMarker };
