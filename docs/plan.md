@@ -666,7 +666,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
   - The existing TASK-15 self-test still reports exactly the same 3 bad files; the real repo scan still passes; the full suite passes.
 - Status: ready for review (built 2026-11-19 on branch task-17-guard-marked-stale-hash)
 - Review: approved 2026-11-19
-- QA: pending
+- QA: passed 2026-11-19
 
 ### TASK-15: Watermark marker in every uploader file + Publish check + repo guard test - APPROVED 2026-11-18
 - Linked idea(s): IDEA-10 (with IDEA-9, IDEA-8)
