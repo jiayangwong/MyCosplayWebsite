@@ -342,3 +342,21 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
 .sb-wm button { font: 700 11px var(--font-mono); min-height: 32px; border: 2px solid var(--color-ink); border-radius: 4px; background: #fff; color: var(--color-ink); cursor: pointer; }
 .sb-wm button[aria-pressed="true"] { background: var(--color-ink); color: #fff; }
 @media (max-width: 767px) { .sb-wm { bottom: auto; top: 40px; } }
+
+/* admin: collapsible GitHub + Publish panels */
+.adm-side { display: grid; gap: var(--space-4); align-content: start; }
+.adm-side .panel, .panel.fold { margin: 0; max-width: none; }
+.panel.fold { margin-bottom: var(--space-6); }
+.panel.fold h2 { margin: 0; }
+.fold-btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.fold-btn > span:first-child { flex: 1; }
+.fold-btn .st { font: 700 12px var(--font-mono); text-transform: uppercase; border: var(--outline); border-radius: 999px; padding: 4px 10px; background: var(--color-bg); }
+.fold-btn .st[data-s="ok"] { border-color: var(--color-purple-deep); color: var(--color-purple-deep); }
+.fold-btn .st[data-s="err"] { border-color: var(--color-error); color: var(--color-error); }
+.fold-btn i { font-style: normal; transition: transform .2s; }
+.fold-btn[aria-expanded="true"] i { transform: rotate(180deg); }
+.fold-btn:focus-visible { outline: 3px solid var(--color-purple-deep); outline-offset: 4px; }
+.fold-body { margin-top: var(--space-3); }
+.fold-body[hidden] { display: none; }
+.pub-go { width: 100%; margin-top: var(--space-3); }
+@media (prefers-reduced-motion: reduce) { .fold-btn i { transition: none; } }

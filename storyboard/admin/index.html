@@ -18,6 +18,19 @@
 <p class="menu-soc mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK<br>[social links from site-config]</p></dialog>
 <main id="main">
 <section class="wrap pg"><h1>EVENT MANAGER</h1>
+<section class="panel fold" id="gh" aria-labelledby="ghh"><h2 id="ghh"><button class="fold-btn" type="button" aria-expanded="false" aria-controls="ghBody"><span>GitHub</span><span class="st" id="ghChip">Not connected</span><i aria-hidden="true">&#9662;</i></button></h2>
+<div class="fold-body" id="ghBody" hidden>
+<p class="muted">The token stays in this browser only.</p>
+<label class="field">Token<input type="password" id="tok" autocomplete="off" placeholder="paste token (storyboard: nothing is sent)"></label>
+<p class="mono muted">Fine-grained token, Contents: read and write, this repository only.</p>
+<p class="mono" id="tokSaved" hidden></p>
+<div class="bar"><button class="btn btn-primary" type="button" id="ghSave">Save</button><button class="btn btn-secondary" type="button" id="ghTest">Test connection</button><button class="btn btn-secondary is-danger" type="button" id="ghForget">Forget token</button></div>
+<div class="msg none" data-gh="none" role="status"><span class="ic" aria-hidden="true">&ndash;</span><p>No token saved. Paste one above.</p></div>
+<div class="msg" data-gh="testing" role="status" hidden><span class="ic" aria-hidden="true">...</span><div><p class="mono">Testing...</p><div class="ibar"></div></div></div>
+<div class="msg ok" data-gh="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p>Connected to jiayangwong/MyCosplayWebsite (site-v1).</p></div>
+<div class="msg err" data-gh="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><p><b>GitHub said no (401). Check the token and try again.</b></p></div>
+</div>
+</section>
 <p class="help"><b>Help.</b> Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.</p>
 <p class="mono">Source in use: [draft from localStorage / data/events.json]</p>
 <div class="bar"><button class="btn btn-accent" type="button">New event</button><button class="btn btn-secondary" type="button">Import events.json</button><button class="btn btn-primary" type="button">Export events.json</button><button class="btn btn-secondary" type="button">Discard draft</button></div>
@@ -29,6 +42,18 @@
 <span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">7 Dec 2024</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
 <span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">20 Jul 2024</span><b>OMT</b><span>Omatsuri <span class="sample">Sample</span></span>
 <span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li></ul></div>
+<div class="adm-side">
+<section class="panel fold" id="pub" aria-labelledby="pubh"><h2 id="pubh"><button class="fold-btn" type="button" aria-expanded="false" aria-controls="pubBody"><span>Publish</span><span class="st">6 pending</span><i aria-hidden="true">&#9662;</i></button></h2>
+<button class="btn btn-accent" type="button" id="pubBtn">Publish to GitHub</button>
+<p class="mono muted small" id="pubWhy">Needs a saved token (see above).</p>
+<div class="fold-body" id="pubBody" hidden>
+<ul class="pend" aria-label="Pending changes"><li><b>+</b> media/events/2026-03-14-cf/sample-1.webp</li><li><b>+</b> media/events/2026-03-14-cf/sample-1-full.webp</li><li><b>~</b> data/events.json</li><li><b>-</b> media/events/2025-08-09-omt/old-cover.webp</li><li><b>-</b> media/events/2025-08-09-omt/old-cover-full.webp</li><li><b>-</b> media/events/2025-05-03-amg/old-cover.webp</li></ul>
+<div id="pprog" hidden><p class="mono" id="ptxt">Uploading 0 of 5 files</p><div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Publish progress"><i id="pfill"></i></div></div>
+<div class="msg ok" data-pub="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p><b>Published.</b> <a href="#" onclick="return false"><u>View commit</u></a></p></div>
+<div class="msg err" data-pub="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>Could not upload file 3 of 5 (network error).</b></p><p class="next">Nothing was changed on GitHub. Check your connection and try again.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
+<div class="msg err" data-pub="stale" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>The site changed on GitHub while you were publishing.</b></p><p class="next">Nothing was changed. Try again to use the newest version.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
+</div>
+</section>
 <form class="adm-form" onsubmit="return false"><h2>Event form</h2>
 <label>Date<input type="date" value="2026-03-14"></label>
 <label>Short form (1-12)<input type="text" value="CF"></label>
@@ -38,27 +63,8 @@
 <label>Social link<input type="url" value="https://www.instagram.com/reel/XXXX/"></label>
 <div class="embed-prev"><div class="ph ph-43 sky" role="img" aria-label="Placeholder: Embed preview (YouTube / Instagram / TikTok) or photo + link fallback"><span>[Embed preview (YouTube / Instagram / TikTok) or photo + link fallback]</span></div></div>
 <label>Preview photo path<input type="text" value="media/events/2026-03-14-cf/cover-wm.webp"></label>
-<div class="bar"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-secondary" type="button">Cancel</button></div></form></div>
-<section class="panel" id="gh" aria-labelledby="ghh"><h2 id="ghh">GitHub</h2>
-<p class="muted">The token stays in this browser only.</p>
-<label class="field">Token<input type="password" id="tok" autocomplete="off" placeholder="paste token (storyboard: nothing is sent)"></label>
-<p class="mono muted">Fine-grained token, Contents: read and write, this repository only.</p>
-<p class="mono" id="tokSaved" hidden></p>
-<div class="bar"><button class="btn btn-primary" type="button" id="ghSave">Save</button><button class="btn btn-secondary" type="button" id="ghTest">Test connection</button><button class="btn btn-secondary is-danger" type="button" id="ghForget">Forget token</button></div>
-<div class="msg none" data-gh="none" role="status"><span class="ic" aria-hidden="true">&ndash;</span><p>No token saved. Paste one above.</p></div>
-<div class="msg" data-gh="testing" role="status" hidden><span class="ic" aria-hidden="true">...</span><div><p class="mono">Testing...</p><div class="ibar"></div></div></div>
-<div class="msg ok" data-gh="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p>Connected to jiayangwong/MyCosplayWebsite (site-v1).</p></div>
-<div class="msg err" data-gh="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><p><b>GitHub said no (401). Check the token and try again.</b></p></div>
-</section>
-<section class="panel" id="pub" aria-labelledby="pubh"><h2 id="pubh">Publish</h2>
-<ul class="pend" aria-label="Pending changes"><li><b>+</b> media/events/2026-03-14-cf/sample-1.webp</li><li><b>+</b> media/events/2026-03-14-cf/sample-1-full.webp</li><li><b>~</b> data/events.json</li><li><b>-</b> media/events/2025-08-09-omt/old-cover.webp</li><li><b>-</b> media/events/2025-08-09-omt/old-cover-full.webp</li><li><b>-</b> media/events/2025-05-03-amg/old-cover.webp</li></ul>
-<button class="btn btn-accent" type="button" id="pubBtn">Publish to GitHub</button>
-<p class="mono muted small" id="pubWhy">Needs a saved token (see above).</p>
-<div id="pprog" hidden><p class="mono" id="ptxt">Uploading 0 of 5 files</p><div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Publish progress"><i id="pfill"></i></div></div>
-<div class="msg ok" data-pub="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p><b>Published.</b> <a href="#" onclick="return false"><u>View commit</u></a></p></div>
-<div class="msg err" data-pub="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>Could not upload file 3 of 5 (network error).</b></p><p class="next">Nothing was changed on GitHub. Check your connection and try again.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
-<div class="msg err" data-pub="stale" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>The site changed on GitHub while you were publishing.</b></p><p class="next">Nothing was changed. Try again to use the newest version.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
-</section>
+<div class="bar"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-secondary" type="button">Cancel</button></div></form>
+</div></div>
 <dialog class="confirm" id="cfm" aria-labelledby="cfmh"><h3 id="cfmh">These 3 old files will be removed</h3><p class="muted">Old versions stay in the GitHub history.</p>
 <ul><li>&minus; media/events/2025-08-09-omt/old-cover.webp</li><li>&minus; media/events/2025-08-09-omt/old-cover-full.webp</li><li>&minus; media/events/2025-05-03-amg/old-cover.webp</li></ul>
 <div class="acts"><button class="btn btn-secondary" type="button" id="cfmNo" autofocus>Cancel</button><button class="btn btn-primary" type="button" id="cfmYes">Remove and publish</button></div></dialog>
@@ -68,8 +74,12 @@
 <script>
 (function () {
   var $ = function (i) { return document.getElementById(i); }, ghState = 'none', timer;
+  function fold(id, open) { var b = $(id), t = b.parentNode.querySelector('.fold-btn'); b.hidden = !open; t.setAttribute('aria-expanded', open); }
+  document.querySelectorAll('.fold-btn').forEach(function (t) { t.addEventListener('click', function () { fold(t.getAttribute('aria-controls'), t.getAttribute('aria-expanded') !== 'true'); }); });
+  var GHCHIP = { none: 'Not connected', testing: 'Testing...', ok: 'Connected', err: 'Error' };
   function gh(s, last) {
-    ghState = s;
+    ghState = s; $('ghChip').textContent = GHCHIP[s]; $('ghChip').dataset.s = s;
+    if (s === 'none' || s === 'err') fold('ghBody', true);
     document.querySelectorAll('[data-gh]').forEach(function (m) { m.hidden = m.getAttribute('data-gh') !== s; });
     $('swGh').value = s;
     var saved = s === 'ok' || s === 'err' || s === 'testing';
@@ -86,12 +96,12 @@
     if ($('cfm').open) $('cfm').close();
     if (s === 'busy') {
       if (ghState !== 'ok') gh('ok');
-      b.dataset.busy = '1'; b.disabled = true; b.textContent = 'Publishing...'; $('pprog').hidden = false;
+      fold('pubBody', true); b.dataset.busy = '1'; b.disabled = true; b.textContent = 'Publishing...'; $('pprog').hidden = false;
       var n = 0; (function tick() { n++; var pc = n * 20; $('pfill').style.width = pc + '%'; $('pprog').querySelector('[role=progressbar]').setAttribute('aria-valuenow', pc); $('ptxt').textContent = 'Uploading ' + n + ' of 5 files';
         if (n < 5) timer = setTimeout(tick, 600); else timer = setTimeout(function () { pub('ok'); }, 600); })();
       return;
     }
-    if (s === 'ok' || s === 'err' || s === 'stale') { if (ghState !== 'ok') gh('ok'); pubMsg(s); }
+    if (s === 'ok' || s === 'err' || s === 'stale') { if (ghState !== 'ok') gh('ok'); pubMsg(s); fold('pubBody', true); }
     gh(ghState);
   }
   $('ghSave').addEventListener('click', function () { var v = $('tok').value; gh('ok', v.length >= 4 ? v.slice(-4) : 'x7Kq'); $('tok').value = ''; });
