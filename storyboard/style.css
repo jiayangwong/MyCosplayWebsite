@@ -68,6 +68,7 @@ a { color: var(--color-purple-deep); }
 /* storyboard banner */
 .sb-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 200; height: 32px; background: #FFE066; color: var(--color-ink); border-bottom: var(--outline); font: 700 11px/30px var(--font-mono); padding: 0 12px; display: flex; gap: 14px; overflow: hidden; white-space: nowrap; }
 .sb-banner a { color: var(--color-ink); margin-left: auto; }
+@media (max-width: 767px) { .sb-banner span { display: none; } } /* keep the Admin / Back link visible on phones */
 
 /* buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: var(--tap-min); padding: 0 var(--space-4); border: var(--outline); border-radius: var(--radius-btn); font: 700 14px var(--font-body); text-transform: uppercase; letter-spacing: 1px; text-decoration: none; cursor: pointer; transition: transform var(--dur-fast), box-shadow var(--dur-fast); }
