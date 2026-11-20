@@ -48,12 +48,116 @@
     <p class="field-error" id="import-error" role="alert" hidden></p>
 
     <div class="admin-grid">
+      <div class="adm-side">
+    <section class="panel gh-panel fold" id="gh-panel" aria-labelledby="gh-title">
+      <div class="fold-head"><h2 id="gh-title" class="panel-title">GitHub</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="gh-body" aria-labelledby="gh-title gh-chip"><span class="fold-chip" id="gh-chip" data-s="none">Not connected</span><i aria-hidden="true">&#9662;</i></button></div>
+      <div class="fold-body" id="gh-body" hidden>
+      <p class="panel-hint">The token stays in this browser only.</p>
+      <details class="gh-help">
+        <summary>How to get a token</summary>
+        <ol>
+          <li>On GitHub open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Settings &rsaquo; Developer settings &rsaquo; Fine-grained tokens &rsaquo; Generate new token</a>. Use a <strong>fine-grained</strong> token, not a classic one.</li>
+          <li>Repository access: <strong>Only select repositories</strong> &rsaquo; <span class="mono">jiayangwong/MyCosplayWebsite</span> (only this repo).</li>
+          <li>Permissions: <strong>Contents: Read and write</strong>. Nothing else.</li>
+          <li>Set an <strong>expiry date</strong> (for example 90 days), generate it, copy it and paste it below.</li>
+        </ol>
+      </details>
+      <div class="field gh-field">
+        <label for="gh-token">Token</label>
+        <input type="password" id="gh-token" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="gh-token-help gh-token-error">
+        <p class="panel-hint" id="gh-token-help">Fine-grained token, Contents: read and write, this repository only.</p>
+        <p class="field-error" id="gh-token-error" role="alert" hidden></p>
+      </div>
+      <p class="gh-saved mono" id="gh-saved" hidden></p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" id="gh-save">Save token</button>
+        <button type="button" class="btn btn-secondary" id="gh-test" disabled>Test connection</button>
+        <button type="button" class="btn btn-secondary is-danger" id="gh-forget" disabled>Forget token</button>
+      </div>
+      <div class="msg" id="gh-status" role="status" data-state="none">
+        <span class="msg-icon" aria-hidden="true">&ndash;</span>
+        <div class="msg-body"><p class="msg-text">No token saved. Paste one above.</p><div class="ibar" hidden></div></div>
+      </div>
+      <div class="msg" id="gh-alert" role="alert" data-state="err" hidden>
+        <span class="msg-icon" aria-hidden="true">!</span>
+        <div class="msg-body"><p class="msg-text"></p></div>
+      </div>
+      </div>
+    </section>
       <section class="panel" aria-labelledby="list-title">
         <h2 id="list-title" class="panel-title">Events <span class="panel-count" id="event-count"></span></h2>
         <p class="panel-hint">Newest first. Move up/down only changes the order of events on the same date.</p>
         <ol class="event-list" id="event-list"></ol>
       </section>
 
+      </div>
+      <div class="adm-side">
+    <section class="panel pub-panel fold" id="publish-panel" aria-labelledby="pub-title">
+      <div class="fold-head"><h2 id="pub-title" class="panel-title">Publish</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="pub-body" aria-labelledby="pub-title pub-chip"><span class="fold-chip" id="pub-chip">Nothing pending</span><i aria-hidden="true">&#9662;</i></button></div>
+      <button type="button" class="btn btn-accent pub-go" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
+      <p class="panel-hint mono" id="publish-hint" role="status">Add a GitHub token to publish</p>
+      <div class="fold-body" id="pub-body" hidden>
+        <p class="panel-hint">One press makes one commit on GitHub. Nothing goes live unless every step works.</p>
+        <p class="panel-hint" id="pub-help">Publish also removes photo files that no event uses any more. Old versions stay in the GitHub history.</p>
+        <ul class="pend" id="pub-pending" aria-label="Pending changes"></ul>
+        <p class="panel-hint pub-note" id="pub-note" role="status" hidden></p>
+        <p class="mono pub-total" id="pub-total" hidden></p>
+        <div class="msg" id="pub-limit" role="alert" data-state="err" hidden>
+          <span class="msg-icon" aria-hidden="true">!</span>
+          <div class="msg-body"><p class="msg-text"></p></div>
+        </div>
+      </div>
+      <div class="pub-progress" id="pub-progress" hidden>
+        <p class="mono pub-step" id="pub-step"></p>
+        <div class="pbar" id="pub-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="pub-step"><i></i></div>
+      </div>
+      <div class="msg" id="pub-ok" role="status" data-state="ok" hidden>
+        <span class="msg-icon" aria-hidden="true">&#10003;</span>
+        <div class="msg-body">
+          <p class="msg-text">Published. The site updates in about 1-2 minutes.</p>
+          <p class="msg-next" id="pub-ok-note" hidden></p>
+          <p class="msg-link"><a id="pub-commit" href="#" target="_blank" rel="noopener noreferrer">View commit</a></p>
+        </div>
+      </div>
+      <div class="msg" id="pub-cancel" role="status" data-state="none" hidden>
+        <span class="msg-icon" aria-hidden="true">&ndash;</span>
+        <div class="msg-body"><p class="msg-text">Publish cancelled. Nothing was changed.</p></div>
+      </div>
+      <div class="msg" id="pub-err" role="alert" data-state="err" hidden>
+        <span class="msg-icon" aria-hidden="true">!</span>
+        <div class="msg-body">
+          <p class="msg-text" id="pub-err-text"></p>
+          <p class="msg-next" id="pub-err-next"></p>
+          <div class="msg-actions"><button type="button" class="btn btn-secondary" id="pub-retry">Try again</button></div>
+        </div>
+      </div>
+      <div class="msg" id="pub-stale" role="alert" data-state="err" hidden>
+        <span class="msg-icon" aria-hidden="true">!</span>
+        <div class="msg-body">
+          <p class="msg-text">The site changed since you started editing (maybe from another device). Export a backup, then reload this page.</p>
+          <p class="msg-next">Nothing was changed on GitHub. To go on:</p>
+          <ol class="msg-next msg-steps">
+            <li>Export backup.</li>
+            <li>Discard draft (this loads the newest events.json from GitHub).</li>
+            <li>Import your backup, or redo your edits, and check the other change is still there.</li>
+            <li>Publish.</li>
+          </ol>
+          <div class="msg-actions">
+            <button type="button" class="btn btn-secondary" id="pub-export">Export backup</button>
+            <button type="button" class="btn btn-secondary" id="pub-reload">Reload</button>
+          </div>
+        </div>
+      </div>
+      <dialog class="confirm" id="pub-confirm" aria-modal="true" aria-labelledby="pub-confirm-title" aria-describedby="pub-confirm-note">
+        <h3 id="pub-confirm-title">These old files will be removed</h3>
+        <p class="panel-hint" id="pub-confirm-note">Old versions stay in the GitHub history.</p>
+        <ul class="confirm-list" id="pub-confirm-list" aria-label="Files to remove"></ul>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-secondary" id="pub-confirm-no" autofocus>Cancel</button>
+          <button type="button" class="btn btn-primary" id="pub-confirm-yes">Remove and publish</button>
+        </div>
+      </dialog>
+    </section>
       <section class="panel" aria-labelledby="form-title">
         <h2 id="form-title" class="panel-title">New event</h2>
         <form id="event-form" novalidate>
@@ -114,106 +218,10 @@
           <div id="embed-preview" class="embed-preview"></div>
         </div>
       </section>
+      </div>
     </div>
 
-    <section class="panel gh-panel" id="gh-panel" aria-labelledby="gh-title">
-      <h2 id="gh-title" class="panel-title">GitHub</h2>
-      <p class="panel-hint">The token stays in this browser only.</p>
-      <details class="gh-help">
-        <summary>How to get a token</summary>
-        <ol>
-          <li>On GitHub open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Settings &rsaquo; Developer settings &rsaquo; Fine-grained tokens &rsaquo; Generate new token</a>. Use a <strong>fine-grained</strong> token, not a classic one.</li>
-          <li>Repository access: <strong>Only select repositories</strong> &rsaquo; <span class="mono">jiayangwong/MyCosplayWebsite</span> (only this repo).</li>
-          <li>Permissions: <strong>Contents: Read and write</strong>. Nothing else.</li>
-          <li>Set an <strong>expiry date</strong> (for example 90 days), generate it, copy it and paste it below.</li>
-        </ol>
-      </details>
-      <div class="field gh-field">
-        <label for="gh-token">Token</label>
-        <input type="password" id="gh-token" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="gh-token-help gh-token-error">
-        <p class="panel-hint" id="gh-token-help">Fine-grained token, Contents: read and write, this repository only.</p>
-        <p class="field-error" id="gh-token-error" role="alert" hidden></p>
-      </div>
-      <p class="gh-saved mono" id="gh-saved" hidden></p>
-      <div class="form-actions">
-        <button type="button" class="btn btn-primary" id="gh-save">Save token</button>
-        <button type="button" class="btn btn-secondary" id="gh-test" disabled>Test connection</button>
-        <button type="button" class="btn btn-secondary is-danger" id="gh-forget" disabled>Forget token</button>
-      </div>
-      <div class="msg" id="gh-status" role="status" data-state="none">
-        <span class="msg-icon" aria-hidden="true">&ndash;</span>
-        <div class="msg-body"><p class="msg-text">No token saved. Paste one above.</p><div class="ibar" hidden></div></div>
-      </div>
-      <div class="msg" id="gh-alert" role="alert" data-state="err" hidden>
-        <span class="msg-icon" aria-hidden="true">!</span>
-        <div class="msg-body"><p class="msg-text"></p></div>
-      </div>
-    </section>
 
-    <section class="panel pub-panel" id="publish-panel" aria-labelledby="pub-title">
-      <h2 id="pub-title" class="panel-title">Publish</h2>
-      <p class="panel-hint">One press makes one commit on GitHub. Nothing goes live unless every step works.</p>
-      <p class="panel-hint" id="pub-help">Publish also removes photo files that no event uses any more. Old versions stay in the GitHub history.</p>
-      <ul class="pend" id="pub-pending" aria-label="Pending changes"></ul>
-      <p class="panel-hint pub-note" id="pub-note" role="status" hidden></p>
-      <p class="mono pub-total" id="pub-total" hidden></p>
-      <div class="msg" id="pub-limit" role="alert" data-state="err" hidden>
-        <span class="msg-icon" aria-hidden="true">!</span>
-        <div class="msg-body"><p class="msg-text"></p></div>
-      </div>
-      <button type="button" class="btn btn-accent" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
-      <p class="panel-hint mono" id="publish-hint" role="status">Add a GitHub token to publish</p>
-      <div class="pub-progress" id="pub-progress" hidden>
-        <p class="mono pub-step" id="pub-step"></p>
-        <div class="pbar" id="pub-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="pub-step"><i></i></div>
-      </div>
-      <div class="msg" id="pub-ok" role="status" data-state="ok" hidden>
-        <span class="msg-icon" aria-hidden="true">&#10003;</span>
-        <div class="msg-body">
-          <p class="msg-text">Published. The site updates in about 1-2 minutes.</p>
-          <p class="msg-next" id="pub-ok-note" hidden></p>
-          <p class="msg-link"><a id="pub-commit" href="#" target="_blank" rel="noopener noreferrer">View commit</a></p>
-        </div>
-      </div>
-      <div class="msg" id="pub-cancel" role="status" data-state="none" hidden>
-        <span class="msg-icon" aria-hidden="true">&ndash;</span>
-        <div class="msg-body"><p class="msg-text">Publish cancelled. Nothing was changed.</p></div>
-      </div>
-      <div class="msg" id="pub-err" role="alert" data-state="err" hidden>
-        <span class="msg-icon" aria-hidden="true">!</span>
-        <div class="msg-body">
-          <p class="msg-text" id="pub-err-text"></p>
-          <p class="msg-next" id="pub-err-next"></p>
-          <div class="msg-actions"><button type="button" class="btn btn-secondary" id="pub-retry">Try again</button></div>
-        </div>
-      </div>
-      <div class="msg" id="pub-stale" role="alert" data-state="err" hidden>
-        <span class="msg-icon" aria-hidden="true">!</span>
-        <div class="msg-body">
-          <p class="msg-text">The site changed since you started editing (maybe from another device). Export a backup, then reload this page.</p>
-          <p class="msg-next">Nothing was changed on GitHub. To go on:</p>
-          <ol class="msg-next msg-steps">
-            <li>Export backup.</li>
-            <li>Discard draft (this loads the newest events.json from GitHub).</li>
-            <li>Import your backup, or redo your edits, and check the other change is still there.</li>
-            <li>Publish.</li>
-          </ol>
-          <div class="msg-actions">
-            <button type="button" class="btn btn-secondary" id="pub-export">Export backup</button>
-            <button type="button" class="btn btn-secondary" id="pub-reload">Reload</button>
-          </div>
-        </div>
-      </div>
-      <dialog class="confirm" id="pub-confirm" aria-modal="true" aria-labelledby="pub-confirm-title" aria-describedby="pub-confirm-note">
-        <h3 id="pub-confirm-title">These old files will be removed</h3>
-        <p class="panel-hint" id="pub-confirm-note">Old versions stay in the GitHub history.</p>
-        <ul class="confirm-list" id="pub-confirm-list" aria-label="Files to remove"></ul>
-        <div class="confirm-actions">
-          <button type="button" class="btn btn-secondary" id="pub-confirm-no" autofocus>Cancel</button>
-          <button type="button" class="btn btn-primary" id="pub-confirm-yes">Remove and publish</button>
-        </div>
-      </dialog>
-    </section>
 
     <section class="panel uploader" aria-labelledby="wm-title">
       <h2 id="wm-title" class="panel-title">Media uploader · automatic watermark</h2>
@@ -290,6 +298,7 @@
     </section>
   </main>
 
+  <script type="module" src="../js/admin/folds.js"></script>
   <script type="module" src="../js/admin/manager.js"></script>
   <script type="module" src="../js/admin/watermark.js"></script>
   <script type="module" src="../js/admin/github-panel.js"></script>

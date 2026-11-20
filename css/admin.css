@@ -355,3 +355,21 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
   .confirm-actions { flex-direction: column-reverse; }
   .confirm-actions .btn { width: 100%; }
 }
+
+/* Layout from the approved storyboard: GitHub + Events on the left, Publish + Event form on the right.
+   GitHub and Publish fold; the Publish button and its hint always stay visible. */
+.adm-side { display: grid; gap: var(--space-6); align-content: start; min-width: 0; }
+.adm-side .panel { margin: 0; max-width: none; }
+.fold-head { display: flex; align-items: center; gap: 10px; min-height: var(--tap-min, 44px); cursor: pointer; }
+.fold-head .panel-title { flex: 1; margin: 0; }
+.fold-btn { display: flex; align-items: center; gap: 10px; min-height: var(--tap-min, 44px); padding: 0; background: none; border: 0; font: inherit; color: inherit; cursor: pointer; }
+.fold-chip { font: 700 0.75rem var(--font-mono); text-transform: uppercase; border: var(--outline); border-radius: 999px; padding: 4px 10px; background: var(--color-bg); }
+.fold-chip[data-s="ok"] { border-color: var(--color-purple-deep); color: var(--color-purple-deep); }
+.fold-chip[data-s="err"] { border-color: var(--color-error); color: var(--color-error); }
+.fold-btn i { font-style: normal; transition: transform 0.2s; }
+.fold-btn[aria-expanded="true"] i { transform: rotate(180deg); }
+.fold-btn:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+.fold-body { margin-top: var(--space-3); }
+.fold-body[hidden] { display: none; }
+.pub-go { width: 100%; margin-top: var(--space-3); }
+@media (prefers-reduced-motion: reduce) { .fold-btn i { transition: none; } }
