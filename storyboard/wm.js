@@ -2,10 +2,9 @@
    White dashed diagonal lines (both directions, 45 deg), a small heart at every crossing,
    "@notpuzzkezz" written along the up-right lines between crossings (the line breaks around it).
    Whole layer at 40% opacity. Density: 1x = shorter side / 40; 2x = / 80; 3x = / 120 (min 8px). One cell (crossing to crossing) = 14f.
-   A small grey switch (bottom-right) compares 2x and 3x on every watermarked image of the page. */
+   Storyboard uses 2x (the 2x/3x switch was removed: it covered the menu button). */
 (function () {
   var TEXT = '@notpuzzkezz', DENS = 2, all = [];
-  try { DENS = +localStorage.getItem('sb.wmDensity') || 2; } catch (e) {}
   function heart(c, x, y, s) {
     c.save(); c.translate(x, y); c.rotate(Math.PI / 4);
     c.beginPath(); c.moveTo(0, 0.9 * s);
@@ -54,20 +53,4 @@
   }
   window.sbWatermark = init;
   document.querySelectorAll('.ph[data-wm]').forEach(init);
-  if (all.length) {
-    var box = document.createElement('div');
-    box.className = 'sb-wm'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Storyboard: watermark density');
-    box.innerHTML = '<span>Watermark</span>';
-    [2, 3].forEach(function (d) {
-      var b = document.createElement('button'); b.type = 'button'; b.textContent = d + 'x denser';
-      b.setAttribute('aria-pressed', String(d === DENS));
-      b.addEventListener('click', function () {
-        DENS = d; try { localStorage.setItem('sb.wmDensity', d); } catch (e) {}
-        box.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
-        all.forEach(function (g) { g(); });
-      });
-      box.appendChild(b);
-    });
-    document.body.appendChild(box);
-  }
 })();

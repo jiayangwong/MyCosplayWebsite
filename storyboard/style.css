@@ -337,12 +337,6 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
 .pcard .fn { font-weight: 700; overflow-wrap: anywhere; margin: 8px 0 0; }
 @media (max-width: 767px) { .pair { flex-direction: column; } }
 
-/* storyboard: watermark density switch */
-.sb-wm { position: fixed; right: 8px; bottom: 8px; z-index: 260; background: #FFE066; color: var(--color-ink); border: var(--outline); border-radius: var(--radius-card); padding: 6px 8px; font: 700 11px var(--font-mono); display: flex; gap: 6px; align-items: center; }
-.sb-wm button { font: 700 11px var(--font-mono); min-height: 32px; border: 2px solid var(--color-ink); border-radius: 4px; background: #fff; color: var(--color-ink); cursor: pointer; }
-.sb-wm button[aria-pressed="true"] { background: var(--color-ink); color: #fff; }
-@media (max-width: 767px) { .sb-wm { bottom: auto; top: 40px; } }
-
 /* admin: collapsible GitHub + Publish panels */
 .adm-side { display: grid; gap: var(--space-4); align-content: start; }
 .adm-side .panel, .panel.fold { margin: 0; max-width: none; }
