@@ -426,3 +426,20 @@ Round 1. Diff `task/TASK-20-events-hall-bangai..task/TASK-21-admin-moments` (e70
 - **Storyboard:** there is no Moments screen. The panel reuses the approved event list and form patterns of /admin/. This is acceptable. The storyboard-creator may add a screen later.
 - [nice-to-have] js/admin/moments-draft.js:206 - the base text is `formatMoments(list)` of the raw file, but the draft is `cleanMoments(list)`. If the live file ever holds an invalid moment, the panel shows "data/moments.json changed" right away, and the next publish drops that moment without saying so. Consider showing a note naming the skipped moments.
 - [nice-to-have] js/admin/moments-draft.js:270 - moments read back from localStorage are not run through `validateMoment`. TASK-22's publish-time `validateMoment` check now covers what gets committed, so this is only about the panel.
+
+## Review TASK-22 - 2026-11-23
+Result: APPROVED
+
+Round 1. Diff `task/TASK-21-admin-moments..task/TASK-22-moment-photos` (c66dc93 + merge 726206e). task-22 + task-21 + task-13 + task-15 + task-16 = 190 passed. task-7 / 12 / 14 / 18 = 104 passed. task-1..5, 8..11, 19, 20 = 145 passed, 3 skipped, and 6 failed, which are exactly the BUG-8 tests that also fail on site-v1. All runs were desktop + phone with system Chrome.
+
+- **Criteria:** all met.
+  - **Uploader:** "Moment photo" uses `makeSitePhoto(file, 'webp')`, the same pipeline as the other uploads: 1200px longest side, never enlarged, q0.85, `watermarkLayout` / `WM_DIVISOR`, and the TASK-15 marker. The test checks 1200x800, the marker contents and watermark pixels in all 9 cells. The path is `media/moments/<id>.webp`, or `-2`, `-3`... when the name is taken. "Use for moment" saves the moment and adds the file to the pending list, which counts towards the 20-photo limit. Download works.
+  - **Publish:** `momentPathProblem` allows only `media/moments/<own id>(-n).webp` of a draft moment that uses exactly that path. Anything else is refused before any request (tested).
+  - **Removal:** `isRemovableMoment` is limited to `.webp` files directly in `media/moments/`, only when moments.json is in the commit, and never when the tree is truncated. Files used by any event or moment, and files new in this publish, are never removed. The removal goes through the same dialog, the same guard and the same single commit.
+  - **Broken links:** `brokenMomentPhotoLinks` stops the publish with no write.
+  - **Remove from publish:** puts back the published photo, or clears it.
+  - **Repo guard:** checks `data/moments.json`. The self-test covers a missing and an unmarked file.
+- **Programmer notes (1)-(4)** in the TASK-22 status line: (1) a separate "Moment photo" block, not an 8th picker option; (2) no storyboard screen; (3) a file used by a moment is never removed by an events publish, and the other way round; (4) a moment with no photo and no link stops Publish. All four are accepted, implemented as described, and tested.
+- **Security:** the publish-time `validateMoment` also re-checks links (http/https only) and photo paths of draft moments, so a tampered localStorage draft cannot commit a `javascript:` link. All new admin text is set with `textContent`. No token handling changed.
+- [nice-to-have] admin/index.html:354 - `#mp-for` has `role="status"` and is re-rendered on every keystroke in the Moments form (because the new-moment id follows the caption). Screen readers will announce it over and over. Drop `role="status"`, or announce only when the target moment changes.
+- [nice-to-have] js/admin/publish.js (render, `expectedMomentRemovals`) - the Publish preview lists only old moment photos taken from the base moments.json. The real run also removes stray `.webp` files found in the `media/moments/` tree. The confirmation dialog shows the full list before anything happens, so this is only a preview gap.
