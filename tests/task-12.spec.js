@@ -269,7 +269,9 @@ test('Reload alone does not re-base the draft: Publish is still stale', async ({
   github.repo.pushOutside({ 'data/events.json': '{"version":1,"events":[]}\n' });
   await page.click('#publish-btn');
   await expectResult(page.locator('#pub-stale')).toBeVisible();
-  await page.click('#pub-reload');
+  // The old page already has data-publish-ready="true": wait for the reloaded page to load first,
+  // or the ready check passes on the old page and the next click races the reload (BUG-8).
+  await Promise.all([page.waitForEvent('load'), page.click('#pub-reload')]);
   await expectResult(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
   await page.click('#publish-btn');
   await expectResult(page.locator('#pub-stale')).toBeVisible();

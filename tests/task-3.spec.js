@@ -90,15 +90,19 @@ test('reduced motion shows a plain stacked list with all events', async ({ page 
   await mockEvents(page, EVENTS);
   await page.goto('index.html');
   await expect(page.locator('.hall-wrap')).toHaveClass(/is-static/);
+  // Wait for all stations before reading transforms (an empty list would pass without checking anything).
+  await expect(page.locator('.station')).toHaveCount(4);
   await page.mouse.wheel(0, 1500);
   const transforms = await page.locator('.station-inner').evaluateAll((els) => els.map((el) => getComputedStyle(el).transform));
+  expect(transforms).toHaveLength(4);
   for (const t of transforms) expect(t).toBe('none');
-  await expect(page.locator('.station')).toHaveCount(4);
 });
 
 test('only the first two polaroid photos load eagerly', async ({ page }) => {
   await mockEvents(page, EVENTS.map((e) => ({ ...e, photo: 'favicon.svg' })));
   await page.goto('index.html');
+  // evaluateAll does not wait: let the hall finish rendering first (BUG-8, flaky under load).
+  await expect(page.locator('.polaroid img')).toHaveCount(4);
   const loading = await page.locator('.polaroid img').evaluateAll((els) => els.map((el) => el.loading));
   expect(loading).toEqual(['eager', 'eager', 'lazy', 'lazy']);
 });

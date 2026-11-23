@@ -1,9 +1,12 @@
 // TASK-6: admin event manager.
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
+const { mockEvents, SAMPLE_EVENTS } = require('./helpers');
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept());
+  // Fixed published data: the 8 SAMPLE events (data/events.json now holds the real events, BUG-8).
+  await mockEvents(page, SAMPLE_EVENTS);
   await page.goto('admin/index.html');
   await expect(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
 });
