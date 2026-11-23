@@ -17,6 +17,11 @@ This project uses nine subagents in `.claude/agents/`. Route work like this:
 
 Flow: idea-collector -> planner -> designer -> storyboard-creator -> [programmer -> reviewer -> qa <-> bugfixer] -> release-manager
 
+## Daily schedule (user decision 2026-11-23)
+- **programmer** works whenever the user gives tasks, and does not wait for review. It builds the next tasks and leaves them for review.
+- **reviewer, qa, bugfixer, release-manager** rest by default and start at **19:30 Malaysia time (GMT+8)** every day, only if something is pending for them. This replaces "run automatically" in step 5. A direct user request in chat overrides it.
+- A push notification is sent when the programmer finishes a task group, and when each of these four roles starts.
+
 ## Gates
 - Only the user can approve the plan, the style guide, the storyboard, and a deploy.
 - Never start programmer, reviewer or qa unless docs/approval.md contains `STORYBOARD APPROVED`.

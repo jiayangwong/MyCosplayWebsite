@@ -374,13 +374,7 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
 .pron-inline { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; justify-content: center; margin-top: var(--space-3); }
 .pron-inline p { margin: 0; } .pron-inline .jp { font-size: 18px; }
 
-/* timeline: the detached ??? mark (a cross, not joined to the line) */
-.track { margin-right: 64px; }
-.bangai-mark { position: absolute; right: -60px; top: 0; width: 44px; height: 56px; display: flex; flex-direction: column; align-items: center; }
-.bangai-mark .bm-l { font-weight: 700; color: var(--color-ink); line-height: 16px; }
-.bangai-mark i { position: relative; display: block; width: 28px; height: 28px; margin-top: 4px; }
-.bangai-mark i::before { content: ""; position: absolute; left: 12px; top: 0; width: 3px; height: 28px; background: var(--color-ink); }
-.bangai-mark i::after { content: ""; position: absolute; left: 0; top: 12px; width: 28px; height: 3px; background: var(--color-ink); }
+/* timeline: ??? is a normal year (same dot, label and line) */
 
 /* modal */
 .bangai-modal { border: var(--outline); border-radius: var(--radius-card); padding: 0 0 var(--space-4); width: min(960px, calc(100vw - 24px)); max-height: calc(100vh - 48px); overflow: auto; background: var(--color-bg); color: var(--color-ink); box-shadow: var(--shadow-pass); }
