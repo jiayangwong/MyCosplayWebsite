@@ -352,7 +352,8 @@ dialog.bangai-modal::backdrop { background: var(--color-scrim); }
   background: var(--color-surface); color: var(--color-ink); font: inherit; font-weight: 700; font-size: 0.8125rem; cursor: pointer;
 }
 .bm-chip[aria-pressed="true"] { background: var(--color-ink); color: var(--color-on-dark); }
-.bm-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.bm-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+@media (min-width: 600px) { .bm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .bm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4) var(--space-6); } }
 .bm-item { min-width: 0; }
 .bm-item[hidden], .bm-empty[hidden], .bm-loading[hidden] { display: none; }
