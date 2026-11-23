@@ -884,7 +884,7 @@ Admin -> Moments -> "New moment" -> year, caption, alt, link and/or "Moment phot
   - **Automated tests (`tests/task-20.spec.js`, desktop + phone):** the section is last, the jump row ends with `???`, `#hall-bangai` deep link works, "Open album" opens the dialog with the mocked moments, Esc closes it and focus returns.
 - Status: in-progress (built, waiting for review) - built 2026-11-23 on branch `task/TASK-20-events-hall-bangai` (made from the TASK-19 branch). tests/task-20.spec.js + tests/task-5.spec.js pass (desktop + phone, run with system Chrome)
 - Review: approved 2026-11-23
-- QA:
+- QA: passed 2026-11-23
 
 ### TASK-21: Admin - Moments panel (list, add, edit, delete, reorder) and Publish `data/moments.json`
 - Linked idea(s): IDEA-12 (with IDEA-7, IDEA-8)
