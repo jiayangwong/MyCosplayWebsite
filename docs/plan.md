@@ -898,7 +898,7 @@ Admin -> Moments -> "New moment" -> year, caption, alt, link and/or "Moment phot
   - **Automated tests (`tests/task-21.spec.js`, fake repo + fake token):** add / edit / delete / reorder with reload; validation errors; Publish commits `data/moments.json` in one tree with the expected text; stale `moments.json` stops with no `POST` / `PATCH`; publishing events only does not touch `data/moments.json`; earlier admin tests pass.
 - Status: in-progress (built, waiting for review) - built 2026-11-23 on branch `task/TASK-21-admin-moments` (made from the TASK-20 branch). New `js/admin/moments-draft.js` (draft in `puzzkezz.moments.draft` with its own base SHA, A8 text, ids, edits; reuses `validateMoment` / `sortMoments` / `cleanMoments` from js/bangai.js) and `js/admin/moments.js` (Moments panel), small additions in js/admin/publish.js. tests/task-21.spec.js passes (desktop + phone, run with system Chrome). Note: the storyboard has no Moments screen, so the panel reuses the existing event list / form layout of /admin/.
 - Review: approved 2026-11-23
-- QA:
+- QA: passed 2026-11-23
 
 ### TASK-22: Moment photos - uploader target, Publish, unused-photo removal, link check and repo guard
 - Linked idea(s): IDEA-12 (with IDEA-9, IDEA-10, IDEA-11)
