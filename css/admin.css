@@ -207,7 +207,7 @@
   border-radius: var(--radius-btn);
   background: var(--color-surface);
   color: var(--color-ink);
-  font: 700 1.5rem/1 var(--font-body, inherit);
+  font: 700 var(--fs-h3)/1 var(--font-body);
   cursor: pointer;
 }
 .wm-x:hover:not(:disabled) { background: var(--ph-lilac); }
@@ -395,6 +395,8 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
   .adm-side { display: contents; }
 }
 @media (min-width: 1000px) {
+  /* On desktop Publish is shown above the form via order: -1, but Tab reaches the form first (DOM order).
+     Accepted trade-off, not a bug. */
   .adm-right > #publish-panel { order: -1; }
 }
 .adm-side .panel { margin: 0; max-width: none; }

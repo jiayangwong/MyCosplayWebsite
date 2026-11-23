@@ -122,6 +122,49 @@ test.describe('X remove button', () => {
     await expect(page.locator('.wm-card')).toHaveCount(0);
   });
 
+  test('focus after X: next card, else previous card, else the file input (never body)', async ({ page }) => {
+    await plain(page);
+    await page.setInputFiles('#wm-files', [SMALL, SMALL, BIG]);
+    await expect(page.locator('.wm-card')).toHaveCount(3);
+    await expectResult(card(page, 2)).toHaveAttribute('data-state', 'ready', { timeout: 40000 });
+    const focusedLabel = () => page.evaluate(() => document.activeElement.getAttribute('aria-label') || document.activeElement.id || document.activeElement.tagName);
+    // Middle card: focus goes to the X of the card that took its place (the last one).
+    await xBtn(page, 1, 'flat-800x600.png').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.wm-card')).toHaveCount(2);
+    expect(await focusedLabel()).toBe('Remove flat-2400x1600.png');
+    // Last card: focus goes to the previous card's X.
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.wm-card')).toHaveCount(1);
+    expect(await focusedLabel()).toBe('Remove flat-800x600.png');
+    // No cards left: the file input.
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.wm-card')).toHaveCount(0);
+    await expect(page.locator('#wm-files')).toBeFocused();
+  });
+
+  test('focus after X + Remove in the confirm dialog on a pending card is not lost', async ({ page, github }) => {
+    await setup(page, github);
+    await page.setInputFiles('#wm-files', BIG);
+    await expectResult(card(page, 0)).toHaveAttribute('data-state', 'ready', { timeout: 30000 });
+    const i = await attach(page, X); // second card, attached
+    expect(i).toBe(1);
+    await xBtn(page, 1, 'flat-800x600.png').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#wm-remove-confirm')).toBeVisible();
+    await page.locator('#wm-remove-yes').click();
+    await expect(page.locator('.wm-card')).toHaveCount(1);
+    await expect(xBtn(page, 0, 'flat-2400x1600.png')).toBeFocused();
+    // Only card left is plain; a pending card alone: remove it through the dialog -> file input.
+    await xBtn(page, 0, 'flat-2400x1600.png').click();
+    await expect(page.locator('.wm-card')).toHaveCount(0);
+    await attach(page, X);
+    await xBtn(page, 0, 'flat-800x600.png').press('Enter');
+    await page.locator('#wm-remove-yes').click();
+    await expect(page.locator('.wm-card')).toHaveCount(0);
+    await expect(page.locator('#wm-files')).toBeFocused();
+  });
+
   test('X on an errored card removes it; no text Remove button there', async ({ page }) => {
     await page.addInitScript(() => {
       const original = HTMLCanvasElement.prototype.toBlob;

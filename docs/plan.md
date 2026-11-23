@@ -990,7 +990,7 @@ Build order for IDEA-12: **TASK-19** (review + QA of the existing build) -> **TA
   - Any test that types into `#gh-token` or clicks inside `#pub-body` (for example "Remove from publish" buttons in `#pub-pending`) without opening the panel first: the shared helper `saveFakeToken` in `tests/github-mock.js` (and any similar helper in `tests/helpers.js`) opens the GitHub panel first when it is collapsed; specs that read or click `#pub-pending` items open the Publish panel first. Likely affected: `tests/task-11.spec.js`, `task-12`, `task-13`, `task-14`, `task-16`, `task-21`, `task-22` (the programmer confirms with a search for `#gh-token`, `gh-save`, `pub-pending`, `pend-remove`).
   - `tests/task-7.spec.js`: any check that looks for the "Remove" text button on error / too-big cards now uses the X (`aria-label` starting "Remove ").
   - The full suite passes in both projects.
-- Status: built, waiting for review
+- Status: built again, waiting for re-review
 - Review: changes requested (1 must-fix: keyboard focus falls to <body> after the X removes a card; see docs/reviews.md 2026-11-24)
 - QA:
 

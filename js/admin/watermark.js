@@ -458,6 +458,9 @@ function removeNow(item) {
   item.ui.card.remove();
   assignNames();
   $('wm-download-all').disabled = !items.some((x) => x.state === 'ready');
+  // Focus must not fall to <body>: next card's X, else the previous card's X, else the file input (drop zone).
+  const target = items[i] || items[i - 1];
+  (target ? target.ui.remove : $('wm-files')).focus();
 }
 
 /** Asks before taking a photo out of the publish. Resolves true on "Remove", false on Cancel or Esc. */
