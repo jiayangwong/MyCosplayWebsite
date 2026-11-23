@@ -4,7 +4,7 @@
 First public version. Release notes are in docs/release.md. Entries below were made while building it.
 
 ## Unreleased
-- 2026-11-23 Events data: replaced sample events with the 21 real events (with venues) from the Facebook albums, newest first (data/events.json, fbcosplayalbumlist.md)
+- 2026-11-23 Events data: replaced sample events with the 21 real events (with venues; Bon Odori 2024 at LaLaport BBCC) from the Facebook albums, newest first (data/events.json, fbcosplayalbumlist.md)
 - 2026-11-17 TASK-1: site shell. Design tokens, fonts, header tabs (PC), MENU full-screen menu (phone), footer, robots.txt (css/tokens.css, css/base.css, js/nav.js, js/site-config.js, *.html)
 - 2026-11-17 TASK-2: event data layer. Sample data/events.json, load / sort newest first / group by year / validate / make ids, embed detection (js/events-data.js, js/embed.js, data/events.json)
 - 2026-11-17 TASK-3: Home convention hall. Guest pass, hall signs, polaroids that flip, scroll "camera", descending years-only YOU ARE HERE timeline, reduced-motion list (index.html, js/hall.js, css/home.css, css/components.css)

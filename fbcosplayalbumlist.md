@@ -18,7 +18,7 @@ Events Puzz attended, taken from the Facebook album names and cross-checked agai
 | 2024-09-14 | Cos-mic | Cos-Mic 2024 | Sunway Pyramid Convention Center | Cos-mic 2024 D3 |  |
 | 2024-08-23 | AMG | AniManGaki 2024 | Mines International Exhibition and Convention Centre | AMG 2024 Day 3 |  |
 | 2024-08-16 | ACG Matsuri | ACG Matsuri 2024 | LaLaport Bukit Bintang City Centre | ACG Matsuri Aug 2024 |  |
-| 2024-07-20 | Bon Odori | Bon Odori 2024 | Kompleks Sukan Panasonic, Shah Alam | Bon odori lalaport July 2024 | mdoujin has two 2024 listings (20 Jul Shah Alam, 19-21 Jul Eko Galleria); used 20 Jul, which matches the date on your fan photo |
+| 2024-07-27 | Bon Odori | Bon Odori Festival 2024 (LaLaport BBCC) | LaLaport BBCC, Central Rooftop Garden | Bon odori lalaport July 2024 | Not on mdoujin; dates from news: 27-28 Jul and 3-4 Aug 2024. Your album is July, so 27 Jul is used |
 | 2024-07-13 | Nijigen | Nijigen Expo 2024 MVEC | Mid Valley Exhibition Centre | Nijigen 2024 D2 | inferred; the other 2024 listing is 1-3 Mar MIECC |
 | 2024-04-26 | AF+ | Anime Fest+ 2024 | Tropicana Gardens Mall | AF+2024 D3 / Anime Fest+ 2024 |  |
 | 2023-12-23 | CF | Comic Fiesta 2023 | KLCC Convention Centre | CF2023 D1/D2 |  |
@@ -34,4 +34,4 @@ Profile pictures, Cover photos, Featured Photos, 母校, 跨年, 日常, 节日,
 
 - AMG = AniManGaki.
 - Nijigen 2025 has two events (Feb MIECC and Jul MVEC), listed separately.
-- Venues are from the mdoujin listings (as of 2026-11-23). The NIKKE 4th Anniversary pop-up is not on mdoujin; its date and venue come from news reports.
+- Venues are from the mdoujin listings (as of 2026-11-23). The NIKKE 4th Anniversary pop-up and the LaLaport Bon Odori 2024 are not on mdoujin; their dates and venues come from news reports.
