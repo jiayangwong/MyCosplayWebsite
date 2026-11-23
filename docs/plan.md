@@ -991,7 +991,7 @@ Build order for IDEA-12: **TASK-19** (review + QA of the existing build) -> **TA
   - `tests/task-7.spec.js`: any check that looks for the "Remove" text button on error / too-big cards now uses the X (`aria-label` starting "Remove ").
   - The full suite passes in both projects.
 - Status: built, waiting for review
-- Review:
+- Review: changes requested (1 must-fix: keyboard focus falls to <body> after the X removes a card; see docs/reviews.md 2026-11-24)
 - QA:
 
 Build order for IDEA-13: TASK-23 alone (it touches only `/admin/`; no public page changes).
