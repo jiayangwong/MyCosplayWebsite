@@ -33,7 +33,7 @@
 
     <aside class="help-box" aria-label="How publishing works">
       <p><strong>How it works.</strong> Changes stay on this browser until you press Publish to GitHub. Export events.json is a backup you can commit by hand. Only commit photo files that came out of the uploader.</p>
-      <p>Photos: use the media uploader below. It makes two watermarked files per photo (full size + 1200px display copy). Attach them to an event, or download them and save them into the repo at the paths it shows. Site photos (portrait, reel covers, share image) are at the end of the uploader.</p>
+      <p>Photos: use the media uploader below. It makes two watermarked files per photo (full size + 1200px display copy). Attach them to an event, or download them and save them into the repo at the paths it shows. Site photos (portrait, reel covers, share image) are at the end of the uploader. Hall ??? moments are in the Moments panel.</p>
     </aside>
 
     <p class="source-banner" id="source-banner" role="status"></p>
@@ -221,7 +221,58 @@
       </div>
     </div>
 
-
+    <section class="panel moments-panel" id="moments-panel" aria-labelledby="mo-title">
+      <h2 id="mo-title" class="panel-title">Moments · Hall ??? (bangai) <span class="panel-count" id="mo-count"></span></h2>
+      <p class="panel-hint">Funny and special moments of all years, shown in the Hall ??? album on Home and Events. Album order: newest year first, moments without a year last. Move up/down only changes the order of moments of the same year.</p>
+      <div class="moments-grid">
+        <div>
+          <ol class="event-list" id="moment-list" aria-label="Moments"></ol>
+        </div>
+        <div>
+          <div class="mo-form-head">
+            <h3 id="mo-form-title" class="panel-subtitle">New moment</h3>
+            <button type="button" class="btn btn-primary btn-sm" id="new-moment">New moment</button>
+          </div>
+          <form id="moment-form" novalidate aria-labelledby="mo-form-title">
+            <div class="field-row">
+              <div class="field">
+                <label for="m-year">Year (optional)</label>
+                <input type="text" id="m-year" name="year" inputmode="numeric" placeholder="2025" aria-describedby="err-m-year">
+                <p class="field-error" id="err-m-year" hidden></p>
+              </div>
+              <div class="field field-grow">
+                <label for="m-caption">Caption (optional, max 140)</label>
+                <input type="text" id="m-caption" name="caption" maxlength="140" placeholder="Wig fell off on the escalator" aria-describedby="err-m-caption">
+                <p class="field-error" id="err-m-caption" hidden></p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="m-alt">Alt text (describes the photo)</label>
+              <input type="text" id="m-alt" name="alt" placeholder="Puzz holding a pink wig, laughing" aria-describedby="m-alt-help err-m-alt">
+              <p class="panel-hint" id="m-alt-help">Optional. Without it the caption is used.</p>
+              <p class="field-error" id="err-m-alt" hidden></p>
+            </div>
+            <div class="field">
+              <label for="m-link">Link (video or post)</label>
+              <input type="url" id="m-link" name="link" placeholder="https://www.instagram.com/reel/..." aria-describedby="m-link-help err-m-link">
+              <p class="panel-hint" id="m-link-help">Instagram, TikTok or YouTube links become a player in the album. A moment needs a link, a photo, or both.</p>
+              <p class="field-error" id="err-m-link" hidden></p>
+            </div>
+            <div class="field">
+              <label for="m-photo">Photo path</label>
+              <input type="text" id="m-photo" name="photo" placeholder="media/moments/2025-wig-fell-off.webp" aria-describedby="m-photo-help err-m-photo">
+              <p class="panel-hint" id="m-photo-help">The watermarked 1200px file. Filled in by "Moment photo" in the uploader, or typed.</p>
+              <p class="field-error" id="err-m-photo" hidden></p>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="save-moment">Save moment</button>
+              <button type="button" class="btn btn-secondary" id="clear-moment">Clear form</button>
+            </div>
+            <p class="save-status" id="mo-status" role="status"></p>
+          </form>
+        </div>
+      </div>
+    </section>
 
     <section class="panel uploader" aria-labelledby="wm-title">
       <h2 id="wm-title" class="panel-title">Media uploader · automatic watermark</h2>
@@ -304,5 +355,6 @@
   <script type="module" src="../js/admin/github-panel.js"></script>
   <script type="module" src="../js/admin/publish.js"></script>
   <script type="module" src="../js/admin/site-photos.js"></script>
+  <script type="module" src="../js/admin/moments.js"></script>
 </body>
 </html>

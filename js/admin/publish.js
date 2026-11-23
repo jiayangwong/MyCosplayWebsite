@@ -1,6 +1,6 @@
 // Publish to GitHub: commits the draft's data/events.json, the pending photo pairs (TASK-13), the removal
 // of old, unused photo files, and the site photos with data/site.json + data/reels.json (TASK-14) as ONE
-// commit through the Git Data API.
+// commit through the Git Data API. TASK-21 adds data/moments.json (moments-draft.js) to the same commit.
 // Order: read ref -> read commit -> read contents (stale check) -> read tree (recursive) -> [confirm removals]
 // -> blobs (one at a time) -> tree -> commit -> move ref (force: false).
 // The ref is the only write that changes the live site, and it is always the last call, so a failure at any
@@ -21,6 +21,9 @@ import {
   siteDraftReady, onSiteDraftChange, siteText, reelsText, siteChanged, reelsChanged, baseOf, setSiteBase,
   reelIds, draftPortrait, draftThumb, resetToBase, SITE_PATH, REELS_PATH, PORTRAIT_PATH, SHARE_PATH, reelCoverPath,
 } from './site-draft.js';
+import {
+  momentsDraftReady, onMomentsChange, momentsText, momentsChanged, momentsBase, setMomentsBase, MOMENTS_PATH,
+} from './moments-draft.js';
 import { MAX_FILE_BYTES, formatBytes } from './watermark.js';
 import { readWatermarkMarker } from './wm-marker.js';
 
@@ -422,6 +425,12 @@ function siteFileUsed(entry) {
   return Boolean(m) && draftThumb(m[1]) === entry.path;
 }
 
+/** Number of moments in a data/moments.json text (0 for bad JSON). */
+function momentCount(text) {
+  const data = objectOf(text);
+  return data && Array.isArray(data.moments) ? data.moments.length : 0;
+}
+
 /* ---------- What is pending ---------- */
 
 /**
@@ -503,6 +512,7 @@ async function prepare() {
   const json = [];
   if (siteChanged()) json.push({ path: SITE_PATH, text: siteText(), base: baseOf(SITE_PATH) });
   if (reelsChanged()) json.push({ path: REELS_PATH, text: reelsText(), base: baseOf(REELS_PATH) });
+  if (momentsChanged()) json.push({ path: MOMENTS_PATH, text: momentsText(), base: momentsBase() }); // TASK-21
   return { text, withEvents, json, ...set };
 }
 
@@ -662,6 +672,7 @@ function render() {
   if (changed) list.append(pendRow('~', 'changed', `${EVENTS_PATH} changed`));
   if (siteChanged()) list.append(pendRow('~', 'changed', `${SITE_PATH} changed`));
   if (reelsChanged()) list.append(pendRow('~', 'changed', `${REELS_PATH} changed`));
+  if (momentsChanged()) list.append(pendRow('~', 'changed', `${MOMENTS_PATH} changed`));
   for (const path of removals) list.append(pendRow('-', 'removed', `${path} (no event uses it)`));
   if (!list.children.length) list.append(make('li', 'pend-empty', 'No pending changes.'));
 
@@ -678,7 +689,7 @@ function render() {
   }
 
   const token = readToken() !== '';
-  const something = changed || photoCount(set) > 0 || siteChanged() || reelsChanged();
+  const something = changed || photoCount(set) > 0 || siteChanged() || reelsChanged() || momentsChanged();
   btn.classList.remove('is-limit');
   if (isDraftLoading()) {
     btn.disabled = true;
@@ -911,9 +922,10 @@ async function run(token, { text, files, pairs, site, withEvents, json }) {
   showProgress(7);
   const k = removals.length;
   const photos = pairs.length + site.length;
-  const message = withEvents
-    ? `Update events from /admin/ (${eventCount()} events, ${photos} photos${k ? `, ${k} old files removed` : ''})`
-    : `Update site photos from /admin/ (${photos} photos)`;
+  const withMoments = data.some((d) => d.path === MOMENTS_PATH);
+  let message = `Update site photos from /admin/ (${photos} photos)`;
+  if (withEvents) message = `Update events from /admin/ (${eventCount()} events, ${photos} photos${k ? `, ${k} old files removed` : ''})`;
+  else if (withMoments) message = `Update moments from /admin/ (${momentCount(jsonText(MOMENTS_PATH))} moments, ${photos} photos${k ? `, ${k} old files removed` : ''})`;
   const made = await api(token, `${REPO}/git/commits`, {
     method: 'POST',
     body: { message, tree: newTree.sha, parents: [head] },
@@ -941,7 +953,7 @@ async function run(token, { text, files, pairs, site, withEvents, json }) {
 }
 
 function hasSomethingToPublish() {
-  return draftDiffersFromBase() || photoCount(publishSet()) > 0 || siteChanged() || reelsChanged();
+  return draftDiffersFromBase() || photoCount(publishSet()) > 0 || siteChanged() || reelsChanged() || momentsChanged();
 }
 
 export async function publish() {
@@ -957,6 +969,7 @@ export async function publish() {
     const result = await run(token, prepared);
     for (const j of result.json) {
       if (j.path === EVENTS_PATH) setBase(j.sha, j.text);
+      else if (j.path === MOMENTS_PATH) setMomentsBase(j.sha, j.text);
       else setSiteBase(j.path, j.sha, j.text);
     }
     clearPendingPairs(result.pairs); // published: no more "unsaved files" warning for them
@@ -980,6 +993,7 @@ async function init() {
   if (!$('publish-panel')) return;
   await managerReady;
   await siteDraftReady;
+  await momentsDraftReady;
   $('publish-btn').addEventListener('click', publish);
   $('pub-retry').addEventListener('click', publish);
   $('pub-export').addEventListener('click', exportEvents);
@@ -987,6 +1001,7 @@ async function init() {
   onDraftChange(render);
   onPendingChange(render);
   onSiteDraftChange(render);
+  onMomentsChange(render);
   window.addEventListener(TOKEN_EVENT, render);
   window.addEventListener('storage', (e) => {
     if (e.key === null || e.key === TOKEN_KEY) render();
