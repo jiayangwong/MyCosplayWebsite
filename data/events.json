@@ -9,14 +9,19 @@
       "venue": "Doko Koko, LaLaport BBCC",
       "activities": [
         "cosplay as Dorothy"
-      ]
+      ],
+      "photo": "media/events/2026-11-07-nikke/33873.webp",
+      "photoFull": "media/events/2026-11-07-nikke/33873-full.webp"
     },
     {
       "id": "2026-08-28-amg",
       "date": "2026-08-28",
       "short": "AMG",
       "name": "Animangaki 2026",
-      "venue": "Mines International Exhibition & Convention Centre"
+      "venue": "Mines International Exhibition & Convention Centre",
+      "activities": [],
+      "photo": "media/events/2026-08-28-amg/30534.webp",
+      "photoFull": "media/events/2026-08-28-amg/30534-full.webp"
     },
     {
       "id": "2026-05-30-nijigen",
