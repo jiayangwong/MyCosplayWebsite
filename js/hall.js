@@ -1,7 +1,9 @@
 // Home: the convention hall walk-through (newest event first) and the YOU ARE HERE year timeline.
 import { loadEvents, groupByYear, formatDate, yearOf } from './events-data.js';
 import { siteUrl } from './nav.js';
+import { buildBangaiStation } from './bangai.js';
 
+const BANGAI_YEAR = '???';
 const DEPTHS = ['near', 'far', 'mid'];
 const PH = ['var(--ph-pink)', 'var(--ph-lilac)', 'var(--ph-sky)', 'var(--ph-grey)'];
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -108,7 +110,7 @@ function buildStation(event, index) {
 
 function buildYearMarker(year) {
   const li = make('li', 'hall-year');
-  li.id = `year-${year}`;
+  li.id = year === BANGAI_YEAR ? 'year-bangai' : `year-${year}`;
   li.dataset.kind = 'year';
   li.dataset.year = String(year);
   const sign = make('div', 'year-sign');
@@ -143,6 +145,22 @@ function buildTimeline(groups) {
       track.append(tickItem);
     }
   }
+  // Hall ??? 番外 is treated as one more year at the end of the timeline.
+  const bangaiYear = make('li');
+  const bangaiButton = make('button', 'tl-year', BANGAI_YEAR);
+  bangaiButton.type = 'button';
+  bangaiButton.dataset.target = 'year-bangai';
+  bangaiButton.setAttribute('aria-label', 'Go to Hall ???, bangai, the extra one');
+  bangaiYear.append(bangaiButton);
+  track.append(bangaiYear);
+  const bangaiTickItem = make('li');
+  const bangaiTick = make('button', 'tl-tick');
+  bangaiTick.type = 'button';
+  bangaiTick.dataset.target = 'hall-bangai';
+  bangaiTick.setAttribute('aria-label', 'Hall ???, bangai');
+  bangaiTick.title = 'Hall ??? · 番外';
+  bangaiTickItem.append(bangaiTick);
+  track.append(bangaiTickItem);
   nav.append(track);
   return nav;
 }
@@ -222,6 +240,9 @@ export async function mountHall({ hallList, timelineSlot, summary }) {
       index += 1;
     }
   }
+
+  hallList.append(buildYearMarker(BANGAI_YEAR));
+  hallList.append(buildBangaiStation(index));
 
   if (summary) {
     const years = groups.map((g) => g.year);

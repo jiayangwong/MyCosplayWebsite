@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="style.css"></head>
 <body>
-<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: HOME</span> <span>TASK-1, TASK-3, TASK-4</span> <a href="admin/index.html">Admin (storyboard link)</a></div>
+<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: HOME</span> <span>TASK-1, TASK-3, TASK-4 &middot; IDEA-12 (Hall ??? 番外)</span> <a href="admin/index.html">Admin (storyboard link)</a></div>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap hdr">
 <a class="logo" href="index.html">PUZZ KEZZ</a>
@@ -67,9 +67,18 @@
 <button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2024 - tap to flip"><span class="inner">
 <span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - OMT]<br>Sample</span></span><span class="mono cap">20 Jul 2024 &middot; OMT</span></span>
 <span class="face back"><b>OMATSURI</b><span class="mono">20 Jul 2024</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+
+<div class="bangai-gap" aria-hidden="true"><span class="mono">&mdash; &mdash; OUTSIDE THE NUMBERING &mdash; &mdash;</span></div>
+<div class="hall-item far bangai" id="hall-bangai">
+<div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate plate-special"><span class="mono hall-l">HALL ???</span><b lang="ja"><ruby>番外<rt>ばんがい</rt></ruby></b><span class="mono plate-rom">bangai &middot; the extra one</span></div></div>
+<button class="polaroid polaroid-shy" type="button" aria-haspopup="dialog" aria-controls="bangai" data-open-bangai aria-label="Hall ???, bangai. Open the special album: funny and special moments from all years"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq lilac shy-ph" data-wm="1200x1200"><span class="kao" aria-hidden="true">(*/ω＼*)</span><span class="shy-dots mono" aria-hidden="true">&hellip;?</span></span><span class="mono cap">??? &middot; all years &middot; tap me</span></span></span></button>
+<div class="pron pron-inline"><p class="jp" lang="ja"><ruby>番外<rt>ばんがい</rt></ruby></p><p class="rom mono">ban-gai</p><p class="en">Extra, outside the numbering</p>
+<button class="speaker" type="button" aria-label="Play pronunciation of ban-gai">&#9654;</button></div>
+</div>
 </div></section>
 <div class="you-are-here" aria-label="Year timeline"><div class="wrap yah"><span class="mono yah-l">YOU ARE HERE</span>
-<div class="track"><span class="line"></span>
+<div class="track"><span class="line"></span><span class="bangai-mark" role="img" aria-label="Hall ???, bangai. Outside the main timeline"><span class="mono bm-l">???</span><i aria-hidden="true"></i></span>
 <a class="year here" style="left:3%" href="#y2026"><i></i><span class="mono">2026</span></a>
 <a class="year" style="left:35%" href="#y2025"><i></i><span class="mono">2025</span></a>
 <a class="year" style="left:72%" href="#y2024"><i></i><span class="mono">2024</span></a><a class="tick" style="left:8%" href="#" aria-label="CF 14 Mar" onclick="return false"></a><a class="tick" style="left:14%" href="#" aria-label="AMG 2 Feb" onclick="return false"></a><a class="tick" style="left:20%" href="#" aria-label="event" onclick="return false"></a><a class="tick" style="left:30%" href="#" aria-label="CF 6 Dec" onclick="return false"></a><a class="tick" style="left:38%" href="#" aria-label="OMT 9 Aug" onclick="return false"></a><a class="tick" style="left:45%" href="#" aria-label="AMG 3 May" onclick="return false"></a><a class="tick" style="left:52%" href="#" aria-label="event" onclick="return false"></a><a class="tick" style="left:60%" href="#" aria-label="event" onclick="return false"></a><a class="tick" style="left:68%" href="#" aria-label="CF 7 Dec" onclick="return false"></a><a class="tick" style="left:77%" href="#" aria-label="OMT 20 Jul" onclick="return false"></a><a class="tick" style="left:86%" href="#" aria-label="event" onclick="return false"></a></div>
@@ -105,6 +114,24 @@
 <footer class="site-footer"><div class="truss" aria-hidden="true"></div><div class="wrap">
 <p class="mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK [links]</p>
 <p class="mono">&copy; 2026 Puzz Kezz. Photos watermarked. Please ask before reposting.</p></div></footer>
+<dialog class="bangai-modal" id="bangai" aria-labelledby="bangai-h">
+<div class="bm-lace" aria-hidden="true"></div>
+<div class="bm-head"><div><p class="mono bm-kicker">HALL ??? &middot; ALL YEARS</p><h2 id="bangai-h" lang="ja"><ruby>番外<rt>ばんがい</rt></ruby> <span class="bm-en">The extra one</span></h2>
+<p class="mono bm-rom">ban-gai &middot; "extra, outside the numbering"</p></div>
+<button class="btn btn-secondary" type="button" data-close-bangai>CLOSE &times;</button></div>
+<p class="bm-intro">[One line goes here.] Funny and special moments from every year. Not one con, just the stuff that did not fit anywhere else. (/ω＼)</p>
+<div class="bm-filters" role="group" aria-label="Show"><button type="button" class="chip" aria-pressed="true" data-f="all">All</button><button type="button" class="chip" aria-pressed="false" data-f="photo">Photos</button><button type="button" class="chip" aria-pressed="false" data-f="video">Videos</button><button type="button" class="chip" aria-pressed="false" data-f="link">Links</button></div>
+<ul class="bm-grid" id="bm-grid">
+<li class="bm-item" data-type="photo"><div class="ph ph-sq pink" data-wm="1200x1200" role="img" aria-label="Placeholder: photo (watermarked)"><span>[Photo 1:1]</span></div><p class="mono cap">2025 &middot; wig fell off at the photo spot</p></li>
+<li class="bm-item" data-type="video"><button class="bm-video" type="button" aria-label="Play video: [short clip title]"><span class="ph ph-sq sky" data-wm="1080x1080"><span>[Video cover]</span></span><span class="play" aria-hidden="true">&#9654;</span></button><p class="mono cap">2024 &middot; [short clip, loads when tapped]</p></li>
+<li class="bm-item" data-type="link"><a class="bm-embed" href="#" onclick="return false"><span class="mono bm-src">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE</span><span class="bm-embed-t">Tap to load the video</span><span class="mono soon">Social link: click-to-load embed (opens in a new tab if it cannot embed)</span></a><p class="mono cap">2026 &middot; [funny moment from a social post]</p></li>
+<li class="bm-item" data-type="photo"><div class="ph ph-45 lilac" data-wm="1200x1500" role="img" aria-label="Placeholder: photo (watermarked)"><span>[Photo 4:5]</span></div><p class="mono cap">2023 &middot; [one-line caption]</p></li>
+<li class="bm-item" data-type="video"><button class="bm-video" type="button" aria-label="Play video: [short clip title]"><span class="ph ph-sq pink" data-wm="1080x1080"><span>[Video cover]</span></span><span class="play" aria-hidden="true">&#9654;</span></button><p class="mono cap">2026 &middot; [short clip]</p></li>
+<li class="bm-item" data-type="photo"><div class="ph ph-sq sky" data-wm="1200x1200" role="img" aria-label="Placeholder: photo (watermarked)"><span>[Photo 1:1]</span></div><p class="mono cap">2025 &middot; [caption]</p></li>
+</ul>
+<p class="bm-empty" id="bm-empty" hidden>Nothing here yet. (&gt;///&lt;) Come back later.</p>
+<div class="bm-sb mono" role="group" aria-label="Storyboard: show state"><b>Storyboard: show state</b><button type="button" data-state="album" aria-pressed="true">Album</button><button type="button" data-state="empty" aria-pressed="false">Empty (no moments yet)</button></div>
+</dialog>
 <script src="app.js"></script>
 <script src="wm.js"></script>
 </body></html>

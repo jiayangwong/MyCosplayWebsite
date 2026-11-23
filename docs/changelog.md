@@ -4,6 +4,7 @@
 First public version. Release notes are in docs/release.md. Entries below were made while building it.
 
 ## Unreleased
+- 2026-11-23 IDEA-12: Hall ??? 番外 (bangai) on Home. Treated as one more year at the end of the hall and the YOU ARE HERE timeline (`???` year + tick); hall sign, shy-kaomoji polaroid that opens an album pop-up (photos, videos, social links, filters); albums come from data/moments.json (empty for now). Storyboard and docs/ideas.md updated (js/bangai.js, js/hall.js, css/home.css, data/moments.json, tests/task-3.spec.js, storyboard/)
 - 2026-11-23 Events data: replaced sample events with the 21 real events (with venues; Bon Odori 2024 at LaLaport BBCC) from the Facebook albums, newest first (data/events.json, fbcosplayalbumlist.md)
 - 2026-11-17 TASK-1: site shell. Design tokens, fonts, header tabs (PC), MENU full-screen menu (phone), footer, robots.txt (css/tokens.css, css/base.css, js/nav.js, js/site-config.js, *.html)
 - 2026-11-17 TASK-2: event data layer. Sample data/events.json, load / sort newest first / group by year / validate / make ids, embed detection (js/events-data.js, js/embed.js, data/events.json)

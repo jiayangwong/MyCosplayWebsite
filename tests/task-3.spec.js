@@ -23,10 +23,10 @@ test('hall is built from events.json, newest first, with year markers and hall l
   await mockEvents(page, EVENTS);
   await page.goto('index.html');
   const items = page.locator('#hall-list > li');
-  await expect(items).toHaveCount(7);
+  await expect(items).toHaveCount(9);
   const kinds = await items.evaluateAll((els) => els.map((el) => (el.dataset.kind === 'year' ? `Y${el.dataset.year}` : el.dataset.id)));
-  expect(kinds).toEqual(['Y2026', '2026-08-22-oma', 'Y2025', '2025-12-13-cf', '2025-05-31-amg', 'Y2024', '2024-06-01-amg']);
-  await expect(page.locator('.station .hall-sign-label')).toHaveText(['HALL A', 'HALL B', 'HALL C', 'HALL D']);
+  expect(kinds).toEqual(['Y2026', '2026-08-22-oma', 'Y2025', '2025-12-13-cf', '2025-05-31-amg', 'Y2024', '2024-06-01-amg', 'Y???', 'bangai']);
+  await expect(page.locator('.station .hall-sign-label')).toHaveText(['HALL A', 'HALL B', 'HALL C', 'HALL D', 'HALL ???']);
   await expect(page.locator('.station .hall-sign-name').first()).toHaveText('OMATSURI');
   await expect(page.locator('#hall-2025-12-13-cf .polaroid-photo')).toHaveAttribute('aria-label', 'Comic Fiesta 2025');
   await expect(page.locator('.hall-end')).toContainText('END OF HALL');
@@ -65,13 +65,13 @@ test('timeline shows years only, descending, with one tick per event', async ({ 
   await mockEvents(page, EVENTS);
   await page.goto('index.html');
   const timeline = page.locator('.timeline');
-  await expect(timeline.locator('.tl-year')).toHaveText(['2026', '2025', '2024']);
-  await expect(timeline.locator('.tl-tick')).toHaveCount(4);
+  await expect(timeline.locator('.tl-year')).toHaveText(['2026', '2025', '2024', '???']);
+  await expect(timeline.locator('.tl-tick')).toHaveCount(5);
   const tickText = await timeline.locator('.tl-tick').allInnerTexts();
   expect(tickText.join('').trim()).toBe('');
   await expect(timeline.locator('.tl-tick').first()).toHaveAttribute('aria-label', 'OMA 2026-08-22');
   const visibleText = (await timeline.locator('.timeline-track').innerText()).replace(/\s+/g, ' ').trim();
-  expect(visibleText).toBe('2026 2025 2024');
+  expect(visibleText).toBe('2026 2025 2024 ???');
 });
 
 test('timeline follows scroll and jumps on click', async ({ page }) => {
@@ -93,7 +93,7 @@ test('reduced motion shows a plain stacked list with all events', async ({ page 
   await page.mouse.wheel(0, 1500);
   const transforms = await page.locator('.station-inner').evaluateAll((els) => els.map((el) => getComputedStyle(el).transform));
   for (const t of transforms) expect(t).toBe('none');
-  await expect(page.locator('.station')).toHaveCount(4);
+  await expect(page.locator('.station')).toHaveCount(5);
 });
 
 test('only the first two polaroid photos load eagerly', async ({ page }) => {
@@ -101,4 +101,25 @@ test('only the first two polaroid photos load eagerly', async ({ page }) => {
   await page.goto('index.html');
   const loading = await page.locator('.polaroid img').evaluateAll((els) => els.map((el) => el.loading));
   expect(loading).toEqual(['eager', 'eager', 'lazy', 'lazy']);
+});
+
+test('Hall ??? is the last year: only its polaroid opens the album pop-up', async ({ page }) => {
+  await mockEvents(page, EVENTS);
+  await page.route('**/data/moments.json', (route) => route.fulfill({ json: { version: 1, moments: [
+    { year: 2025, caption: 'Funny one', photo: 'photos/x.jpg' },
+    { year: 2024, caption: 'Clip', link: 'https://www.youtube.com/watch?v=abcdefghijk' },
+  ] } }));
+  await page.goto('index.html');
+  await page.locator('.tl-year', { hasText: '???' }).click();
+  const trigger = page.locator('#hall-bangai .polaroid-shy');
+  await expect(trigger.locator('.kao')).toHaveText('(*/ω＼*)');
+  await trigger.click();
+  const dialog = page.locator('dialog#bangai');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('.bm-item')).toHaveCount(2);
+  await dialog.locator('.bm-chip', { hasText: 'Photos' }).click();
+  await expect(dialog.locator('.bm-item:visible')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
+  await expect(trigger).toBeFocused();
 });
