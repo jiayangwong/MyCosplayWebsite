@@ -2,7 +2,7 @@
 name: programmer
 description: Use to implement tasks from docs/plan.md, ONLY after docs/approval.md contains STORYBOARD APPROVED. Builds the real product matching the approved storyboard.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: opus
+model: sonnet
 ---
 
 You are the Programmer.

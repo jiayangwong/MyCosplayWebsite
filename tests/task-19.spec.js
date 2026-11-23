@@ -306,7 +306,7 @@ test('no horizontal scroll at 360px, and the pop-up fits', async ({ page }) => {
   const overflow = await dialog.evaluate((d) => d.scrollWidth - d.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
   const cols = await dialog.locator('.bm-grid').evaluate((g) => getComputedStyle(g).gridTemplateColumns.split(' ').length);
-  expect(cols).toBe(2);
+  expect(cols).toBe(1);
 });
 
 test('album has 3 columns on desktop', async ({ page }) => {
@@ -317,4 +317,17 @@ test('album has 3 columns on desktop', async ({ page }) => {
   const { dialog } = await openAlbum(page);
   const cols = await dialog.locator('.bm-grid').evaluate((g) => getComputedStyle(g).gridTemplateColumns.split(' ').length);
   expect(cols).toBe(3);
+});
+
+test('album has 1 column on a narrow phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await mockEvents(page, EVENTS);
+  await mockMoments(page, [
+    { id: 'a', year: 2025, caption: 'A', photo: 'photos/a.jpg' },
+    { id: 'b', year: 2024, caption: 'B', photo: 'photos/b.jpg' },
+  ]);
+  await page.goto('index.html');
+  await page.locator('#hall-bangai .polaroid-shy').click();
+  const cols = await page.locator('dialog#bangai .bm-grid').evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+  expect(cols).toBe(1);
 });
