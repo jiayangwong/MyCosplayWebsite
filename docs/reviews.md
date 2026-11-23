@@ -406,3 +406,12 @@ Round 1. Reviewed `feature/hall-bangai` (first Home commit 7988c22) together wit
 - [nice-to-have] css/components.css:350 - `.bm-chip` uses literal `0.8125rem` and `22px` radius. These copy the storyboard, but a token (or the existing chip style) would be better.
 - [nice-to-have] js/embed.js:106 (pre-existing) - when a facade becomes an iframe inside the dialog, focus falls back to the document. Moving focus to the new iframe would keep keyboard users in place.
 - [nice-to-have] commit 8dc9c53 also changes `.claude/agents/programmer.md` (model). This is not TASK-19 work. Keep agent config changes in their own commit.
+
+## Review TASK-20 - 2026-11-23
+Result: APPROVED
+
+Round 1. Diff `task/TASK-19-home-hall-bangai..task/TASK-20-events-hall-bangai` (4f03d69). task-20 + task-5 + task-19 = 56 passed (desktop + phone, system Chrome).
+
+- **Criteria:** all met. The last section has `id="hall-bangai"` with the heading "Hall ??? 番外" (ruby, `lang="ja"`) and a full pronunciation block with a speaker. The jump row ends with `???` -> `#hall-bangai`, and the deep link works. There is one card: kaomoji (`aria-hidden`), the line "Funny and special moments, all years" and "Open album". The card uses `bindAlbumTrigger()` from js/bangai.js (shared code, not a copy), and focus returns to the button. It is not an event: no date, no tag, and the order is unchanged. With no events there is no section. No horizontal scroll at 360px with the album open.
+- **Scope/style:** only js/events-page.js, css/pages.css, the test, the plan and the changelog changed. Tokens are used throughout. The storyboard has no Events screen for Hall ???, and the card reuses the dark-card, dashed-purple look of the approved Home sign.
+- [nice-to-have] css/pages.css:5 - the `div.year-jump { display: contents }` wrapper inside `nav.year-jump-row` exists so that the TASK-5 selector still counts only years. A one-line comment saying so would help the next reader.
