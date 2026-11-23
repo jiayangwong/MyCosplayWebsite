@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="../style.css"><meta name="robots" content="noindex, nofollow"></head>
 <body class="admin">
-<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: ADMIN - Event manager (not in nav)</span> <span>TASK-6, TASK-7, TASK-11, TASK-12, TASK-13</span> <a href="../index.html">Back to site</a></div>
+<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: ADMIN - Event manager (not in nav)</span> <span>TASK-6, TASK-7, TASK-11, TASK-12, TASK-13, TASK-23</span> <a href="../index.html">Back to site</a></div>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap hdr">
 <a class="logo" href="../index.html">PUZZ KEZZ</a>
@@ -21,7 +21,7 @@
 <p class="help"><b>Help.</b> Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.</p>
 <p class="mono">Source in use: [draft from localStorage / data/events.json]</p>
 <div class="bar"><button class="btn btn-accent" type="button">New event</button><button class="btn btn-secondary" type="button">Import events.json</button><button class="btn btn-primary" type="button">Export events.json</button><button class="btn btn-secondary" type="button">Discard draft</button></div>
-<div class="adm-grid"><div class="adm-side"><section class="panel fold" id="gh" aria-labelledby="ghh"><h2 id="ghh"><button class="fold-btn" type="button" aria-expanded="false" aria-controls="ghBody"><span>GitHub</span><span class="st" id="ghChip">Not connected</span><i aria-hidden="true">&#9662;</i></button></h2>
+<div class="adm-grid"><div class="adm-side adm-left"><section class="panel fold" id="gh" aria-labelledby="ghh"><h2 id="ghh"><button class="fold-btn" type="button" aria-expanded="false" aria-controls="ghBody"><span>GitHub</span><span class="st" id="ghChip">Not connected</span><i aria-hidden="true">&#9662;</i></button></h2>
 <div class="fold-body" id="ghBody" hidden>
 <p class="muted">The token stays in this browser only.</p>
 <label class="field">Token<input type="password" id="tok" autocomplete="off" placeholder="paste token (storyboard: nothing is sent)"></label>
@@ -35,25 +35,14 @@
 </div>
 </section>
 <div><h2>Events</h2><p class="mono">Move up/down only swaps events on the same date (disabled otherwise).</p><ul class="adm-list"><li class="adm-row"><span class="mono">14 Mar 2026</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
-<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">2 Feb 2026</span><b>AMG</b><span>Amg [Full Name Placeholder] <span class="sample">Sample</span></span>
-<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">6 Dec 2025</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
-<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">9 Aug 2025</span><b>OMT</b><span>Omatsuri <span class="sample">Sample</span></span>
-<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">3 May 2025</span><b>AMG</b><span>Amg [Full Name Placeholder] <span class="sample">Sample</span></span>
-<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">7 Dec 2024</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
-<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li><li class="adm-row"><span class="mono">20 Jul 2024</span><b>OMT</b><span>Omatsuri <span class="sample">Sample</span></span>
-<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button">Delete</button><button class="btn btn-secondary" type="button" disabled>&uarr;</button><button class="btn btn-secondary" type="button" disabled>&darr;</button></span></li></ul></div></div>
-<div class="adm-side">
-<section class="panel fold" id="pub" aria-labelledby="pubh"><h2 id="pubh"><button class="fold-btn" type="button" aria-expanded="false" aria-controls="pubBody"><span>Publish</span><span class="st">6 pending</span><i aria-hidden="true">&#9662;</i></button></h2>
-<button class="btn btn-accent" type="button" id="pubBtn">Publish to GitHub</button>
-<p class="mono muted small" id="pubWhy">Needs a saved token (see above).</p>
-<div class="fold-body" id="pubBody" hidden>
-<ul class="pend" aria-label="Pending changes"><li><b>+</b> media/events/2026-03-14-cf/sample-1.webp</li><li><b>+</b> media/events/2026-03-14-cf/sample-1-full.webp</li><li><b>~</b> data/events.json</li><li><b>-</b> media/events/2025-08-09-omt/old-cover.webp</li><li><b>-</b> media/events/2025-08-09-omt/old-cover-full.webp</li><li><b>-</b> media/events/2025-05-03-amg/old-cover.webp</li></ul>
-<div id="pprog" hidden><p class="mono" id="ptxt">Uploading 0 of 5 files</p><div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Publish progress"><i id="pfill"></i></div></div>
-<div class="msg ok" data-pub="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p><b>Published.</b> <a href="#" onclick="return false"><u>View commit</u></a></p></div>
-<div class="msg err" data-pub="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>Could not upload file 3 of 5 (network error).</b></p><p class="next">Nothing was changed on GitHub. Check your connection and try again.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
-<div class="msg err" data-pub="stale" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>The site changed on GitHub while you were publishing.</b></p><p class="next">Nothing was changed. Try again to use the newest version.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
-</div>
-</section>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">2 Feb 2026</span><b>AMG</b><span>Amg [Full Name Placeholder] <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">6 Dec 2025</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">9 Aug 2025</span><b>OMT</b><span>Omatsuri <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">3 May 2025</span><b>AMG</b><span>Amg [Full Name Placeholder] <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">7 Dec 2024</span><b>CF</b><span>Comic Fiesta <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">20 Jul 2024</span><b>OMT</b><span>Omatsuri <span class="sample">Sample</span></span>
+<span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li></ul></div></div>
+<div class="adm-side adm-right">
 <form class="adm-form" onsubmit="return false"><h2>Event form</h2>
 <label>Date<input type="date" value="2026-03-14"></label>
 <label>Short form (1-12)<input type="text" value="CF"></label>
@@ -64,7 +53,20 @@
 <div class="embed-prev"><div class="ph ph-43 sky" role="img" aria-label="Placeholder: Embed preview (YouTube / Instagram / TikTok) or photo + link fallback"><span>[Embed preview (YouTube / Instagram / TikTok) or photo + link fallback]</span></div></div>
 <label>Preview photo path<input type="text" value="media/events/2026-03-14-cf/cover-wm.webp"></label>
 <div class="bar"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-secondary" type="button">Cancel</button></div></form>
+<section class="panel fold pub-first" id="pub" aria-labelledby="pubh"><h2 id="pubh"><button class="fold-btn" type="button" aria-expanded="false" aria-controls="pubBody"><span>Publish</span><span class="st">6 pending</span><i aria-hidden="true">&#9662;</i></button></h2>
+<button class="btn btn-accent" type="button" id="pubBtn">Publish to GitHub</button>
+<p class="mono muted small" id="pubWhy">Needs a saved token (see above).</p>
+<div class="fold-body" id="pubBody" hidden>
+<ul class="pend" aria-label="Pending changes"><li><b>+</b> media/events/2026-03-14-cf/sample-1.webp</li><li><b>+</b> media/events/2026-03-14-cf/sample-1-full.webp</li><li><b>~</b> data/events.json</li><li><b>-</b> media/events/2025-08-09-omt/old-cover.webp</li><li><b>-</b> media/events/2025-08-09-omt/old-cover-full.webp</li><li><b>-</b> media/events/2025-05-03-amg/old-cover.webp</li></ul>
+<div id="pprog" hidden><p class="mono" id="ptxt">Uploading 0 of 5 files</p><div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Publish progress"><i id="pfill"></i></div></div>
+<div class="msg ok" data-pub="ok" role="status" hidden><span class="ic" aria-hidden="true">&#10003;</span><p><b>Published.</b> <a href="#" onclick="return false"><u>View commit</u></a></p></div>
+<div class="msg err" data-pub="err" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>Could not upload file 3 of 5 (network error).</b></p><p class="next">Nothing was changed on GitHub. Check your connection and try again.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
+<div class="msg err" data-pub="stale" role="alert" hidden><span class="ic" aria-hidden="true">!</span><div><p><b>The site changed on GitHub while you were publishing.</b></p><p class="next">Nothing was changed. Try again to use the newest version.</p><p><button class="btn btn-secondary" type="button" data-retry>Try again</button></p></div></div>
+</div>
+</section>
 </div></div>
+<div class="wrap-mom"><h2>Moments</h2><ul class="adm-list"><li class="adm-row"><span class="mono">12 Apr 2026</span><b>MOM</b><span>Backstage at Comic Fiesta (long moment title to show the full-width name) <span class="sample">Sample</span></span><span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down">&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li></ul></div>
+<dialog class="confirm" id="rmc" aria-labelledby="rmch"><h3 id="rmch">Remove sample-1.jpg?</h3><p class="muted">It is attached to CF 2026 and will be taken out of the publish.</p><div class="acts"><button class="btn btn-secondary" type="button" id="rmNo" autofocus>Cancel</button><button class="btn btn-primary" type="button" id="rmYes">Remove</button></div></dialog>
 <dialog class="confirm" id="cfm" aria-labelledby="cfmh"><h3 id="cfmh">These 3 old files will be removed</h3><p class="muted">Old versions stay in the GitHub history.</p>
 <ul><li>&minus; media/events/2025-08-09-omt/old-cover.webp</li><li>&minus; media/events/2025-08-09-omt/old-cover-full.webp</li><li>&minus; media/events/2025-05-03-amg/old-cover.webp</li></ul>
 <div class="acts"><button class="btn btn-secondary" type="button" id="cfmNo" autofocus>Cancel</button><button class="btn btn-primary" type="button" id="cfmYes">Remove and publish</button></div></dialog>
@@ -79,7 +81,7 @@
   var GHCHIP = { none: 'Not connected', testing: 'Testing...', ok: 'Connected', err: 'Error' };
   function gh(s, last) {
     ghState = s; $('ghChip').textContent = GHCHIP[s]; $('ghChip').dataset.s = s;
-    if (s === 'none' || s === 'err') fold('ghBody', true);
+    if (s === 'err') fold('ghBody', true); /* TASK-23: collapsed on load; opens by itself only on error */
     document.querySelectorAll('[data-gh]').forEach(function (m) { m.hidden = m.getAttribute('data-gh') !== s; });
     $('swGh').value = s;
     var saved = s === 'ok' || s === 'err' || s === 'testing';
@@ -115,6 +117,13 @@
   $('swGh').addEventListener('change', function (e) { gh(e.target.value); });
   $('swPub').addEventListener('change', function (e) { pub(e.target.value); });
   gh('none');
+  var rmCard = null;
+  document.querySelectorAll('.pc-x').forEach(function (x) { x.addEventListener('click', function () {
+    var c = x.closest('.pcard');
+    if (c.dataset.pending === '1') { rmCard = c; $('rmc').showModal(); } else c.remove();
+  }); });
+  $('rmNo').addEventListener('click', function () { $('rmc').close(); });
+  $('rmYes').addEventListener('click', function () { $('rmc').close(); if (rmCard) rmCard.remove(); document.querySelector('#pub .st').textContent = '3 pending'; });
 })();
 </script>
 <hr><h2>Media uploader</h2>
@@ -124,13 +133,13 @@
 <p class="mono small">Files will be saved for event: <b>CF 14 Mar 2026 (Sample)</b> (the event open in the form above).</p>
 <p class="mono small">Each photo makes two files: MASTER (original size, nothing shrunk) and DISPLAY (1200px longest side). Both get the watermark. Location and camera data are removed.</p></div></div>
 <div id="cards">
-<div class="pcard"><div class="pair"><figure><div class="ph ph-sq pink" data-wm="2400x2400" role="img" aria-label="Master thumbnail with tiled watermark"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>2400 x 2400 - 1.8 MB</figcaption></figure>
+<div class="pcard" data-pending="1" data-fn="sample-1.jpg"><button class="pc-x" type="button" aria-label="Remove sample-1.jpg"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq pink" data-wm="2400x2400" role="img" aria-label="Master thumbnail with tiled watermark"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>2400 x 2400 - 1.8 MB</figcaption></figure>
 <figure><div class="ph ph-sq pink" data-wm="1200x1200" role="img" aria-label="Display thumbnail with tiled watermark"><span>[DISPLAY thumb]</span></div><figcaption class="mono"><span class="chip d">DISPLAY</span><br>1200 x 1200 - 180 KB</figcaption></figure></div>
 <p class="fn">sample-1.jpg <span class="mono">&#10003; Ready</span></p><p class="mono muted small">media/events/2026-03-14-cf/sample-1-full.webp<br>media/events/2026-03-14-cf/sample-1.webp</p><p><button class="btn btn-secondary" type="button">Download</button> <button class="btn btn-accent" type="button">Attach to selected event</button></p></div>
-<div class="pcard"><div class="pair"><figure><div class="ph ph-sq lilac" role="img" aria-label="Processing"><span>[processing...]</span></div></figure></div><p class="fn">sample-2.jpg</p><p class="mono" role="status">Processing...</p><div class="ibar"></div></div>
-<div class="pcard is-err"><div class="pair"><figure><div class="ph ph-sq" role="img" aria-label="No thumbnail, file failed"><span>[no thumbnail]</span></div></figure></div><p class="fn">notes.heic</p><p class="err" role="alert">&#9888; Could not read this file. Is it a JPG, PNG or WebP?</p><button class="btn btn-secondary" type="button">Remove</button></div>
-<div class="pcard is-err"><div class="pair"><figure><div class="ph ph-sq sky" data-wm="2400x2400" role="img" aria-label="Master thumbnail"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>6000 x 6000 - 26.4 MB</figcaption></figure>
-<figure><div class="ph ph-sq sky" data-wm="1200x1200" role="img" aria-label="Display thumbnail"><span>[DISPLAY thumb]</span></div><figcaption class="mono"><span class="chip d">DISPLAY</span><br>1200 x 1200 - 452 KB</figcaption></figure></div><p class="fn">sample-3.png</p><p class="err" role="alert">&#9888; This photo is too big to publish (over 25 MB). Please use a smaller original.</p><button class="btn btn-secondary" type="button">Remove</button></div>
+<div class="pcard"><button class="pc-x" type="button" aria-label="Remove sample-2.jpg"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq lilac" role="img" aria-label="Processing"><span>[processing...]</span></div></figure></div><p class="fn">sample-2.jpg</p><p class="mono" role="status">Processing...</p><div class="ibar"></div></div>
+<div class="pcard is-err"><button class="pc-x" type="button" aria-label="Remove notes.heic"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq" role="img" aria-label="No thumbnail, file failed"><span>[no thumbnail]</span></div></figure></div><p class="fn">notes.heic</p><p class="err" role="alert">&#9888; Could not read this file. Is it a JPG, PNG or WebP?</p></div>
+<div class="pcard is-err"><button class="pc-x" type="button" aria-label="Remove sample-3.png"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq sky" data-wm="2400x2400" role="img" aria-label="Master thumbnail"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>6000 x 6000 - 26.4 MB</figcaption></figure>
+<figure><div class="ph ph-sq sky" data-wm="1200x1200" role="img" aria-label="Display thumbnail"><span>[DISPLAY thumb]</span></div><figcaption class="mono"><span class="chip d">DISPLAY</span><br>1200 x 1200 - 452 KB</figcaption></figure></div><p class="fn">sample-3.png</p><p class="err" role="alert">&#9888; This photo is too big to publish (over 25 MB). Please use a smaller original.</p></div>
 <p><button class="btn btn-primary" type="button">Download all</button></p></div></div>
 </section>
 </main>
