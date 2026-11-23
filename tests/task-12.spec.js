@@ -3,7 +3,7 @@
 // a test on any unhandled api.github.com call, and if the token shows up anywhere except the Authorization
 // header of a request to https://api.github.com.
 const fs = require('fs');
-const { test, expect, BRANCH, API, FAKE_TOKEN, gitBlobSha } = require('./github-mock');
+const { test, expect, BRANCH, API, FAKE_TOKEN, gitBlobSha, openFold } = require('./github-mock');
 
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
 const REF_GET = `GET ${REPO}/git/ref/heads/${BRANCH}`;
@@ -34,6 +34,7 @@ test.beforeEach(async ({ page }) => {
 /** Saves the fake token and waits until it is stored. Uses Enter in the field (keyboard focus, not a
  *  mouse click) because on the phone layout a click on Save token could land mid layout shift and be lost. */
 async function saveFakeToken(page) {
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter');
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);

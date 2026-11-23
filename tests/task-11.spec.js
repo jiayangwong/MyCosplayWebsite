@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { test, expect, BRANCH, FAKE_TOKEN, saveFakeToken } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, saveFakeToken, openFold } = require('./github-mock');
 
 const TOKEN_KEY = 'puzzkezz.github.token';
 const REPO_PATH = '/repos/jiayangwong/MyCosplayWebsite';
@@ -24,6 +24,8 @@ const stored = (page) => page.evaluate((k) => localStorage.getItem(k), TOKEN_KEY
 
 test('panel layout: help, password field, buttons, not-connected state', async ({ page }) => {
   const panel = page.locator('#gh-panel');
+  await expect(page.locator('#gh-panel .fold-btn')).toHaveAttribute('aria-expanded', 'false'); // TASK-23
+  await openFold(page, 'gh');
   await expect(panel.locator('h2')).toHaveText('GitHub');
   await expect(panel).toContainText('The token stays in this browser only.');
   await panel.locator('summary').click();
@@ -57,10 +59,12 @@ test('Save stores the fake token, clears the input, shows the last 4; survives r
 });
 
 test('classic ghp_ token and empty input are refused and not stored', async ({ page }) => {
+  await openFold(page, 'gh');
   await page.fill('#gh-token', 'ghp_TESTONLY');
   await page.click('#gh-save');
   await expect(page.locator('#gh-token-error')).toHaveText(CLASSIC);
   expect(await stored(page)).toBeNull();
+  await openFold(page, 'gh');
   await page.fill('#gh-token', '   ');
   await page.click('#gh-save');
   await expect(page.locator('#gh-token-error')).toBeVisible();
@@ -73,6 +77,7 @@ test('Test connection: 200 / 401 / 404 / network abort show their messages', asy
 
   // Hold the request open, so "Testing..." stays on screen until the test has checked it.
   const check = github.hold(`GET ${REPO_PATH}`);
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await check.arrived;
   await expect(page.locator('#gh-status')).toContainText('Testing...');
@@ -82,20 +87,24 @@ test('Test connection: 200 / 401 / 404 / network abort show their messages', asy
   await expect(page.locator('#gh-status')).toHaveAttribute('data-state', 'ok');
 
   github.respond(`GET ${REPO_PATH}`, { status: 401 });
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await expect(page.locator('#gh-alert')).toHaveText(/This token is wrong or has expired\./);
   await expect(page.locator('#gh-alert')).toHaveAttribute('role', 'alert');
   await expect(page.locator('#gh-status')).toBeHidden();
 
   github.respond(`GET ${REPO_PATH}`, { status: 404 });
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await expect(page.locator('#gh-alert')).toHaveText(/This token can't see the repo\. Check that it is for jiayangwong\/MyCosplayWebsite\./);
 
   github.respond(`GET ${REPO_PATH}`, { status: 403 });
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await expect(page.locator('#gh-alert')).toHaveText(/can't see the repo/);
 
   github.respond(`GET ${REPO_PATH}`, { abort: true });
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await expect(page.locator('#gh-alert')).toHaveText(/Can't reach GitHub\. Check your internet connection\./);
 
@@ -113,6 +122,7 @@ test('Forget token removes the key and disables Publish', async ({ page }) => {
   await expect(page.locator('#publish-hint')).not.toHaveText('Add a GitHub token to publish');
   let asked = false;
   page.on('dialog', () => { asked = true; });
+  await openFold(page, 'gh');
   await page.click('#gh-forget');
   expect(asked).toBe(true);
   expect(await stored(page)).toBeNull();
@@ -128,12 +138,14 @@ test('Forget token: cancelling the confirmation keeps the token', async ({ page 
   await saveFakeToken(page);
   page.removeAllListeners('dialog');
   page.once('dialog', (d) => d.dismiss());
+  await openFold(page, 'gh');
   await page.click('#gh-forget');
   expect(await stored(page)).toBe(FAKE_TOKEN);
 });
 
 test('the token never reaches the draft or an exported events.json', async ({ page, github }) => {
   await saveFakeToken(page);
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await expect(page.locator('#gh-status')).toHaveAttribute('data-state', 'ok');
   // Make a draft (one more row than the published events, whatever data/events.json holds; BUG-8).
@@ -178,13 +190,16 @@ test('CSP allows only self + api.github.com for fetch, referrer is off', async (
 
 test('a full session leaks the token nowhere (checked by the github fixture)', async ({ page, github }) => {
   await saveFakeToken(page);
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await expect(page.locator('#gh-status')).toHaveAttribute('data-state', 'ok');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-github-ready', 'true');
   github.respond(`GET ${REPO_PATH}`, { status: 401 });
+  await openFold(page, 'gh');
   await page.click('#gh-test');
   await expect(page.locator('#gh-alert')).toBeVisible();
+  await openFold(page, 'gh');
   await page.click('#gh-forget');
   expect(github.requests.length).toBe(2);
   expect(page.url()).not.toContain(FAKE_TOKEN);

@@ -220,13 +220,13 @@ test('toBlob returning nothing shows "Too large" on that card only; the next pho
   await expect(card(page, 0)).toHaveAttribute('data-state', 'error', { timeout: 20000 });
   await expect(card(page, 0).locator('.wm-error')).toContainText('Too large for this browser. Please use a desktop browser (Chrome, Edge or Firefox).');
   await expect(card(page, 0)).toHaveClass(/is-err/);
-  await expect(card(page, 0).getByRole('button', { name: 'Remove' })).toBeVisible();
+  await expect(card(page, 0).getByRole('button', { name: 'Remove flat-2400x1600.png', exact: true })).toBeVisible(); // TASK-23: the X replaces the text button
   await expect(card(page, 0).getByRole('button', { name: 'Attach to selected event' })).toBeDisabled();
   await waitReady(page, 1);
   const display = await readOutput(page, 1, 'display');
   expect([display.width, display.height]).toEqual([800, 600]);
 
-  await card(page, 0).getByRole('button', { name: 'Remove' }).click();
+  await card(page, 0).getByRole('button', { name: 'Remove flat-2400x1600.png', exact: true }).click();
   await expect(page.locator('.wm-card')).toHaveCount(1);
 });
 

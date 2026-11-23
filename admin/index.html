@@ -48,7 +48,7 @@
     <p class="field-error" id="import-error" role="alert" hidden></p>
 
     <div class="admin-grid">
-      <div class="adm-side">
+      <div class="adm-side adm-left">
     <section class="panel gh-panel fold" id="gh-panel" aria-labelledby="gh-title">
       <div class="fold-head"><h2 id="gh-title" class="panel-title">GitHub</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="gh-body" aria-labelledby="gh-title gh-chip"><span class="fold-chip" id="gh-chip" data-s="none">Not connected</span><i aria-hidden="true">&#9662;</i></button></div>
       <div class="fold-body" id="gh-body" hidden>
@@ -89,9 +89,68 @@
         <p class="panel-hint">Newest first. Move up/down only changes the order of events on the same date.</p>
         <ol class="event-list" id="event-list"></ol>
       </section>
-
       </div>
-      <div class="adm-side">
+      <div class="adm-side adm-right">
+      <section class="panel" aria-labelledby="form-title">
+        <h2 id="form-title" class="panel-title">New event</h2>
+        <form id="event-form" novalidate>
+          <div class="field">
+            <label for="f-date">When (date)</label>
+            <input type="date" id="f-date" name="date" required aria-describedby="err-date">
+            <p class="field-error" id="err-date" hidden></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="f-short">Event short form</label>
+              <input type="text" id="f-short" name="short" maxlength="12" placeholder="CF" required aria-describedby="err-short">
+              <p class="field-error" id="err-short" hidden></p>
+            </div>
+            <div class="field field-grow">
+              <label for="f-name">Event full name</label>
+              <input type="text" id="f-name" name="name" placeholder="Comic Fiesta" required aria-describedby="err-name">
+              <p class="field-error" id="err-name" hidden></p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-venue">Venue / city (optional)</label>
+            <input type="text" id="f-venue" name="venue" placeholder="Kuala Lumpur">
+          </div>
+          <fieldset class="field">
+            <legend>Activities</legend>
+            <p class="panel-hint">One per row: cosplay characters, stage, booth, panel...</p>
+            <ol class="activity-list" id="activity-list"></ol>
+            <button type="button" class="btn btn-secondary btn-sm" id="add-activity">Add activity</button>
+            <p class="field-error" id="err-activities" hidden></p>
+          </fieldset>
+          <div class="field">
+            <label for="f-link">Social media link (for embedded video)</label>
+            <input type="url" id="f-link" name="link" placeholder="https://www.instagram.com/reel/..." aria-describedby="err-link link-help">
+            <p class="panel-hint" id="link-help">Instagram, TikTok or YouTube links become an embedded player. Other links show the preview photo and a link.</p>
+            <p class="field-error" id="err-link" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-photo">Display photo</label>
+            <input type="text" id="f-photo" name="photo" placeholder="media/events/2025-12-13-cf/cover.webp" aria-describedby="photo-help err-photo">
+            <p class="panel-hint" id="photo-help">The 1200px watermarked copy. Used on Home, Events and the Gallery tiles.</p>
+            <p class="field-error" id="err-photo" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-photo-full">Full-size photo</label>
+            <input type="text" id="f-photo-full" name="photoFull" placeholder="media/events/2025-12-13-cf/cover-full.webp" aria-describedby="photo-full-help err-photoFull">
+            <p class="panel-hint" id="photo-full-help">Optional. The full-resolution watermarked master, opened in the Gallery viewer. Needs a Display photo.</p>
+            <p class="field-error" id="err-photoFull" hidden></p>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="save-event">Save event</button>
+            <button type="button" class="btn btn-secondary" id="cancel-edit">Clear form</button>
+          </div>
+          <p class="save-status" id="save-status" role="status"></p>
+        </form>
+        <div class="preview-block">
+          <h3 class="panel-subtitle">Embed preview</h3>
+          <div id="embed-preview" class="embed-preview"></div>
+        </div>
+      </section>
     <section class="panel pub-panel fold" id="publish-panel" aria-labelledby="pub-title">
       <div class="fold-head"><h2 id="pub-title" class="panel-title">Publish</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="pub-body" aria-labelledby="pub-title pub-chip"><span class="fold-chip" id="pub-chip">Nothing pending</span><i aria-hidden="true">&#9662;</i></button></div>
       <button type="button" class="btn btn-accent pub-go" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
@@ -158,66 +217,6 @@
         </div>
       </dialog>
     </section>
-      <section class="panel" aria-labelledby="form-title">
-        <h2 id="form-title" class="panel-title">New event</h2>
-        <form id="event-form" novalidate>
-          <div class="field">
-            <label for="f-date">When (date)</label>
-            <input type="date" id="f-date" name="date" required aria-describedby="err-date">
-            <p class="field-error" id="err-date" hidden></p>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="f-short">Event short form</label>
-              <input type="text" id="f-short" name="short" maxlength="12" placeholder="CF" required aria-describedby="err-short">
-              <p class="field-error" id="err-short" hidden></p>
-            </div>
-            <div class="field field-grow">
-              <label for="f-name">Event full name</label>
-              <input type="text" id="f-name" name="name" placeholder="Comic Fiesta" required aria-describedby="err-name">
-              <p class="field-error" id="err-name" hidden></p>
-            </div>
-          </div>
-          <div class="field">
-            <label for="f-venue">Venue / city (optional)</label>
-            <input type="text" id="f-venue" name="venue" placeholder="Kuala Lumpur">
-          </div>
-          <fieldset class="field">
-            <legend>Activities</legend>
-            <p class="panel-hint">One per row: cosplay characters, stage, booth, panel...</p>
-            <ol class="activity-list" id="activity-list"></ol>
-            <button type="button" class="btn btn-secondary btn-sm" id="add-activity">Add activity</button>
-            <p class="field-error" id="err-activities" hidden></p>
-          </fieldset>
-          <div class="field">
-            <label for="f-link">Social media link (for embedded video)</label>
-            <input type="url" id="f-link" name="link" placeholder="https://www.instagram.com/reel/..." aria-describedby="err-link link-help">
-            <p class="panel-hint" id="link-help">Instagram, TikTok or YouTube links become an embedded player. Other links show the preview photo and a link.</p>
-            <p class="field-error" id="err-link" hidden></p>
-          </div>
-          <div class="field">
-            <label for="f-photo">Display photo</label>
-            <input type="text" id="f-photo" name="photo" placeholder="media/events/2025-12-13-cf/cover.webp" aria-describedby="photo-help err-photo">
-            <p class="panel-hint" id="photo-help">The 1200px watermarked copy. Used on Home, Events and the Gallery tiles.</p>
-            <p class="field-error" id="err-photo" hidden></p>
-          </div>
-          <div class="field">
-            <label for="f-photo-full">Full-size photo</label>
-            <input type="text" id="f-photo-full" name="photoFull" placeholder="media/events/2025-12-13-cf/cover-full.webp" aria-describedby="photo-full-help err-photoFull">
-            <p class="panel-hint" id="photo-full-help">Optional. The full-resolution watermarked master, opened in the Gallery viewer. Needs a Display photo.</p>
-            <p class="field-error" id="err-photoFull" hidden></p>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="save-event">Save event</button>
-            <button type="button" class="btn btn-secondary" id="cancel-edit">Clear form</button>
-          </div>
-          <p class="save-status" id="save-status" role="status"></p>
-        </form>
-        <div class="preview-block">
-          <h3 class="panel-subtitle">Embed preview</h3>
-          <div id="embed-preview" class="embed-preview"></div>
-        </div>
-      </section>
       </div>
     </div>
 
@@ -373,6 +372,15 @@
         </div>
       </div>
     </section>
+
+    <dialog class="confirm" id="wm-remove-confirm" aria-modal="true" aria-labelledby="wm-remove-title" aria-describedby="wm-remove-text">
+      <h3 id="wm-remove-title">Remove this photo?</h3>
+      <p class="panel-hint" id="wm-remove-text"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" id="wm-remove-no" autofocus>Cancel</button>
+        <button type="button" class="btn btn-primary" id="wm-remove-yes">Remove</button>
+      </div>
+    </dialog>
   </main>
 
   <script type="module" src="../js/admin/folds.js"></script>

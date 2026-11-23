@@ -1,5 +1,5 @@
 // QA exploratory checks for the admin Moments panel (TASK-21 / TASK-22): double publish, bad published file, token.
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
 const EV = `${JSON.stringify({ version: 1, events: [{ id: '2026-03-14-cf', date: '2026-03-14', short: 'CF', name: 'CF Test Con' }] }, null, 2)}\n`;
 const ok = expect.configure({ timeout: 15000 });
 test.describe.configure({ timeout: 60000 });
@@ -11,6 +11,7 @@ async function setup(page, github, moments) {
   await page.route('**/data/moments.json', (r) => r.fulfill({ contentType: 'application/json', body: moments }));
   await page.goto('admin/index.html');
   for (const f of ['manager', 'github', 'publish', 'moments']) await ok(page.locator('html')).toHaveAttribute(`data-${f}-ready`, 'true');
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter');
   await ok(page.locator('#gh-saved')).toContainText('Token saved');

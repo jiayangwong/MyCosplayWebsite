@@ -19,17 +19,23 @@ function syncGithub() {
   const chip = $('gh-chip');
   chip.textContent = GH_CHIP[state] || state;
   chip.dataset.s = state;
-  // No token or an error: open the panel so the next step is visible.
-  if (state === 'none' || state === 'err') fold(btn, true);
+  // TASK-23: collapsed on every load; it only opens by itself for an error (the user closes it again).
+  if (state === 'err') fold(btn, true);
 }
 
 function syncPublish() {
-  const btn = document.querySelector('#publish-panel .fold-btn');
   const items = $('pub-pending').querySelectorAll('li');
   const empty = items.length === 0 || (items.length === 1 && !items[0].querySelector('button') && /^No pending/.test(items[0].textContent));
   const n = empty ? 0 : items.length;
   $('pub-chip').textContent = n ? `${n} pending` : 'Nothing pending';
-  if (n) fold(btn, true);
+  // A new pending change only updates the chip. Publish opens for progress or a result (RESULT_IDS below).
+}
+
+const RESULT_IDS = ['pub-progress', 'pub-ok', 'pub-cancel', 'pub-err', 'pub-stale', 'pub-limit'];
+
+// Opens only when one of these boxes has just been shown (not when it is hidden or re-hidden).
+function openForResult(records) {
+  if (records.some((r) => !r.target.hidden)) fold(document.querySelector('#publish-panel .fold-btn'), true);
 }
 
 function init() {
@@ -46,6 +52,7 @@ function init() {
   watch($('gh-status'), { attributes: true, childList: true, subtree: true, attributeFilter: ['hidden', 'data-state'] }, syncGithub);
   watch($('gh-alert'), { attributes: true, childList: true, subtree: true, attributeFilter: ['hidden', 'data-state'] }, syncGithub);
   watch($('pub-pending'), { childList: true, subtree: true, characterData: true }, syncPublish);
+  RESULT_IDS.forEach((id) => watch($(id), { attributes: true, attributeFilter: ['hidden'] }, openForResult));
   syncGithub();
   syncPublish();
 }

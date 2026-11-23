@@ -365,10 +365,18 @@ const test = base.test.extend({
   }, { auto: true }],
 });
 
-/** Saves the fake token through the admin GitHub panel. */
+/** TASK-23: the GitHub and Publish panels start collapsed. Opens one (which = 'gh' | 'pub') if it is closed. */
+async function openFold(page, which) {
+  const btn = page.locator(which === 'gh' ? '#gh-panel .fold-btn' : '#publish-panel .fold-btn');
+  if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
+  await expect(btn).toHaveAttribute('aria-expanded', 'true');
+}
+
+/** Saves the fake token through the admin GitHub panel (opens the panel first). */
 async function saveFakeToken(page, token = FAKE_TOKEN) {
+  await openFold(page, 'gh');
   await page.fill('#gh-token', token);
   await page.click('#gh-save');
 }
 
-module.exports = { test, expect, FAKE_TOKEN, API, BRANCH, FakeRepo, FakeGitHub, installGitHubMock, watchTokenLeaks, gitBlobSha, saveFakeToken };
+module.exports = { test, expect, FAKE_TOKEN, API, BRANCH, FakeRepo, FakeGitHub, installGitHubMock, watchTokenLeaks, gitBlobSha, saveFakeToken, openFold };
