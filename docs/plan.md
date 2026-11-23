@@ -870,7 +870,7 @@ Admin -> Moments -> "New moment" -> year, caption, alt, link and/or "Moment phot
   - **Automated tests:** `tests/task-3.spec.js` (as edited on the branch) and a new `tests/task-19.spec.js` (desktop + phone) covering: order and placement with mocked events; no letter for Hall ???; strip labels `2026 2025 2024 ???`; the click on `???` scrolls and highlights; polaroid opens the dialog, does not flip; focus on CLOSE, Esc / CLOSE / backdrop close, focus back; `moments.json` not requested before the first open and requested once; filters with a mocked list (photo only, link only, both); bad moment skipped (`javascript:` link, `/abs.webp` photo, no photo and no link); empty list and 404 show the empty message; facade loads an iframe only after a click; speaker buttons present for both 番外 blocks; reduced-motion stack. The full suite must still pass.
 - Status: in-progress (built, waiting for review) - finished 2026-11-23 on branch `task/TASK-19-home-hall-bangai`: speaker in the pop-up title, moments validation (id, year, caption, http/https links, safe relative photo paths, duplicate ids), A8 order, one fetch per page, double-open guard, scroll lock on Home, album code shared via `bindAlbumTrigger()`. tests/task-19.spec.js + tests/task-3.spec.js pass (desktop + phone, run with system Chrome)
 - Review: approved 2026-11-23
-- QA: pending
+- QA: passed 2026-11-23 (verified again on site-v1 702876d, 2026-11-23 19:30 run: full suite 494 passed, 4 skipped)
 
 ### TASK-20: Events page - last section "Hall ??? 番外" that opens the same album
 - Linked idea(s): IDEA-12 (with IDEA-6)
@@ -884,7 +884,7 @@ Admin -> Moments -> "New moment" -> year, caption, alt, link and/or "Moment phot
   - **Automated tests (`tests/task-20.spec.js`, desktop + phone):** the section is last, the jump row ends with `???`, `#hall-bangai` deep link works, "Open album" opens the dialog with the mocked moments, Esc closes it and focus returns.
 - Status: in-progress (built, waiting for review) - built 2026-11-23 on branch `task/TASK-20-events-hall-bangai` (made from the TASK-19 branch). tests/task-20.spec.js + tests/task-5.spec.js pass (desktop + phone, run with system Chrome)
 - Review: approved 2026-11-23
-- QA:
+- QA: passed 2026-11-23 (verified again on site-v1 702876d, 2026-11-23 19:30 run: full suite 494 passed, 4 skipped)
 
 ### TASK-21: Admin - Moments panel (list, add, edit, delete, reorder) and Publish `data/moments.json`
 - Linked idea(s): IDEA-12 (with IDEA-7, IDEA-8)
@@ -898,7 +898,7 @@ Admin -> Moments -> "New moment" -> year, caption, alt, link and/or "Moment phot
   - **Automated tests (`tests/task-21.spec.js`, fake repo + fake token):** add / edit / delete / reorder with reload; validation errors; Publish commits `data/moments.json` in one tree with the expected text; stale `moments.json` stops with no `POST` / `PATCH`; publishing events only does not touch `data/moments.json`; earlier admin tests pass.
 - Status: in-progress (built, waiting for review) - built 2026-11-23 on branch `task/TASK-21-admin-moments` (made from the TASK-20 branch). New `js/admin/moments-draft.js` (draft in `puzzkezz.moments.draft` with its own base SHA, A8 text, ids, edits; reuses `validateMoment` / `sortMoments` / `cleanMoments` from js/bangai.js) and `js/admin/moments.js` (Moments panel), small additions in js/admin/publish.js. tests/task-21.spec.js passes (desktop + phone, run with system Chrome). Note: the storyboard has no Moments screen, so the panel reuses the existing event list / form layout of /admin/.
 - Review: approved 2026-11-23
-- QA:
+- QA: passed 2026-11-23 (verified again on site-v1 702876d, 2026-11-23 19:30 run: full suite 494 passed, 4 skipped)
 
 ### TASK-22: Moment photos - uploader target, Publish, unused-photo removal, link check and repo guard
 - Linked idea(s): IDEA-12 (with IDEA-9, IDEA-10, IDEA-11)
