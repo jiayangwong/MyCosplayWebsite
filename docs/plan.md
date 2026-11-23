@@ -992,6 +992,6 @@ Build order for IDEA-12: **TASK-19** (review + QA of the existing build) -> **TA
   - The full suite passes in both projects.
 - Status: built again, waiting for re-review
 - Review: approved 2026-11-24
-- QA:
+- QA: passed 2026-11-23
 
 Build order for IDEA-13: TASK-23 alone (it touches only `/admin/`; no public page changes).
