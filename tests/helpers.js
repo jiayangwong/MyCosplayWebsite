@@ -27,4 +27,15 @@ async function mockEvents(page, events) {
   }));
 }
 
-module.exports = { PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents };
+/** Replace data/moments.json (Hall ??? album) for one test. Returns a list that counts the requests. */
+async function mockMoments(page, moments, { status = 200 } = {}) {
+  const requests = [];
+  await page.route('**/data/moments.json', (route) => {
+    requests.push(route.request().url());
+    if (status !== 200) return route.fulfill({ status, body: 'not found' });
+    return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: 1, moments }) });
+  });
+  return requests;
+}
+
+module.exports = { PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments };

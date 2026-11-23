@@ -106,8 +106,8 @@ test('only the first two polaroid photos load eagerly', async ({ page }) => {
 test('Hall ??? is the last year: only its polaroid opens the album pop-up', async ({ page }) => {
   await mockEvents(page, EVENTS);
   await page.route('**/data/moments.json', (route) => route.fulfill({ json: { version: 1, moments: [
-    { year: 2025, caption: 'Funny one', photo: 'photos/x.jpg' },
-    { year: 2024, caption: 'Clip', link: 'https://www.youtube.com/watch?v=abcdefghijk' },
+    { id: 'funny-one', year: 2025, caption: 'Funny one', photo: 'photos/x.jpg' },
+    { id: 'clip', year: 2024, caption: 'Clip', link: 'https://www.youtube.com/watch?v=abcdefghijk' },
   ] } }));
   await page.goto('index.html');
   await page.locator('.tl-year', { hasText: '???' }).click();

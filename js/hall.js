@@ -242,7 +242,7 @@ export async function mountHall({ hallList, timelineSlot, summary }) {
   }
 
   hallList.append(buildYearMarker(BANGAI_YEAR));
-  hallList.append(buildBangaiStation(index));
+  hallList.append(buildBangaiStation());
 
   if (summary) {
     const years = groups.map((g) => g.year);

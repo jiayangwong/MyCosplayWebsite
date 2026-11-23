@@ -315,3 +315,47 @@
 .media-play svg { color: var(--color-pink); width: 28px; height: 28px; }
 .media-facade:hover .media-play { background: var(--color-dark-card); }
 .media-link { font-weight: 700; }
+
+/* ---------- IDEA-12: Hall ??? 番外 album pop-up (Home + Events, js/bangai.js) ---------- */
+html.bangai-open { overflow: hidden; }
+dialog.bangai-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(980px, calc(100% - 16px));
+  max-height: calc(100% - 32px);
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  border: var(--outline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pass);
+}
+dialog.bangai-modal::backdrop { background: var(--color-scrim); }
+.bm-lace { height: 14px; background: radial-gradient(circle at 12px 14px, var(--color-bg) 8px, var(--color-purple) 9px) 0 0 / 24px 14px repeat-x; }
+.bm-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); padding: var(--space-4) var(--space-4) 0; }
+.bm-titles { min-width: 0; }
+.bm-titles .eyebrow { margin: 0 0 var(--space-1); color: var(--color-purple-deep); }
+.bm-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.bm-titles h2 { margin: 0; font-size: var(--fs-h2); line-height: 1.5; letter-spacing: 1px; }
+.bm-titles h2 rt { font-size: 0.45em; }
+.bm-en { font: 900 var(--fs-h3) / 1 var(--font-heading); text-transform: uppercase; letter-spacing: 1px; }
+.bm-rom { margin: var(--space-1) 0 0; color: var(--color-purple-deep); }
+.bm-close { flex: none; }
+.bm-body { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-6); }
+.bm-intro { margin: 0; max-width: 640px; color: var(--color-text-2); }
+.bm-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.bm-chip {
+  min-height: var(--tap-min); padding: 0 var(--space-4); border: var(--outline); border-radius: 22px;
+  background: var(--color-surface); color: var(--color-ink); font: inherit; font-weight: 700; font-size: 0.8125rem; cursor: pointer;
+}
+.bm-chip[aria-pressed="true"] { background: var(--color-ink); color: var(--color-on-dark); }
+.bm-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+@media (min-width: 900px) { .bm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4) var(--space-6); } }
+.bm-item { min-width: 0; }
+.bm-item[hidden], .bm-empty[hidden], .bm-loading[hidden] { display: none; }
+.bm-item .media-play-label { overflow-wrap: anywhere; }
+.bm-cap { margin: var(--space-1) 0 0; font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); overflow-wrap: anywhere; }
+.bm-loading { margin: 0; font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-muted); }
