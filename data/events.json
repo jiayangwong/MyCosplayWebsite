@@ -1,26 +1,155 @@
 {
   "version": 1,
   "events": [
-    { "id": "2026-11-07-nikke", "date": "2026-11-07", "short": "NIKKE", "name": "Goddess of Victory: NIKKE 4th Anniversary Pop-Up", "venue": "Doko Koko, LaLaport BBCC" },
-    { "id": "2026-08-28-amg", "date": "2026-08-28", "short": "AMG", "name": "Animangaki 2026", "venue": "Mines International Exhibition & Convention Centre" },
-    { "id": "2026-05-30-nijigen", "date": "2026-05-30", "short": "Nijigen", "name": "Nijigen Expo 2026 (MITEC)", "venue": "MITEC" },
-    { "id": "2026-04-18-af", "date": "2026-04-18", "short": "AF+", "name": "Anime Fest+ 2026", "venue": "Sunway Pyramid Convention Centre" },
-    { "id": "2025-12-20-cf", "date": "2025-12-20", "short": "CF", "name": "Comic Fiesta 2025", "venue": "KLCC Convention Centre" },
-    { "id": "2025-08-22-amg", "date": "2025-08-22", "short": "AMG", "name": "AniManGaki 2025", "venue": "Mines International Exhibition & Convention Centre" },
-    { "id": "2025-07-12-nijigen", "date": "2025-07-12", "short": "Nijigen", "name": "Nijigen Expo 2025 MVEC", "venue": "Mid Valley Exhibition Centre" },
-    { "id": "2025-04-19-af", "date": "2025-04-19", "short": "AF+", "name": "Anime Fest + 2025", "venue": "IOI Mall Damansara (formerly Tropicana Gardens Mall)" },
-    { "id": "2025-02-21-nijigen", "date": "2025-02-21", "short": "Nijigen", "name": "Nijigen Expo 2025 MIECC", "venue": "Mines International Exhibition & Convention Centre (MIECC)" },
-    { "id": "2024-12-21-cf", "date": "2024-12-21", "short": "CF", "name": "Comic Fiesta 2024", "venue": "Kuala Lumpur Convention Centre" },
-    { "id": "2024-10-25-con-nichiwa", "date": "2024-10-25", "short": "Con-nichiwa", "name": "Con-nichiwa @ Sunway Velocity", "venue": "Sunway Velocity Mall" },
-    { "id": "2024-09-14-cos-mic", "date": "2024-09-14", "short": "Cos-mic", "name": "Cos-Mic 2024", "venue": "Sunway Pyramid Convention Center" },
-    { "id": "2024-08-23-amg", "date": "2024-08-23", "short": "AMG", "name": "AniManGaki 2024", "venue": "Mines International Exhibition and Convention Centre" },
-    { "id": "2024-08-16-acg-matsuri", "date": "2024-08-16", "short": "ACG Matsuri", "name": "ACG Matsuri 2024", "venue": "LaLaport Bukit Bintang City Centre" },
-    { "id": "2024-07-27-bon-odori", "date": "2024-07-27", "short": "Bon Odori", "name": "Bon Odori Festival 2024 (LaLaport BBCC)", "venue": "LaLaport BBCC, Central Rooftop Garden" },
-    { "id": "2024-07-13-nijigen", "date": "2024-07-13", "short": "Nijigen", "name": "Nijigen Expo 2024 MVEC", "venue": "Mid Valley Exhibition Centre" },
-    { "id": "2024-04-26-af", "date": "2024-04-26", "short": "AF+", "name": "Anime Fest+ 2024", "venue": "Tropicana Gardens Mall" },
-    { "id": "2023-12-23-cf", "date": "2023-12-23", "short": "CF", "name": "Comic Fiesta 2023", "venue": "KLCC Convention Centre" },
-    { "id": "2023-08-25-amg", "date": "2023-08-25", "short": "AMG", "name": "AniManGaki 2023", "venue": "Mines International Exhibition & Convention Centre (MIECC)" },
-    { "id": "2023-07-22-bon-odori", "date": "2023-07-22", "short": "Bon Odori", "name": "Bon Odori 2023", "venue": "Kompleks Sukan Panasonic, Shah Alam" },
-    { "id": "2023-04-29-af", "date": "2023-04-29", "short": "AF+", "name": "Anime Fest+", "venue": "Tropicana Gardens Mall" }
+    {
+      "id": "2026-11-07-nikke",
+      "date": "2026-11-07",
+      "short": "NIKKE",
+      "name": "Goddess of Victory: NIKKE 4th Anniversary Pop-Up",
+      "venue": "Doko Koko, LaLaport BBCC",
+      "activities": [
+        "cosplay as Dorothy"
+      ]
+    },
+    {
+      "id": "2026-08-28-amg",
+      "date": "2026-08-28",
+      "short": "AMG",
+      "name": "Animangaki 2026",
+      "venue": "Mines International Exhibition & Convention Centre"
+    },
+    {
+      "id": "2026-05-30-nijigen",
+      "date": "2026-05-30",
+      "short": "Nijigen",
+      "name": "Nijigen Expo 2026 (MITEC)",
+      "venue": "MITEC"
+    },
+    {
+      "id": "2026-04-18-af",
+      "date": "2026-04-18",
+      "short": "AF+",
+      "name": "Anime Fest+ 2026",
+      "venue": "Sunway Pyramid Convention Centre"
+    },
+    {
+      "id": "2025-12-20-cf",
+      "date": "2025-12-20",
+      "short": "CF",
+      "name": "Comic Fiesta 2025",
+      "venue": "KLCC Convention Centre"
+    },
+    {
+      "id": "2025-08-22-amg",
+      "date": "2025-08-22",
+      "short": "AMG",
+      "name": "AniManGaki 2025",
+      "venue": "Mines International Exhibition & Convention Centre"
+    },
+    {
+      "id": "2025-07-12-nijigen",
+      "date": "2025-07-12",
+      "short": "Nijigen",
+      "name": "Nijigen Expo 2025 MVEC",
+      "venue": "Mid Valley Exhibition Centre"
+    },
+    {
+      "id": "2025-04-19-af",
+      "date": "2025-04-19",
+      "short": "AF+",
+      "name": "Anime Fest + 2025",
+      "venue": "IOI Mall Damansara (formerly Tropicana Gardens Mall)"
+    },
+    {
+      "id": "2025-02-21-nijigen",
+      "date": "2025-02-21",
+      "short": "Nijigen",
+      "name": "Nijigen Expo 2025 MIECC",
+      "venue": "Mines International Exhibition & Convention Centre (MIECC)"
+    },
+    {
+      "id": "2024-12-21-cf",
+      "date": "2024-12-21",
+      "short": "CF",
+      "name": "Comic Fiesta 2024",
+      "venue": "Kuala Lumpur Convention Centre"
+    },
+    {
+      "id": "2024-10-25-con-nichiwa",
+      "date": "2024-10-25",
+      "short": "Con-nichiwa",
+      "name": "Con-nichiwa @ Sunway Velocity",
+      "venue": "Sunway Velocity Mall"
+    },
+    {
+      "id": "2024-09-14-cos-mic",
+      "date": "2024-09-14",
+      "short": "Cos-mic",
+      "name": "Cos-Mic 2024",
+      "venue": "Sunway Pyramid Convention Center"
+    },
+    {
+      "id": "2024-08-23-amg",
+      "date": "2024-08-23",
+      "short": "AMG",
+      "name": "AniManGaki 2024",
+      "venue": "Mines International Exhibition and Convention Centre"
+    },
+    {
+      "id": "2024-08-16-acg-matsuri",
+      "date": "2024-08-16",
+      "short": "ACG Matsuri",
+      "name": "ACG Matsuri 2024",
+      "venue": "LaLaport Bukit Bintang City Centre"
+    },
+    {
+      "id": "2024-07-27-bon-odori",
+      "date": "2024-07-27",
+      "short": "Bon Odori",
+      "name": "Bon Odori Festival 2024 (LaLaport BBCC)",
+      "venue": "LaLaport BBCC, Central Rooftop Garden"
+    },
+    {
+      "id": "2024-07-13-nijigen",
+      "date": "2024-07-13",
+      "short": "Nijigen",
+      "name": "Nijigen Expo 2024 MVEC",
+      "venue": "Mid Valley Exhibition Centre"
+    },
+    {
+      "id": "2024-04-26-af",
+      "date": "2024-04-26",
+      "short": "AF+",
+      "name": "Anime Fest+ 2024",
+      "venue": "Tropicana Gardens Mall"
+    },
+    {
+      "id": "2023-12-23-cf",
+      "date": "2023-12-23",
+      "short": "CF",
+      "name": "Comic Fiesta 2023",
+      "venue": "KLCC Convention Centre"
+    },
+    {
+      "id": "2023-08-25-amg",
+      "date": "2023-08-25",
+      "short": "AMG",
+      "name": "AniManGaki 2023",
+      "venue": "Mines International Exhibition & Convention Centre (MIECC)"
+    },
+    {
+      "id": "2023-07-22-bon-odori",
+      "date": "2023-07-22",
+      "short": "Bon Odori",
+      "name": "Bon Odori 2023",
+      "venue": "Kompleks Sukan Panasonic, Shah Alam"
+    },
+    {
+      "id": "2023-04-29-af",
+      "date": "2023-04-29",
+      "short": "AF+",
+      "name": "Anime Fest+",
+      "venue": "Tropicana Gardens Mall"
+    }
   ]
 }
