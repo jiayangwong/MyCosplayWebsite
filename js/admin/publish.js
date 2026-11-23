@@ -15,7 +15,7 @@ import {
 } from './manager.js';
 import {
   pendingPairs, onPendingChange, clearPendingPairs, removePendingItem, isPipelineFile,
-  pendingSiteFiles, removePendingSiteFile, clearPendingSiteFiles,
+  pendingSiteFiles, removePendingSiteFile, clearPendingSiteFiles, pendingHooks,
 } from './pending.js';
 import {
   siteDraftReady, onSiteDraftChange, siteText, reelsText, siteChanged, reelsChanged, baseOf, setSiteBase,
@@ -691,6 +691,15 @@ function undoAttach(item) {
   const notes = gone.map(revertPair).filter(Boolean);
   showNote(notes.length ? notes[notes.length - 1] : '');
 }
+
+// TASK-23: the uploader's X button on a pending card reuses "Remove from publish" and the event's name.
+pendingHooks.undo = undoAttach;
+pendingHooks.describe = (item) => {
+  const pair = pendingPairs().find((p) => p.item === item);
+  if (!pair) return '';
+  const event = eventsOf(draftText()).find((e) => e.id === pair.eventId);
+  return event ? eventName(event) : pair.eventId;
+};
 
 function pendRow(mark, label, text) {
   const li = make('li');

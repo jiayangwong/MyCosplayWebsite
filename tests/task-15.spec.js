@@ -4,7 +4,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
 const guard = require('./wm-guard');
 
 const BIG = path.join(__dirname, 'fixtures', 'flat-2400x1600.png');
@@ -100,6 +100,7 @@ async function setup(page, github, { events }) {
   for (const flag of ['manager', 'uploader', 'github', 'publish']) {
     await expectResult(page.locator('html')).toHaveAttribute(`data-${flag}-ready`, 'true');
   }
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter'); // keyboard, not a click: no lost clicks on the phone layout
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);

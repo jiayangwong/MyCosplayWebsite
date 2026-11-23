@@ -13,6 +13,7 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-19 by the planner for IDEA-11 ("Remove from publish" can break an event photo and delete its old photo). New: TASK-16 (both protections, option (c)), open questions 19-20, and a new build-order line (TASK-16 before TASK-15). TASK-16 is **proposed, waiting for user approval**; the rest of the plan stays approved.
 - Revised: 2026-11-19 by the planner after the user wrote "TASK-16 approved, yes" (answers to questions 19, 20 and 22: yes to all). TASK-16 is **approved** and now also covers site photos (BUG-4: a portrait or reel cover link to a file that is not on GitHub). New: TASK-17 (repo guard accepts a marked file whose allowlist hash is stale, question 22 (b)). Build order: TASK-16 -> TASK-17. Questions 19, 20 and 22 moved to answered.
 - Revised: 2026-11-23 by the planner for IDEA-12 (Hall ??? 番外 bangai). New: section 7 "IDEA-12 addition" (planner assumptions A1-A9, `data/moments.json` format, TASK-19 to TASK-22, questions 23-26). Task numbers start at 19 because TASK-18 (admin layout) is already used in docs/changelog.md. TASK-19 (Home part) is **already built on branch `feature/hall-bangai` (commit 7988c22) but not reviewed, not QA-tested and its tests have never been run**. The IDEA-12 tasks are **PROPOSED and wait for the user's approval**. The rest of the plan stays approved.
+- Revised: 2026-11-24 by the planner for IDEA-13 (admin polish). New: section 8, TASK-23 (one task, four changes), planner assumptions B1-B8. Amends TASK-18 (fold behaviour and phone order). The rest of the plan is unchanged.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
@@ -921,3 +922,76 @@ Build order for IDEA-12: **TASK-19** (review + QA of the existing build) -> **TA
 24. **Where it shows (A5):** Home and the Events page, **not** the Gallery. OK, or do you want the moment photos in the Gallery too (labelled "Hall ???")?
 25. **Moment photos (A4):** one watermarked 1200px file per photo, no full-size version and no full-size viewer in the album. OK, or do you want tap-to-enlarge with a full-size master like the Gallery?
 26. **Admin (A7):** Moments in `/admin/` (TASK-21, TASK-22) are separate tasks after the Home and Events parts. Until then moments are added to `data/moments.json` by hand. Build the admin part now, later, or never?
+
+---
+
+## 8. IDEA-13 addition: Admin polish (remove X, collapsed panels, phone layout) - 2026-11-24
+
+- Source: docs/ideas.md IDEA-13 (`ready-for-planning`). One small task, TASK-23. Branch from `site-v1` (for example `task/TASK-23-admin-polish`), merged back into `site-v1`.
+- Amends TASK-18 (not in this file; see docs/changelog.md 2026-11-20 and `tests/task-18.spec.js`): GitHub no longer opens by itself on load when there is no token, Publish no longer opens by itself when changes are pending, and the one-column order changes.
+- Real files: `admin/index.html` (two `.adm-side` columns: `#gh-panel` + Events list section in the first, `#publish-panel` + Event form section in the second), `css/admin.css` (`.admin-grid` two columns from 1000px, `.event-row` grid `1fr auto`, `.event-row-actions`, fold styles), `js/admin/folds.js` (`syncGithub` / `syncPublish` auto-open rules), `js/admin/watermark.js` (`buildCard`, `setState`, `removeItem`; today a "Remove" button only shows on error / too-big cards), `js/admin/manager.js` (event rows), `js/admin/moments.js` (moment rows, same `.event-row` classes), `js/admin/publish.js` / `js/admin/pending.js` ("Remove from publish" and `revertPhoto`, TASK-16).
+
+### Planner assumptions (defaults for IDEA-13's open questions; the user can veto any)
+- **B1 - X on an attached, pending photo:** X asks first ("Remove <file name>? It is attached to <short> <year> and will be taken out of the publish.") and then does exactly what "Remove from publish" does for that pair (TASK-16: the event's photo fields go back to the published photo, or are cleared when there is none, only if the event still uses that pair). Cancel leaves everything as it was. No second copy of the revert logic.
+- **B2 - X on other cards:** a card that is processing, ready, errored, too big, downloaded, or attached but already published (no longer pending) is removed at once, with no question. Removing a card never changes a published file or an event that does not use its pending pair. A card removed while processing is dropped and its result is thrown away.
+- **B3 - Scope of X:** the photo cards in the main uploader list (`#wm-previews`). The Site photo and Moment photo blocks (one card each, replaced by the next upload, with Clear portrait / Clear cover) are not changed.
+- **B4 - X replaces the old "Remove" button** on error / too-big cards, so each card has one remove control.
+- **B5 - Collapsed on load:** both fold panels start collapsed on **every** load, whatever the token, error or pending state. The open/closed choice is not remembered across reloads. The status chips always show the state ("Not connected", "Token saved", "Connected", "Error"; "N pending" / "Nothing pending"). The Publish button and its hint stay visible when collapsed (as in TASK-18).
+- **B6 - Opening by themselves after load:** GitHub opens when an error shows (`#gh-alert` shown or `#gh-status` `data-state="err"`, for example a refused token or a failed Test connection). Publish opens when a publish starts (progress), and on its result: success, cancelled, error, stale, or the over-20-photos limit message. A new pending change alone does **not** open Publish (the chip counts it). Once open, a panel only closes when the user closes it.
+- **B7 - "Phone":** the row layout change applies below 768px wide (the existing admin phone breakpoint). The new panel order applies to the one-column layout (below 1000px, where the panels stack today). From 1000px the two-column desktop layout and order are unchanged.
+- **B8 - Moments rows** get the same phone row layout as Events rows (they share `.event-row`).
+
+### TASK-23: Admin polish - remove X on uploaded images, collapsed GitHub/Publish panels, phone row layout and panel order
+- Linked idea(s): IDEA-13 (with IDEA-7, IDEA-8, IDEA-11, IDEA-12)
+- Plan: approved by user 2026-11-24 (relayed by the main session, quoting the user's chat message "I approved, just continue and merge and deploy, run all steps"; the planner did not see the message itself)
+- Depends on: TASK-7, TASK-16, TASK-18, TASK-21 (all built)
+- Acceptance criteria:
+  - **(1) Remove X on uploaded images (media uploader)**
+    - Every photo card in `#wm-previews` has an X button in its top-right corner from the moment the card appears (processing, ready, error, too big). It is a real `<button type="button">` with `aria-label="Remove <original file name>"`, a visible "×" (`aria-hidden="true"`), a tap target of at least 44 x 44 px, a visible focus style, and style-guide tokens only.
+    - The old text "Remove" button is gone (B4); no card has two remove controls.
+    - Pressing X on a card that is not part of a pending pair removes the card at once (B2): the card leaves the list, its object URLs are released, "Download all" is disabled when no ready card is left, and the other cards' suggested names are re-checked (`-2`, `-3` may drop back).
+    - Pressing X on a card whose pair is pending in the Publish panel asks first (B1). Cancel: nothing changes. Confirm: the card is removed, the pair leaves the pending list, and the event's photo fields change exactly as with "Remove from publish" (TASK-16: put back the published photo, or clear; the `#pub-note` line shows the same note). The draft is saved and an open edit form shows the new values.
+    - A card removed while it is still processing never shows up again and never adds a pending pair.
+    - After the last unpublished, undownloaded card is removed, the `beforeunload` warning stops (no pending files left).
+    - The Site photo and Moment photo cards are unchanged (B3).
+  - **(2) GitHub and Publish panels collapsed on every load, user-toggled**
+    - On every page load both `#gh-panel .fold-btn` and `#publish-panel .fold-btn` have `aria-expanded="false"`, and `#gh-body` and `#pub-body` are hidden. This holds with no token, with a saved token, with a draft that has pending changes, and after a reload.
+    - The chips still show the state on load: `#gh-chip` "Not connected" (no token) or "Token saved" (token saved); `#pub-chip` "Nothing pending" or "<n> pending".
+    - `#publish-btn` and `#publish-hint` stay visible while collapsed.
+    - Clicking the title row or the fold button, or pressing Enter / Space on the button, toggles the panel (as in TASK-18).
+    - Saving an event (a new pending change) updates `#pub-chip` but does **not** open Publish.
+    - Publish opens by itself (B6) when a publish starts (`#pub-progress` shown), and when `#pub-ok`, `#pub-cancel`, `#pub-err`, `#pub-stale` or `#pub-limit` is shown. GitHub opens by itself when `#gh-alert` is shown or the status turns to an error (for example a classic `ghp_` token refused, or Test connection returning 401).
+    - Nothing in the token, publish, stale, removal-dialog or link-check logic changes. All element ids stay the same.
+  - **(3) Phone row layout: buttons below the name (Events and Moments)**
+    - Below 768px wide, each row in `#event-list` and `#moment-list` shows the title and meta line on the full row width, and the 4 buttons (Edit, ↑, ↓, Delete) on their own line below them, in that order, left-aligned, each still at least 44 x 44 px.
+    - At 360px and at Pixel 7 width, the title of a real event (for example "Comic Fiesta", and the longest name in `data/events.json`) is not broken in the middle of a word: its box is as wide as the row's content box (within 2px), and the title sits fully above the first button.
+    - From 768px up, rows look as today (name left, buttons right).
+    - No horizontal scroll on the admin page at 360px, 412px or 1280px.
+  - **(4) Phone panel order**
+    - Below 1000px wide (one column), the order from top to bottom is: GitHub panel, Events list, Event form, Publish panel. The DOM order, keyboard Tab order and visual order match (the change must not use only CSS `order` that leaves Tab going the old way).
+    - From 1000px up the desktop layout is unchanged: GitHub over Events in the left column, Publish over the Event form in the right column, both columns starting at the same height.
+    - The Moments panel and the media uploader stay below these four panels, in their current order.
+  - Matches the style guide (tokens only, no new colours). The approved storyboard has no screen for these changes; the programmer follows the existing admin look and records this in the task notes.
+- Files (expected): `js/admin/watermark.js`, `js/admin/folds.js`, `css/admin.css`, `admin/index.html` (only if needed for the order), `js/admin/publish.js` or `js/admin/pending.js` (only to expose the existing "Remove from publish" action to the X button), `tests/task-23.spec.js`, plus the existing tests listed below.
+- **Automated tests (`tests/task-23.spec.js`, `desktop` 1280x800 and `phone` Pixel 7 projects; fake repo + fake token via `tests/github-mock.js`):**
+  - X: upload two fixtures, both cards show an X with the right `aria-label`; X on the first removes only that card; X on an errored card (stubbed `toBlob` -> `null`) removes it; no card has a "Remove" text button.
+  - X with a pending pair: attach to an event with a published photo, X, Cancel -> nothing changes; X, confirm -> card gone, pair gone from `#pub-pending`, the event's `#f-photo` / `#f-photo-full` back to the published paths, the TASK-16 note shows. Same on a new event -> fields cleared.
+  - X during processing: remove a card before it is ready; no pending pair, no console error.
+  - Folds on load: with no token, with a saved fake token, and with a saved draft that has a pending change, both fold buttons are `aria-expanded="false"` and `#gh-token` / `#pub-pending` are hidden; the chips show the right text; `#publish-btn` is visible.
+  - Toggle by title and by keyboard; reload -> collapsed again.
+  - Save an event -> `#pub-chip` "1 pending", Publish still collapsed.
+  - Auto-open: a classic `ghp_TESTONLY` token -> GitHub opens; Publish with the mock -> Publish opens on progress and shows the success box; a stale mock -> Publish opens with `#pub-stale`.
+  - Phone only: for the first `#event-list` row and a `#moment-list` row (mocked moments), the title's width is within 2px of the row's content width, every action button's top is below the title's bottom, the 4 buttons are in the order Edit, ↑, ↓, Delete; also at a 360px viewport.
+  - Desktop only: the action buttons sit to the right of the title on the same row (as today).
+  - Order: phone -> `y` of GitHub < Events < Event form < Publish, and pressing Tab from the last Events row button reaches the Event form before the Publish button; desktop -> TASK-18's two-column positions still hold.
+  - No horizontal scroll on phone and desktop.
+- **Existing tests to update in this task (expectations only, not weakened):**
+  - `tests/task-18.spec.js`: "GitHub folds: open ... without a token" now expects `aria-expanded="false"` on load and opens on click; "Publish folds ... opens the list" now expects the panel to stay collapsed after Save (chip "1 pending"), then opens on click to check `#pub-pending`; the layout test's phone branch now expects Event form above Publish (`pub.y > form.y`) instead of `form.y > pub.y`.
+  - Any test that types into `#gh-token` or clicks inside `#pub-body` (for example "Remove from publish" buttons in `#pub-pending`) without opening the panel first: the shared helper `saveFakeToken` in `tests/github-mock.js` (and any similar helper in `tests/helpers.js`) opens the GitHub panel first when it is collapsed; specs that read or click `#pub-pending` items open the Publish panel first. Likely affected: `tests/task-11.spec.js`, `task-12`, `task-13`, `task-14`, `task-16`, `task-21`, `task-22` (the programmer confirms with a search for `#gh-token`, `gh-save`, `pub-pending`, `pend-remove`).
+  - `tests/task-7.spec.js`: any check that looks for the "Remove" text button on error / too-big cards now uses the X (`aria-label` starting "Remove ").
+  - The full suite passes in both projects.
+- Status: built again, waiting for re-review
+- Review: approved 2026-11-24
+- QA: passed 2026-11-23
+
+Build order for IDEA-13: TASK-23 alone (it touches only `/admin/`; no public page changes).

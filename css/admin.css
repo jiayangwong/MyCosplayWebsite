@@ -82,6 +82,12 @@
 .event-row-meta { font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
 .event-row-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
 
+/* TASK-23: on phones the 4 buttons sit on their own line below the name and meta, left-aligned. */
+@media (max-width: 767px) {
+  .event-row { grid-template-columns: minmax(0, 1fr); }
+  .event-row-actions { justify-content: flex-start; }
+}
+
 .icon-btn {
   min-width: var(--tap-min);
   min-height: var(--tap-min);
@@ -183,6 +189,30 @@
   background: var(--color-surface);
 }
 .wm-card.is-err, .sp-card.is-err { border-color: var(--color-error); }
+
+/* TASK-23: X remove button in the top-right corner of every uploader card. */
+.wm-card { position: relative; }
+.wm-card > .wm-pair, .wm-card > .wm-name { margin-right: var(--tap-min); }
+.wm-x {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-btn);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: 700 var(--fs-h3)/1 var(--font-body);
+  cursor: pointer;
+}
+.wm-x:hover:not(:disabled) { background: var(--ph-lilac); }
+.wm-x:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.wm-x:disabled { border-color: var(--color-line); color: var(--color-muted); cursor: not-allowed; }
 
 .wm-pair { display: flex; flex-wrap: wrap; gap: var(--space-4); }
 .wm-pair[hidden] { display: none; }
@@ -359,6 +389,16 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 /* Layout from the approved storyboard: GitHub + Events on the left, Publish + Event form on the right.
    GitHub and Publish fold; the Publish button and its hint always stay visible. */
 .adm-side { display: grid; gap: var(--space-6); align-content: start; min-width: 0; }
+/* TASK-23: DOM order is GitHub, Events, Event form, Publish. Under 1000px the two wrappers vanish so the one
+   column follows the DOM (and Tab) order. From 1000px: left = GitHub + Events, right = Publish over Event form. */
+@media (max-width: 999px) {
+  .adm-side { display: contents; }
+}
+@media (min-width: 1000px) {
+  /* On desktop Publish is shown above the form via order: -1, but Tab reaches the form first (DOM order).
+     Accepted trade-off, not a bug. */
+  .adm-right > #publish-panel { order: -1; }
+}
 .adm-side .panel { margin: 0; max-width: none; }
 .fold-head { display: flex; align-items: center; gap: 10px; min-height: var(--tap-min, 44px); cursor: pointer; }
 .fold-head .panel-title { flex: 1; margin: 0; }

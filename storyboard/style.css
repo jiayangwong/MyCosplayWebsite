@@ -223,10 +223,17 @@ a { color: var(--color-purple-deep); }
 .help { background: var(--ph-sky); border: var(--outline); border-radius: var(--radius-card); padding: var(--space-3) var(--space-4); }
 .bar { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-4) 0; }
 .adm-grid, .up-grid { display: grid; gap: var(--space-8); }
-@media (min-width: 900px) { .adm-grid, .up-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 900px) { .up-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { .adm-grid { grid-template-columns: 1fr 1fr; } .adm-right .pub-first { order: -1; } } /* TASK-23: one column below 1000px = GitHub, Events, Event form, Publish */
 .adm-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-.adm-row { display: grid; grid-template-columns: auto auto 1fr; gap: 4px 12px; align-items: center; background: var(--color-surface); border: var(--outline); border-radius: var(--radius-btn); padding: 8px 12px; }
+.adm-row { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; background: var(--color-surface); border: var(--outline); border-radius: var(--radius-btn); padding: 8px 12px; }
+.adm-row > span:nth-of-type(2) { grid-column: 1 / -1; } /* TASK-23 phone: name full width */
 .adm-row .acts { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
+@media (min-width: 768px) { .adm-row { grid-template-columns: auto auto 1fr auto; } .adm-row > span:nth-of-type(2) { grid-column: auto; } .adm-row .acts { grid-column: auto; } }
+.wrap-mom { margin-top: var(--space-8); }
+.pcard { position: relative; }
+.pc-x { position: absolute; top: 4px; right: 4px; z-index: 3; width: 44px; height: 44px; display: grid; place-items: center; background: var(--color-surface); color: var(--color-ink); border: var(--outline); border-radius: var(--radius-btn); font: 900 22px/1 var(--font-body); cursor: pointer; }
+.pc-x:focus-visible { outline: 3px solid var(--color-purple-deep); outline-offset: 2px; }
 .adm-row .btn { min-height: 44px; font-size: 12px; }
 .adm-form { background: var(--color-surface); border: var(--outline); border-radius: var(--radius-card); padding: var(--space-4); }
 label { display: block; font: 700 12px var(--font-mono); text-transform: uppercase; margin-bottom: var(--space-3); }

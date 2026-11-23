@@ -3,7 +3,7 @@
 // any unhandled api.github.com call, an unreleased hold() or a leaked token fails the test.
 const fs = require('fs');
 const path = require('path');
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, gitBlobSha } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, gitBlobSha, openFold } = require('./github-mock');
 
 const BIG = path.join(__dirname, 'fixtures', 'flat-2400x1600.png');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -44,6 +44,7 @@ async function setup(page, github, { events, files = {}, truncated = false }) {
   for (const flag of ['manager', 'uploader', 'github', 'publish']) {
     await expectResult(page.locator('html')).toHaveAttribute(`data-${flag}-ready`, 'true');
   }
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter'); // keyboard, not a click: no lost clicks on the phone layout
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
@@ -473,6 +474,7 @@ test('a pair whose event was deleted is dropped from the publish list and not up
 test('"Remove from publish" takes a pair out of the list', async ({ page, github }) => {
   await setup(page, github, { events: [ev(X), ev(Y)] });
   await attach(page, X);
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-pending .pend-pair')).toHaveCount(0);
   expect(await pendingPairs(page)).toEqual([]);
@@ -501,6 +503,7 @@ test('21 pending photos -> "Publish at most 20 photos at a time" and the button 
   await page.evaluate(() => document.getElementById('publish-btn').click()); // a forced click sends nothing
   await expect(page.locator('#pub-err')).toBeHidden();
 
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').first().press('Enter');
   await expectResult(page.locator('#pub-pending .pend-pair')).toHaveCount(20);
   await expect(page.locator('#pub-limit')).toBeHidden();

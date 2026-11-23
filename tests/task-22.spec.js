@@ -5,7 +5,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
 const guard = require('./wm-guard');
 
 const BIG = path.join(__dirname, 'fixtures', 'flat-2400x1600.png');
@@ -67,6 +67,7 @@ async function setup(page, github) {
   await page.route('**/data/moments.json', (route) => route.fulfill({ contentType: 'application/json', body: MOMENTS_TEXT }));
   await page.addInitScript(PAGE_HELPERS);
   await open(page);
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter');
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
@@ -321,6 +322,7 @@ test('"Remove from publish" on a moment photo puts back the published photo, or 
   await editMoment(page, '2025-a');
   await upload(page, SMALL);
   await use(page);
+  await openFold(page, 'pub');
   await page.getByRole('button', { name: 'Remove media/moments/2025-a-2.webp from publish', exact: true }).press('Enter');
   await expect(page.locator('#pub-note')).toHaveText('Photo for moment 2025-a set back to the published photo.');
   expect((await draftMoment(page, '2025-a')).photo).toBe(OLD);
@@ -331,6 +333,7 @@ test('"Remove from publish" on a moment photo puts back the published photo, or 
   await newMomentForm(page, { year: 2026, caption: 'With link', link: 'https://example.com/l' });
   await upload(page, SMALL);
   await use(page);
+  await openFold(page, 'pub');
   await page.getByRole('button', { name: 'Remove media/moments/2026-with-link.webp from publish', exact: true }).press('Enter');
   await expect(page.locator('#pub-note')).toHaveText('Photo for moment 2026-with-link removed (it has no published photo).');
   expect(await draftMoment(page, '2026-with-link')).toEqual({ id: '2026-with-link', year: 2026, caption: 'With link', link: 'https://example.com/l' });
@@ -339,6 +342,7 @@ test('"Remove from publish" on a moment photo puts back the published photo, or 
   await newMomentForm(page, { year: 2026, caption: 'Photo only' });
   await upload(page, SMALL);
   await use(page);
+  await openFold(page, 'pub');
   await page.getByRole('button', { name: 'Remove media/moments/2026-photo-only.webp from publish', exact: true }).press('Enter');
   await publish(page);
   await expectResult(page.locator('#pub-err-text')).toHaveText("Moment 2026-photo-only can't be published: needs a photo or a link.");

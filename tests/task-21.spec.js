@@ -3,7 +3,7 @@
 // api.github.com call, an unreleased hold() or a leaked token fails the test.
 const fs = require('fs');
 const path = require('path');
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
 
 const ROOT = path.join(__dirname, '..');
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
@@ -46,6 +46,7 @@ async function setup(page, github, { moments = MOMENTS_TEXT, token = true } = {}
   await page.route('**/data/moments.json', (route) => route.fulfill({ contentType: 'application/json', body: moments }));
   await open(page);
   if (!token) return;
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter');
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);

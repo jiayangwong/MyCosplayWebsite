@@ -4,7 +4,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
 const guard = require('./wm-guard');
 
 const ROOT = path.join(__dirname, '..');
@@ -49,6 +49,7 @@ async function setup(page, github) {
   for (const flag of ['manager', 'uploader', 'github', 'publish', 'site-photos']) {
     await expectResult(page.locator('html')).toHaveAttribute(`data-${flag}-ready`, 'true');
   }
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter'); // keyboard: no lost clicks on the phone layout
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
@@ -204,6 +205,7 @@ test('Reel cover す: 1080x1920 -> 675x1200, sugoi thumb set, no other part of d
   await expect(page.locator('#pub-pending')).not.toContainText('data/site.json');
 
   // Remove from publish: the file goes and the cover goes back to the published value ("").
+  await openFold(page, 'pub');
   await page.getByRole('button', { name: 'Remove media/reels/sugoi.webp from publish' }).press('Enter');
   await expect(page.locator('#pub-pending')).toHaveText('No pending changes.');
   expect((await siteDraft(page)).thumbs.sugoi).toBe('');

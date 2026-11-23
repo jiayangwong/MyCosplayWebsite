@@ -4,7 +4,7 @@
 // or a leaked token fails the test. Buttons are pressed with the keyboard (no lost clicks on the phone layout).
 const fs = require('fs');
 const path = require('path');
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
 
 const ROOT = path.join(__dirname, '..');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -63,6 +63,7 @@ async function setup(page, github, { events = [ev(X), ev(Y)], files = {}, trunca
   page.on('dialog', (d) => d.accept()); // window.confirm of "Delete event", and the leave-page prompt on reload
   await page.goto('admin/index.html');
   await ready(page);
+  await openFold(page, 'gh');
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter');
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
@@ -184,6 +185,7 @@ test('IDEA-11: Remove from publish sets X back to its published photo; the next 
   await expectResult(page.locator('#pub-pending')).toContainText(`- ${OLD.photo} (no event uses it)`);
   await expect(page.locator('#pub-note')).toBeHidden();
 
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
   await expect(page.locator('#pub-note')).toHaveAttribute('role', 'status');
@@ -212,6 +214,7 @@ test('new event (not published): Remove from publish clears both fields and says
   await setup(page, github);
   await importDraft(page, [ev(X), ev(Y), ev(Z)]);
   await attach(page, Z);
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-note')).toHaveText('Photo for ZZ 2024 removed from the event (it has no published photo).');
   const z = await draftEvent(page, Z);
@@ -234,6 +237,7 @@ test('changed meanwhile: a typed path after the attach is kept, no note', async 
   expect((await draftEvent(page, X)).photo).toBe(typed);
   // The pair stays listed (its full-size file is still used).
   await expectResult(page.locator('#pub-pending .pend-remove')).toHaveCount(1);
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-pending .pend-pair')).toHaveCount(0);
   const x = await draftEvent(page, X);
@@ -253,6 +257,7 @@ test('form open: Remove from publish updates the open form\'s photo fields and p
   await page.route('**/media/events/**', (route) => route.fulfill({ contentType: 'image/png', body: png }));
   await attach(page, X); // leaves X open in the form
   await expect(page.locator('#embed-preview img')).toHaveAttribute('src', /flat-800x600\.webp$/);
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#f-photo')).toHaveValue(OLD.photo);
   await expect(page.locator('#f-photo-full')).toHaveValue(OLD.photoFull);
@@ -268,6 +273,7 @@ test('BUG-5: Remove from publish on a published SAMPLE event puts back the "Samp
   await expect(row(page, X)).toContainText('SAMPLE');
   await attach(page, X);
   await expectResult(row(page, X)).not.toContainText('SAMPLE'); // attaching drops the tag
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
   expect(await draftEvent(page, X)).toEqual(ev(X, { ...OLD, sample: true }));
@@ -282,6 +288,7 @@ test('BUG-5: Remove from publish on a published SAMPLE event puts back the "Samp
 test('BUG-5: a published event with no photo gets its "Sample" tag back when the photo is removed', async ({ page, github }) => {
   await setup(page, github, { events: [ev(X, { sample: true }), ev(Y)] });
   await attach(page, X);
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 removed from the event (it has no published photo).');
   expect(await draftEvent(page, X)).toEqual(ev(X, { sample: true }));
@@ -299,6 +306,7 @@ test('BUG-6: an unsaved typed path in the open form is kept; the draft is still 
   await expect(page.locator('#f-photo-full')).toHaveValue(pairFull);
   const typed = `media/events/${X}/typed.webp`;
   await page.fill('#f-photo', typed); // not saved
+  await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
   expect(await draftEvent(page, X)).toMatchObject(OLD);

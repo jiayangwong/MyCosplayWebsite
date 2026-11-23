@@ -1,6 +1,6 @@
 // TASK-18: /admin/ layout from the approved storyboard (v3). GitHub + Events on the left, Publish + Event form
 // on the right; GitHub and Publish fold; the Publish button and its hint are always visible.
-const { test, expect, saveFakeToken } = require('./github-mock');
+const { test, expect, saveFakeToken, openFold } = require('./github-mock');
 
 test.beforeEach(async ({ page }) => {
   await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort());
@@ -16,20 +16,24 @@ test('two columns on desktop: GitHub over Events, Publish over Event form; one c
   const gh = await box(page.locator('#gh-panel')), ev = await box(page.locator('#list-title'));
   const pub = await box(page.locator('#publish-panel')), form = await box(page.locator('#form-title'));
   expect(ev.y).toBeGreaterThan(gh.y);       // Events below GitHub
-  expect(form.y).toBeGreaterThan(pub.y);    // Event form below Publish
   if (info.project.name === 'desktop') {
+    expect(form.y).toBeGreaterThan(pub.y);  // Event form below Publish (desktop only; phones: Publish is last)
     expect(pub.x).toBeGreaterThan(gh.x + gh.width - 1); // Publish column is to the right
     expect(Math.abs(gh.y - pub.y)).toBeLessThan(4);     // both columns start at the same height
   } else {
     expect(Math.abs(pub.x - gh.x)).toBeLessThan(4);     // stacked
-    expect(pub.y).toBeGreaterThan(ev.y);                // right column comes after the left one
+    expect(form.y).toBeGreaterThan(ev.y);               // TASK-23: one column: GitHub, Events, Event form ...
+    expect(pub.y).toBeGreaterThan(form.y);              // ... then Publish
   }
 });
 
-test('GitHub folds: open and chip "Not connected" without a token; chip follows the state; toggles by title or arrow', async ({ page }) => {
+test('GitHub folds: collapsed on load with chip "Not connected" (no token); chip follows the state; toggles by title or arrow', async ({ page }) => {
   const btn = page.locator('#gh-panel .fold-btn');
   await expect(page.locator('#gh-title')).toHaveText('GitHub');
   await expect(page.locator('#gh-chip')).toHaveText('Not connected');
+  await expect(btn).toHaveAttribute('aria-expanded', 'false'); // TASK-23: collapsed on every load
+  await expect(page.locator('#gh-token')).toBeHidden();
+  await btn.click();
   await expect(btn).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#gh-token')).toBeVisible();
   await btn.click();
@@ -41,7 +45,7 @@ test('GitHub folds: open and chip "Not connected" without a token; chip follows 
   await expect(page.locator('#gh-chip')).toHaveText('Token saved');
 });
 
-test('Publish folds, but the button and its hint stay visible; chip counts pending changes and opens the list', async ({ page, github }) => {
+test('Publish folds, but the button and its hint stay visible; chip counts pending changes; Save does not open it, a click does', async ({ page, github }) => {
   const btn = page.locator('#publish-panel .fold-btn');
   await expect(btn).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('#publish-btn')).toBeVisible();
@@ -53,7 +57,9 @@ test('Publish folds, but the button and its hint stay visible; chip counts pendi
   await page.fill('#f-name', 'Comic Fiesta');
   await page.click('#save-event');
   await expect(page.locator('#pub-chip')).toHaveText('1 pending');
-  await expect(btn).toHaveAttribute('aria-expanded', 'true');
+  await expect(btn).toHaveAttribute('aria-expanded', 'false'); // TASK-23: a pending change alone does not open it
+  await expect(page.locator('#pub-pending')).toBeHidden();
+  await openFold(page, 'pub');
   await expect(page.locator('#pub-pending')).toContainText('data/events.json');
   expect(github.calls()).toEqual([]);
 });

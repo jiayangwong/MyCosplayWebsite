@@ -25,6 +25,18 @@ function changed() {
   listeners.forEach((fn) => fn());
 }
 
+/**
+ * Set by publish.js (TASK-23): `undo(item)` = the "Remove from publish" action for a card's pair, and
+ * `describe(item)` = "<short> <year>" of the event the pair is attached to. The uploader's X button uses them,
+ * so the revert logic exists only once.
+ */
+export const pendingHooks = { undo: null, describe: null };
+
+/** True while a card's pair is waiting in the Publish list. */
+export function isPendingItem(item) {
+  return pairs.some((p) => p.item === item);
+}
+
 /** Calls `fn` whenever the pending list changes (add, remove, clear). */
 export function onPendingChange(fn) {
   listeners.add(fn);

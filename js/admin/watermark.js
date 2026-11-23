@@ -6,7 +6,7 @@
 import { SITE } from '../site-config.js';
 import { slugify } from '../events-data.js';
 import { onEventChange, attachPhoto, usedPhotoPaths, isEditingSavedEvent } from './manager.js';
-import { addPendingPair, removePendingItem, pendingPaths, markPipelineFile } from './pending.js';
+import { addPendingPair, removePendingItem, pendingPaths, markPipelineFile, isPendingItem, onPendingChange, pendingHooks } from './pending.js';
 import { addWatermarkMarker } from './wm-marker.js';
 
 /** Watermark density: f = round(shorter side / WM_DIVISOR). 80 = "2x" (user decision 2026-11-18). */
@@ -339,7 +339,6 @@ function setState(item, state, message) {
   ui.downloadDisplay.disabled = !hasFiles;
   ui.downloadMaster.disabled = !hasFiles;
   ui.attach.disabled = !hasFiles || item.tooBig;
-  ui.remove.hidden = !(state === 'error' || item.tooBig);
   ui.pair.hidden = !(item.display && state !== 'error');
   $('wm-download-all').disabled = !items.some((i) => i.state === 'ready');
 }
@@ -366,12 +365,14 @@ async function processItem(item) {
   try {
     bitmap = await createImageBitmap(item.file);
   } catch {
-    setState(item, 'error', MESSAGES.read);
+    if (items.includes(item)) setState(item, 'error', MESSAGES.read);
     return;
   }
+  if (!items.includes(item)) { bitmap.close(); return; } // removed with X while the photo was being read
   item.readable = true;
   try {
     await fontsReady;
+    if (!items.includes(item)) return;
     const opts = options();
     const m = masterSize(bitmap.width, bitmap.height);
     const d = displaySize(bitmap.width, bitmap.height);
@@ -380,6 +381,7 @@ async function processItem(item) {
     const master = await encode(bitmap, m, opts, MASTER_QUALITY);
     bitmap.close();
     bitmap = null;
+    if (!items.includes(item)) return; // removed with X while it was processing: throw the result away
     item.display = display;
     item.master = master;
     item.downloaded = { display: false, master: false };
@@ -390,6 +392,7 @@ async function processItem(item) {
     setState(item, 'ready');
   } catch (error) {
     if (!(error instanceof UploadError)) console.error(error);
+    if (!items.includes(item)) return;
     item.display = null;
     item.master = null;
     removePendingItem(item);
@@ -447,7 +450,7 @@ function rekeyUnsavedPairs(newId) {
   }
 }
 
-function removeItem(item) {
+function removeNow(item) {
   const i = items.indexOf(item);
   if (i !== -1) items.splice(i, 1);
   removePendingItem(item);
@@ -455,6 +458,63 @@ function removeItem(item) {
   item.ui.card.remove();
   assignNames();
   $('wm-download-all').disabled = !items.some((x) => x.state === 'ready');
+  // Focus must not fall to <body>: next card's X, else the previous card's X, else the file input (drop zone).
+  const target = items[i] || items[i - 1];
+  (target ? target.ui.remove : $('wm-files')).focus();
+}
+
+/** Asks before taking a photo out of the publish. Resolves true on "Remove", false on Cancel or Esc. */
+function confirmRemove(item) {
+  const dialog = $('wm-remove-confirm');
+  const who = pendingHooks.describe ? pendingHooks.describe(item) : '';
+  $('wm-remove-text').textContent = `Remove ${item.file.name}? It is attached to ${who || 'an event'} and will be taken out of the publish.`;
+  return new Promise((resolve) => {
+    const yes = $('wm-remove-yes');
+    const no = $('wm-remove-no');
+    let settled = false;
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      yes.removeEventListener('click', onYes);
+      no.removeEventListener('click', onNo);
+      dialog.removeEventListener('cancel', onCancel);
+      dialog.removeEventListener('close', onClose);
+      if (dialog.open) dialog.close();
+      resolve(ok);
+    };
+    const onYes = () => finish(true);
+    const onNo = () => finish(false);
+    const onCancel = (e) => { e.preventDefault(); finish(false); };
+    const onClose = () => finish(false);
+    yes.addEventListener('click', onYes);
+    no.addEventListener('click', onNo);
+    dialog.addEventListener('cancel', onCancel);
+    dialog.addEventListener('close', onClose);
+    dialog.showModal();
+    no.focus(); // the safe choice
+  });
+}
+
+let askingFor = null;
+/**
+ * TASK-23: the X button. A card that is not waiting to publish goes at once. A pending card asks first, then
+ * does exactly what "Remove from publish" does (the event gets its published photo back, or none).
+ */
+async function removeItem(item) {
+  if (!items.includes(item)) return;
+  if (!isPendingItem(item)) { removeNow(item); return; }
+  if (publishBusy || askingFor) return;
+  askingFor = item;
+  const ok = await confirmRemove(item);
+  askingFor = null;
+  if (!ok || !items.includes(item)) return;
+  if (isPendingItem(item) && pendingHooks.undo) pendingHooks.undo(item);
+  removeNow(item);
+}
+
+let publishBusy = false;
+function syncRemoveButtons() {
+  for (const item of items) item.ui.remove.disabled = publishBusy && isPendingItem(item);
 }
 
 function buildFigure(kind, chipText) {
@@ -497,10 +557,16 @@ function buildCard(item) {
     downloadDisplay: button('btn-secondary', 'Download display', () => download(item, 'display')),
     downloadMaster: button('btn-secondary', 'Download full size', () => download(item, 'master')),
     attach: button('btn-primary', 'Attach to selected event', () => attach(item)),
-    remove: button('btn-secondary', 'Remove', () => removeItem(item)),
+    remove: make('button', 'wm-x'),
   };
-  actions.append(ui.attach, ui.downloadDisplay, ui.downloadMaster, ui.remove);
-  card.append(pair, nameRow, bar, error, pathsBox, actions);
+  ui.remove.type = 'button';
+  ui.remove.setAttribute('aria-label', `Remove ${item.file.name}`);
+  const cross = make('span', '', '×');
+  cross.setAttribute('aria-hidden', 'true');
+  ui.remove.append(cross);
+  ui.remove.addEventListener('click', () => removeItem(item));
+  actions.append(ui.attach, ui.downloadDisplay, ui.downloadMaster);
+  card.append(ui.remove, pair, nameRow, bar, error, pathsBox, actions); // X first: Tab order = top to bottom
   return ui;
 }
 
@@ -558,6 +624,8 @@ function init() {
     addFiles(e.dataTransfer.files);
   });
 
+  window.addEventListener('publish-busy-change', (e) => { publishBusy = Boolean(e.detail && e.detail.busy); syncRemoveButtons(); });
+  onPendingChange(syncRemoveButtons);
   onEventChange((id) => {
     eventId = id;
     rekeyUnsavedPairs(id);

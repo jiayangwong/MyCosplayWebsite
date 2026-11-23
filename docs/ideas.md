@@ -432,6 +432,23 @@ Mobile:
 - References: none (user message 2026-11-23); related: IDEA-3, IDEA-5 (the し reel category "Behind the scenes"), IDEA-6, IDEA-7, IDEA-9, IDEA-10
 - Priority (user's view): nice-to-have (assumed, the user did not say)
 
+## IDEA-13: Admin polish: remove X, collapsed panels, phone layout
+- Date: 2026-11-24
+- Status: ready-for-planning
+- Summary: Four small improvements to /admin/: an X button to undo a processed image in the media uploader, GitHub and Publish panels collapsed on load, and two phone-browser layout fixes (event row buttons below the name, Publish panel moved lower).
+- Details:
+  1. Media watermark (uploader): when an image has been uploaded/processed, show an X (remove) button on its card so the user can undo it.
+  2. GitHub panel and Publish panel: collapsed by default whenever the page loads; the user toggles expand. (The user wrote "contract", meaning collapse.)
+  3. Phone browser: the event rows in the Events list do not have enough horizontal space for the event name (the name wraps one or two letters per line, see the user's screenshot). On phone, the 4 buttons (Edit, move up, move down, Delete) go BELOW the event name.
+  4. Phone browser: move the Publish panel to below the "Insert and edit events" panel (the event form). New phone order: GitHub, Events, Event form, Publish (it was GitHub, Events, Publish, Event form). Desktop order unchanged.
+- Open questions / assumptions (nobody could be asked):
+  - Request 1: if the image was already attached to an event/moment and is in the pending Publish list, does X also detach it? Assumed yes, with a confirm. (Related: IDEA-11, broken photo links after removal.)
+  - Request 2: v3 behaviour auto-opened the GitHub panel when not connected or on error, and the Publish panel on progress/results. Assumed both stay collapsed on load, but still open by themselves for a publish in progress, a result or an error, and the status chip always shows the state.
+  - Request 3: assumed the Moments rows get the same layout as the Events rows.
+  - Request 4: assumed phone only, desktop order unchanged.
+- References: user message 2026-11-24 (a phone screenshot of the wrapped event names, mentioned by the user)
+- Priority (user's view): must-have (assumed, the user did not say)
+
 ## Comparison and recommendation (for the user to decide)
 - UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
 
