@@ -160,6 +160,32 @@ export function setMomentPhoto(id, value) {
   return true;
 }
 
+export const MOMENT_MEDIA_PREFIX = 'media/moments/';
+
+/** `media/moments/<moment-id>.webp`, or `<moment-id>-2.webp`, `-3`... when that path is used or pending. */
+export function momentPhotoPath(id, taken = new Set()) {
+  const used = new Set(taken);
+  for (const m of [...state.moments, ...baseMoments()]) if (typeof m.photo === 'string') used.add(m.photo);
+  const first = `${MOMENT_MEDIA_PREFIX}${id}.webp`;
+  if (!used.has(first)) return first;
+  let n = 2;
+  while (used.has(`${MOMENT_MEDIA_PREFIX}${id}-${n}.webp`)) n += 1;
+  return `${MOMENT_MEDIA_PREFIX}${id}-${n}.webp`;
+}
+
+/**
+ * TASK-22 "Remove from publish" on a moment photo: the moment that uses `path` gets the photo of the published
+ * moment with the same id back, or none. Returns { id, restored } or null when no moment uses `path`.
+ */
+export function revertMomentPhoto(path) {
+  const moment = state.moments.find((m) => m.photo === path);
+  if (!moment) return null;
+  const published = baseMoments().find((m) => m.id === moment.id);
+  const restored = published && typeof published.photo === 'string' && published.photo ? published.photo : '';
+  setMomentPhoto(moment.id, restored);
+  return { id: moment.id, restored };
+}
+
 /** After a publish: the committed text and its blob SHA become the new base. */
 export function setMomentsBase(sha, text) {
   state.base = { sha, text };

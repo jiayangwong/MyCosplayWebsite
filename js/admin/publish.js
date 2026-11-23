@@ -23,7 +23,9 @@ import {
 } from './site-draft.js';
 import {
   momentsDraftReady, onMomentsChange, momentsText, momentsChanged, momentsBase, setMomentsBase, MOMENTS_PATH,
+  draftMoments, revertMomentPhoto, MOMENT_MEDIA_PREFIX,
 } from './moments-draft.js';
+import { validateMoment } from '../bangai.js';
 import { MAX_FILE_BYTES, formatBytes } from './watermark.js';
 import { readWatermarkMarker } from './wm-marker.js';
 
@@ -82,6 +84,12 @@ export const PUBLISH_MESSAGES = Object.freeze({
   more: (n) => ` (and ${n} more)`,
   revertedBase: (name) => `Photo for ${name} set back to the published photo.`,
   revertedNone: (name) => `Photo for ${name} removed from the event (it has no published photo).`,
+  // TASK-22: moment photos
+  linkMomentNext: 'Make the photo again with "Moment photo", or remove it from the moment, then publish. Nothing was changed.',
+  momentRevertedBase: (id) => `Photo for moment ${id} set back to the published photo.`,
+  momentRevertedNone: (id) => `Photo for moment ${id} removed (it has no published photo).`,
+  momentIncomplete: (id, errors) => `Moment ${id} can't be published: ${errors}.`,
+  momentIncompleteNext: 'Edit it in the Moments panel (add a photo or a link), or delete it, then publish. Nothing was sent to GitHub.',
 });
 
 const STEP_TEXT = [
@@ -271,12 +279,50 @@ export function isRemovable(path, used, newPaths) {
   return !used.has(path) && !newPaths.has(path);
 }
 
+/**
+ * TASK-22: true only for a moment photo Publish may remove: directly in media/moments/ (no sub-folder), ending
+ * in ".webp" (exact, lowercase), not used by any moment or event of this commit, and not a new file of it.
+ */
+export function isRemovableMoment(path, used, newPaths) {
+  if (typeof path !== 'string' || !path.startsWith(MOMENT_MEDIA_PREFIX) || !path.endsWith('.webp')) return false;
+  const name = path.slice(MOMENT_MEDIA_PREFIX.length);
+  if (!name || name === '.webp' || name.includes('/') || name.startsWith('.')) return false;
+  return !used.has(path) && !newPaths.has(path);
+}
+
+/** Every `photo` of the moments in a data/moments.json text, as written and as the site resolves it. */
+export function momentPathsIn(text) {
+  const used = new Set();
+  const data = objectOf(text);
+  for (const m of (data && Array.isArray(data.moments) ? data.moments : [])) {
+    if (!m || typeof m.photo !== 'string' || !m.photo) continue;
+    used.add(m.photo);
+    const resolved = resolvedPath(m.photo);
+    if (resolved) used.add(resolved);
+  }
+  return used;
+}
+
 /** Paths in a recursive tree listing that no event uses any more (see isRemovable). */
 export function removalCandidates(treeEntries, used, newPaths) {
   return treeEntries
     .filter((e) => e && e.type === 'blob' && isRemovable(e.path, used, newPaths))
     .map((e) => e.path)
     .sort();
+}
+
+const MOMENT_FILE_RE = /^media\/moments\/([a-z0-9][a-z0-9-]*)\.webp$/;
+
+/**
+ * TASK-22: '' if a pending moment photo may be published, else the bad path. Allowed only at
+ * media/moments/<id>.webp (or <id>-<n>.webp) of a moment in the draft that uses exactly this path.
+ */
+export function momentPathProblem(entry, moments) {
+  const path = entry && typeof entry.path === 'string' ? entry.path : '';
+  const m = MOMENT_FILE_RE.exec(path);
+  const owner = m && moments.find((x) => x.id === entry.momentId && x.photo === path);
+  if (owner && (m[1] === owner.id || new RegExp(`^${owner.id}-[0-9]+$`).test(m[1]))) return '';
+  return path || '(empty path)';
 }
 
 const PAIR_RE = /^media\/events\/([a-z0-9][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.webp$/;
@@ -400,6 +446,27 @@ export function brokenSitePhotoLinks(siteJsonText, reelsJsonText, treeEntries, t
 }
 
 /**
+ * TASK-22: the same check for the moment photos in the data/moments.json text of this commit (null = not in the
+ * commit). Every photo must be in plain form; one under media/moments/ must be on GitHub or in this publish.
+ * Order: album order of the text. Never throws: bad JSON gives [].
+ */
+export function brokenMomentPhotoLinks(momentsJsonText, treeEntries, truncated, newPaths) {
+  const blobs = blobPathsOf(treeEntries);
+  const fresh = asSet(newPaths);
+  const problems = [];
+  const data = objectOf(momentsJsonText);
+  for (const m of (data && Array.isArray(data.moments) ? data.moments : [])) {
+    if (!m || typeof m !== 'object' || typeof m.photo !== 'string' || !m.photo) continue;
+    const kind = linkProblem(m.photo, blobs, Boolean(truncated), fresh, MOMENT_MEDIA_PREFIX);
+    if (kind) {
+      const who = m.caption ? `Moment "${m.caption}" (${m.id})` : `Moment ${m.id}`;
+      problems.push({ kind, who, id: m.id, field: 'photo', value: m.photo, next: PUBLISH_MESSAGES.linkMomentNext });
+    }
+  }
+  return problems;
+}
+
+/**
  * One message for all link problems: the first one by name, then "(and N more)" where N counts the other
  * events / site photos with a problem (an event whose photo and photoFull are both missing counts once).
  */
@@ -419,6 +486,10 @@ function linkError(problems) {
 /** True while the site draft points at this file (a share image is always used: og:image). */
 function siteFileUsed(entry) {
   if (entry.target === 'share') return true;
+  if (entry.target === 'moment') {
+    if (momentPathProblem(entry, draftMoments())) return true; // kept, so prepare() refuses it before any request
+    return draftMoments().some((m) => m.photo === entry.path);
+  }
   if (sitePathProblem(entry, reelIds())) return true; // kept, so prepare() refuses it before any request
   if (entry.target === 'portrait') return draftPortrait() === entry.path;
   const m = /^media\/reels\/([^/]+)\.webp$/.exec(entry.path || '');
@@ -473,7 +544,14 @@ function limitProblem(set) {
 function expectedRemovals(text, newPaths) {
   if (!allPathsCanonical(text)) return [];
   const used = usedPathsIn(text);
+  for (const p of momentPathsIn(momentsText())) used.add(p); // a file a moment uses is never removed
   return [...usedPathsIn(baseEvents().text)].filter((p) => isRemovable(p, used, newPaths)).sort();
+}
+
+/** TASK-22: old moment photos that the moments draft no longer uses (preview, like expectedRemovals). */
+function expectedMomentRemovals(eventsText, newPaths) {
+  const used = new Set([...momentPathsIn(momentsText()), ...usedPathsIn(eventsText)]);
+  return [...momentPathsIn(momentsBase().text)].filter((p) => isRemovableMoment(p, used, newPaths)).sort();
 }
 
 /**
@@ -491,8 +569,9 @@ async function prepare() {
     if (bad) throw new PublishError('path', PUBLISH_MESSAGES.badPath(bad), PUBLISH_MESSAGES.nothingSent);
   }
   const reels = reelIds();
+  const moments = draftMoments();
   for (const entry of set.site) {
-    const bad = sitePathProblem(entry, reels);
+    const bad = entry.target === 'moment' ? momentPathProblem(entry, moments) : sitePathProblem(entry, reels);
     if (bad) throw new PublishError('path', PUBLISH_MESSAGES.badPath(bad), PUBLISH_MESSAGES.nothingSent);
   }
   for (const file of set.files) {
@@ -512,7 +591,14 @@ async function prepare() {
   const json = [];
   if (siteChanged()) json.push({ path: SITE_PATH, text: siteText(), base: baseOf(SITE_PATH) });
   if (reelsChanged()) json.push({ path: REELS_PATH, text: reelsText(), base: baseOf(REELS_PATH) });
-  if (momentsChanged()) json.push({ path: MOMENTS_PATH, text: momentsText(), base: momentsBase() }); // TASK-21
+  if (momentsChanged()) {
+    // TASK-22: a moment left with no photo and no link (for example after "Remove from publish") is not sent.
+    for (const m of moments) {
+      const errors = validateMoment(m);
+      if (errors.length) throw new PublishError('moment', PUBLISH_MESSAGES.momentIncomplete(m.id, errors.join('; ')), PUBLISH_MESSAGES.momentIncompleteNext);
+    }
+    json.push({ path: MOMENTS_PATH, text: momentsText(), base: momentsBase() }); // TASK-21
+  }
   return { text, withEvents, json, ...set };
 }
 
@@ -664,6 +750,12 @@ function render() {
     remove.setAttribute('aria-label', `Remove ${entry.path} from publish`);
     remove.addEventListener('click', () => {
       removePendingSiteFile(entry.path);
+      if (entry.target === 'moment') {
+        // TASK-22: the moment gets its published photo back (or none), like "Remove from publish" on a pair.
+        const done = revertMomentPhoto(entry.path);
+        if (done) showNote(done.restored ? PUBLISH_MESSAGES.momentRevertedBase(done.id) : PUBLISH_MESSAGES.momentRevertedNone(done.id));
+        return;
+      }
       resetToBase(entry.path); // the draft goes back to the published value, never to a missing file
     });
     li.append(paths, remove);
@@ -674,6 +766,9 @@ function render() {
   if (reelsChanged()) list.append(pendRow('~', 'changed', `${REELS_PATH} changed`));
   if (momentsChanged()) list.append(pendRow('~', 'changed', `${MOMENTS_PATH} changed`));
   for (const path of removals) list.append(pendRow('-', 'removed', `${path} (no event uses it)`));
+  if (momentsChanged()) {
+    for (const path of expectedMomentRemovals(text, newPaths)) list.append(pendRow('-', 'removed', `${path} (no moment uses it)`));
+  }
   if (!list.children.length) list.append(make('li', 'pend-empty', 'No pending changes.'));
 
   const total = $('pub-total');
@@ -862,17 +957,27 @@ async function run(token, { text, files, pairs, site, withEvents, json }) {
   const problems = [
     ...(withEvents ? brokenPhotoLinks(text, tree.entries, tree.truncated, newPaths) : []),
     ...brokenSitePhotoLinks(jsonText(SITE_PATH), jsonText(REELS_PATH), tree.entries, tree.truncated, newPaths),
+    ...brokenMomentPhotoLinks(jsonText(MOMENTS_PATH), tree.entries, tree.truncated, newPaths),
   ];
   if (problems.length) throw linkError(problems);
 
   // Old photo files no event uses any more (never when the listing is incomplete). Only when events.json
   // is part of this publish: the removal rules of TASK-13 need the events.json being committed.
+  // TASK-22: a file used by an event OR a moment (as it will be live after this commit) is never removed.
+  const withMoments = jsonText(MOMENTS_PATH) !== null;
   const used = usedPathsIn(text);
+  for (const p of momentPathsIn(withMoments ? jsonText(MOMENTS_PATH) : momentsBase().text)) used.add(p);
   let removals = !withEvents || tree.truncated ? [] : removalCandidates(tree.entries, used, newPaths);
+  // Unused moment photos directly under media/moments/, only when data/moments.json is part of this commit.
+  if (withMoments && !tree.truncated) {
+    removals = [...removals, ...tree.entries
+      .filter((e) => e && e.type === 'blob' && isRemovableMoment(e.path, used, newPaths)).map((e) => e.path).sort()];
+  }
   if (typeof publishHooks.editRemovals === 'function') removals = publishHooks.editRemovals(removals.slice());
   const guard = () => {
     for (const path of removals) {
-      if (!isRemovable(path, used, newPaths)) throw new PublishError('guard', PUBLISH_MESSAGES.guard(path));
+      const ok = isRemovable(path, used, newPaths) || (withMoments && isRemovableMoment(path, used, newPaths));
+      if (!ok) throw new PublishError('guard', PUBLISH_MESSAGES.guard(path));
     }
   };
   guard(); // before the dialog and before any write
@@ -922,7 +1027,6 @@ async function run(token, { text, files, pairs, site, withEvents, json }) {
   showProgress(7);
   const k = removals.length;
   const photos = pairs.length + site.length;
-  const withMoments = data.some((d) => d.path === MOMENTS_PATH);
   let message = `Update site photos from /admin/ (${photos} photos)`;
   if (withEvents) message = `Update events from /admin/ (${eventCount()} events, ${photos} photos${k ? `, ${k} old files removed` : ''})`;
   else if (withMoments) message = `Update moments from /admin/ (${momentCount(jsonText(MOMENTS_PATH))} moments, ${photos} photos${k ? `, ${k} old files removed` : ''})`;

@@ -346,6 +346,32 @@
           </div>
         </div>
       </div>
+
+      <div class="site-photos" id="moment-photo" role="group" aria-labelledby="mp-title">
+        <h3 id="mp-title" class="panel-subtitle">Moment photo</h3>
+        <p class="panel-hint">For the moment open in the Moments panel. One image at a time, one watermarked 1200px file, with the same watermark text and opacity as above.</p>
+        <div class="sp-now-row">
+          <p class="mono sp-now" id="mp-for" role="status"></p>
+          <div class="sp-pick">
+            <label class="btn btn-secondary btn-sm file-button" for="mp-file">Choose image</label>
+            <input type="file" id="mp-file" accept="image/*" class="visually-hidden">
+          </div>
+        </div>
+        <div class="sp-card" id="mp-card" hidden>
+          <figure class="sp-thumb" id="mp-figure">
+            <img id="mp-img" alt="">
+            <figcaption><span class="chip chip-display">MOMENT</span><br><span class="wm-size" id="mp-size"></span></figcaption>
+          </figure>
+          <p class="wm-name" id="mp-name"> <span class="wm-status" id="mp-status" role="status"></span></p>
+          <div class="wm-ibar" id="mp-bar" aria-hidden="true" hidden></div>
+          <p class="wm-error" id="mp-error" role="alert" hidden></p>
+          <p class="wm-path" id="mp-path"></p>
+          <div class="wm-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="mp-use" disabled>Use for moment</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="mp-download" disabled>Download</button>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -356,5 +382,6 @@
   <script type="module" src="../js/admin/publish.js"></script>
   <script type="module" src="../js/admin/site-photos.js"></script>
   <script type="module" src="../js/admin/moments.js"></script>
+  <script type="module" src="../js/admin/moment-photo.js"></script>
 </body>
 </html>

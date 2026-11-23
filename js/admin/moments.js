@@ -3,7 +3,7 @@
 // All moment text is shown with textContent, never innerHTML.
 import {
   momentsDraftReady, onMomentsChange, draftMoments, saveMoment, deleteMoment, moveMoment, canMove,
-  discardMomentsDraft,
+  discardMomentsDraft, makeMomentId,
 } from './moments-draft.js';
 import { addDiscardHook } from './manager.js';
 
@@ -158,6 +158,25 @@ export function onMomentFormChange(fn) {
 /** The id of the moment open in the form (null for a new, unsaved moment). */
 export function editingMomentId() {
   return editingId;
+}
+
+/** The id of the moment in the form: the one being edited, or the id a new moment would get on Save. */
+export function currentMomentId() {
+  if (editingId) return editingId;
+  return makeMomentId(readMomentForm(), draftMoments().map((m) => m.id));
+}
+
+/**
+ * "Use for moment" (TASK-22): puts `path` in the photo field and saves the form to the draft (a new moment is
+ * created). Returns the saved moment, or null when the form has errors (the photo field gets its old value back).
+ */
+export function useMomentPhoto(path) {
+  const field = $('m-photo');
+  const before = field.value;
+  field.value = path;
+  const saved = submitMoment();
+  if (!saved) field.value = before;
+  return saved;
 }
 
 async function init() {

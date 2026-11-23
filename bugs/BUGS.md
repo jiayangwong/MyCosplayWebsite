@@ -87,3 +87,13 @@
 - Cause: the publish branch in js/admin/github-config.js was set to `main` while the repo's default and Pages branch is `site-v1`; the tests hard-coded `main` too, so they could not catch it.
 - Fix: js/admin/github-config.js now has `branch: 'site-v1'` with a comment that it must match the branch GitHub Pages serves (all API paths and the UI text already read `GITHUB.branch`). tests/github-mock.js reads the branch from that config file and exports `BRANCH`; tests/task-11..16 specs use `BRANCH` for `heads/...`, `ref=...` and the "Connected to ... (branch)" text, so they cannot drift again. Wording updated in docs/plan.md, docs/style-guide.md and storyboard/admin/index.html.
 - QA re-test (2026-11-19): verified. Full publish (events + photo pair + portrait) only requested git/ref/heads/site-v1 and PATCH git/refs/heads/site-v1; "Connected to ... (site-v1)" and the Publish hint name site-v1; no heads/main or ref=main in js/admin/tests/storyboard; with the app set to main and the tests expecting site-v1, task-11/12 tests fail; full suite 359 passed, 3 skipped.
+
+## BUG-8: 18 older admin/data tests still expect the old 8 sample events (fail since the 21 real events went in)
+- Found by: programmer (full-suite runs while building TASK-21 / TASK-22, 2026-11-23, system Chrome)
+- Task: TASK-2, TASK-6, TASK-10, TASK-11 (tests only); caused by the 2026-11-23 change "replaced sample events with the 21 real events"
+- Severity: major (the full suite cannot pass, so no task can meet "earlier tests still passing")
+- Steps to reproduce: on `task/TASK-20-events-hall-bangai` (and the TASK-21 / TASK-22 branches) run the full suite: `npx playwright test` (desktop + phone).
+- Expected: the full suite passes.
+- Actual: the same 9 tests fail in both projects (18 failures): tests/task-2.spec.js:6 "sample events.json follows the format" (expects `sample: true`), tests/task-6.spec.js:11, :23, :32, :53, :65, :74, tests/task-10.spec.js:202 and tests/task-11.spec.js:135. They count `.event-row` (expect 8 or 9, get 21 or 22) or look for the old SAMPLE events. The app itself is fine: data/events.json now holds the 21 real events with no `sample` flag.
+- Also seen once under full-suite load (passed in the next full run and in 3 repeated runs on their own): tests/task-12.spec.js:266 (desktop) and tests/task-19.spec.js:295 (phone). Same kind of load flake as BUG-2 / BUG-3.
+- Status: open
