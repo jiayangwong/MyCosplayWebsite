@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "2026-08-22-oma",
+      "date": "2026-08-22",
+      "short": "OMA",
+      "name": "Omatsuri",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder]"],
+      "sample": true
+    },
+    {
+      "id": "2026-05-30-amg",
+      "date": "2026-05-30",
+      "short": "AMG",
+      "name": "[AMG full name placeholder]",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder]", "[activity placeholder]"],
+      "sample": true
+    },
+    {
+      "id": "2025-12-14-cf",
+      "date": "2025-12-14",
+      "short": "CF",
+      "name": "Comic Fiesta",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder] (day 2)"],
+      "sample": true
+    },
+    {
+      "id": "2025-12-13-cf",
+      "date": "2025-12-13",
+      "short": "CF",
+      "name": "Comic Fiesta",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder] (day 1)"],
+      "sample": true
+    },
+    {
+      "id": "2025-08-23-oma",
+      "date": "2025-08-23",
+      "short": "OMA",
+      "name": "Omatsuri",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder]"],
+      "sample": true
+    },
+    {
+      "id": "2025-05-31-amg",
+      "date": "2025-05-31",
+      "short": "AMG",
+      "name": "[AMG full name placeholder]",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder]"],
+      "sample": true
+    },
+    {
+      "id": "2024-12-14-cf",
+      "date": "2024-12-14",
+      "short": "CF",
+      "name": "Comic Fiesta",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder]"],
+      "sample": true
+    },
+    {
+      "id": "2024-06-01-amg",
+      "date": "2024-06-01",
+      "short": "AMG",
+      "name": "[AMG full name placeholder]",
+      "venue": "[venue placeholder]",
+      "activities": ["[cosplay character placeholder]"],
+      "sample": true
+    }
+  ]
+}

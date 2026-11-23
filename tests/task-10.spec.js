@@ -2,7 +2,7 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
-const { mockEvents, trackErrors } = require('./helpers');
+const { mockEvents, trackErrors, SAMPLE_EVENTS } = require('./helpers');
 
 const PNG = fs.readFileSync(path.join(__dirname, 'fixtures', 'flat-2400x1600.png'));
 const SVG = fs.readFileSync(path.join(__dirname, '..', 'favicon.svg'));
@@ -201,6 +201,8 @@ test('the footer watermark note stays', async ({ page }) => {
 
 test('admin: Display photo and Full-size photo are saved, kept after reload and exported', async ({ page }) => {
   page.on('dialog', (d) => d.accept());
+  // Fixed published data: the 8 SAMPLE events, so the new 2026-09-12 event is first (BUG-8).
+  await mockEvents(page, SAMPLE_EVENTS);
   await page.goto('admin/index.html');
   await expect(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
   await expect(page.getByLabel('Display photo')).toHaveAttribute('id', 'f-photo');

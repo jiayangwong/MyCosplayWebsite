@@ -297,6 +297,7 @@ test('no horizontal scroll at 360px, and the pop-up fits', async ({ page }) => {
   await mockEvents(page, EVENTS);
   await mockMoments(page, MOMENTS);
   await page.goto('index.html');
+  await expect(page.locator('#hall-bangai')).toBeAttached();
   await noHorizontalScroll(page);
   const { dialog } = await openAlbum(page);
   await expect(dialog.locator('.bm-item')).toHaveCount(4);

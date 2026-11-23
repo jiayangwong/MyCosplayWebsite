@@ -38,4 +38,10 @@ async function mockMoments(page, moments, { status = 200 } = {}) {
   return requests;
 }
 
-module.exports = { PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments };
+/**
+ * The 8 placeholder SAMPLE events that were in data/events.json before the real events went in (commit 8b057d5).
+ * Tests that need a fixed, known event list (counts, "Sample" tags, Omatsuri first) mock with these.
+ */
+const SAMPLE_EVENTS = require('./fixtures/sample-events.json').events;
+
+module.exports = { PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };

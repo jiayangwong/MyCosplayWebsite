@@ -3,13 +3,32 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 
-test('sample events.json follows the format', () => {
-  const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'events.json'), 'utf8'));
+test('sample events fixture follows the format (8+ SAMPLE events across 2024-2026)', () => {
+  // The placeholder samples that shipped with TASK-2; now kept as a test fixture (data/events.json holds real events).
+  const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'sample-events.json'), 'utf8'));
   expect(data.version).toBe(1);
   expect(data.events.length).toBeGreaterThanOrEqual(8);
   const years = new Set(data.events.map((e) => e.date.slice(0, 4)));
   for (const y of ['2024', '2025', '2026']) expect(years.has(y)).toBe(true);
   for (const e of data.events) expect(e.sample).toBe(true);
+});
+
+test('published data/events.json follows the format: valid events, unique ids, no sample flag', async ({ page }) => {
+  const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'events.json'), 'utf8'));
+  expect(data.version).toBe(1);
+  expect(data.events.length).toBeGreaterThanOrEqual(8);
+  const years = new Set(data.events.map((e) => e.date.slice(0, 4)));
+  for (const y of ['2024', '2025', '2026']) expect(years.has(y)).toBe(true);
+  const ids = data.events.map((e) => e.id);
+  expect(new Set(ids).size).toBe(ids.length);
+  // Real events: none may still be marked as a placeholder sample.
+  for (const e of data.events) expect(e.sample).toBeUndefined();
+  await page.goto('index.html');
+  const problems = await page.evaluate(async (events) => {
+    const d = await import('./js/events-data.js');
+    return events.map((e) => [e.id, d.validateEvent(e).map((x) => x.field)]).filter(([, f]) => f.length);
+  }, data.events);
+  expect(problems).toEqual([]);
 });
 
 test('loader, sort, group, validation, ids and embed detection', async ({ page }) => {
