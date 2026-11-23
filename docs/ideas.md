@@ -344,6 +344,94 @@ Mobile:
 - References: TASK-13 review (reviewer finding, 2026-11-19)
 - Priority (user's view): high (must be decided before release)
 
+## IDEA-12: Special moments event (always last / easter egg)
+- Date: 2026-11-23
+- Status: new
+- Summary: One special entry that is not a normal con. It holds the funny, special and unplanned moments of all time (like 花絮 hua xu, but NOT called "behind the scenes"). It always sits at the very bottom of the timeline and works a bit like an easter egg.
+- Details:
+  - User's words (mixed English/Chinese, tidied): "I need an event something like 花絮 (hua xu), but don't use 'behind the scenes' because it's not that. It will always be at the very bottom of the timeline. It is also similar to an easter egg. It is a special event and there is only 1; it includes all funny or special moments of all time. Should it be the last event (most bottom), or a variant timeline like the Avengers sacred timeline and variants? Too much might feel messy. Give me a few ideas and naming."
+  - Method note: the 'impeccable' design skill was NOT run (not installed in this cloud session; the repo only has `.impeccable/config.json`). Its spirit was applied by hand: each concept below was checked for clutter, hierarchy, accessibility (contrast, keyboard, reduced motion, phone) and cliches. This is brainstorming only, not a design or plan.
+  - Assumptions (nobody could be asked):
+    - "Bottom of the timeline" = the END of the list. The hall and Events page run newest first, so the special entry comes AFTER the oldest year (2023) and before the `END OF HALL - 5 REELS` sign. It reads like "the origin story / the lost footage".
+    - Only ONE such entry on the whole site, not one per year.
+    - It holds many small moments (photos, short clips, one-line captions), not one photo and one link.
+    - Every photo in it is watermarked like all other photos (IDEA-9 / IDEA-10).
+    - "Behind the scenes" is already the category of the し reel on the site (`知らなかった！ shi-ra-na-kat-ta!`), so the new entry must not overlap with that word.
+    - Anything Japanese in a name needs the full pronunciation block (furigana, romaji, English, speaker). Chinese is shown with pinyin and meaning as a courtesy (the site rule only covers Japanese).
+  - What the entry is: a single, clearly "special" entry for all-time funny / special / unplanned moments (outtakes, mishaps, small wins, strange con encounters). It is not a normal con, has no hall letter of its own, and is not "behind the scenes" (making-of content).
+
+  ### Placement / structure concepts
+  1. **A. Last hall (plain)**
+     - Summary: the special entry is simply the final hall sign after the 2023 events.
+     - Hall: one more hall sign in the same shape, but with a different plate (dashed ink border, purple label instead of `HALL x`) and one polaroid. Sits after the 2023 group, right before `END OF HALL`.
+     - YOU ARE HERE strip: after `2023` one small extra marker (a hollow diamond, `aria-label` with the entry name) at the far end. Years stay the only text labels.
+     - Events page: after the 2023 group, a final section with its own heading (not a year) and one card.
+     - Reveal: none, always visible.
+     - Pros: simplest, no new interaction, most accessible, keeps the walk-through unbroken.
+     - Cons: not much "easter egg" feeling; looks like one more con unless the plate is clearly different. Messiness risk: low.
+     - Effort: S.
+  2. **B. Branch / variant timeline (sacred-timeline vibe, kept tidy)**
+     - Summary: the main line stays 2026 to 2023; ONE dashed side line splits off at the end and leads to the special entry.
+     - Hall: a fork in the hall floor (a floor-tape arrow with a "VARIANT" sign) after 2023; the special sign hangs down the side branch.
+     - Strip: a single dashed spur leaves the line after `2023` and ends in a hollow diamond. No second branch, ever.
+     - Events page: the final section is boxed with a dashed border and a small mono tag, like a timeline "variant" card.
+     - Reveal: optional, the spur can be drawn only when the strip reaches it.
+     - Pros: matches the user's Avengers reference; clear that it is "different from the con list".
+     - Cons: more drawing; on a 375px strip the spur plus 44px touch targets get crowded; fork art can read as a bug if it is not explained. Messiness risk: medium (fine for 1 branch, messy for 2 or more; so the rule is exactly one).
+     - Effort: M.
+  3. **C. Hidden easter egg (find it yourself)**
+     - Summary: no sign and no tick; the entry only appears when the visitor finds a trigger.
+     - Hall / strip / Events page: nothing visible by default. After the last hall, a small "dropped" item on the floor (for example a lanyard tag or a crumpled flyer) is the trigger; tapping it opens the entry. The Events page can show a locked-looking card `???` after 2023.
+     - Reveal: tap or click the item; a short reveal (under 600ms). Must also be reachable by keyboard and screen reader (a real button with a plain label), and a text link in the footer, so nobody is locked out. Reduced motion: instant swap.
+     - Pros: real easter-egg delight; zero clutter on the main timeline.
+     - Cons: most visitors (and recruiters / clients) never see it; a hidden feature is easy to break or forget; "hidden" must not mean "inaccessible". Messiness risk: lowest on screen, highest in "does anyone find it".
+     - Effort: M.
+  4. **D. Lost-and-found counter (invented)**
+     - Summary: the last thing in the hall is not a hall but a lost-and-found counter, a real con object, with the moments as tagged items on it.
+     - Hall: after 2023, a small counter with a hanging sign. On it a tray of 6 to 8 numbered luggage-style tags; each tag is a tiny moment card (one photo, one caption such as "wig fell off, 14:32"). Tapping a tag flips it like a polaroid.
+     - Strip: one end marker after `2023`, a small tag icon (not a year, not a tick). Events page: final section "tray" of the same tags in a grid; one entry in data, many moments inside.
+     - Reveal: the tray is closed at first (a "Ring the bell" or "Open tray" button); opening it is the easter-egg beat. Keyboard and reduced motion: a plain disclosure button, no animation.
+     - Pros: fits the con world without copying a normal event; the entry can hold many moments without becoming many events; clearly different from hall signs, so no confusion.
+     - Cons: needs a new small component and moment data; the tray must stay at 8 items or less per view (paging after that) or it gets noisy. Messiness risk: low to medium.
+     - Effort: M to L.
+
+  ### Name options (short form is at most 12 characters)
+  1. **Hua Xu / Tidbits**, 花絮 (huā xù, "side tidbits"). Short: `HUA XU` (6). Fits: it is the user's own word and a nod to the Chinese side of the site. Avoids: "behind the scenes". Note: in Chinese it often means making-of too, so the subtitle must say "funny and special moments".
+  2. **NG Shots**, NG镜头 (NG jìngtóu, "failed takes"); Japanese 〈NG{集|しゅう}〉 (enujī shū, "NG collection"). Short: `NG SHOTS` (8). Fits: funny mishaps, instantly understood by Asian con fans. Avoids: the making-of meaning. Cons: only mishaps, not "special" moments.
+  3. **Bloopers**, 笑料 (xiào liào, "laughs"). Short: `BLOOPERS` (8). Fits: the blooper-reel idea, plain and funny. Avoids: "behind the scenes". Note: do not say "Reel", it would clash with the five Instagram reels.
+  4. **The Vault**, {秘蔵|ひぞう} (hizō, "treasured, kept secret"); Chinese 珍藏库 (zhēn cáng kù, "treasure store"). Short: `THE VAULT` (9). Fits: serious tone, "locked-away best bits", suits an easter egg. Avoids: sounding like a joke-only page. Cliche risk: common in games and brands, so give it an ink-and-mono look, not a gold or sparkle look.
+  5. **Lost & Found**, 失物招领 (shī wù zhāo lǐng, "lost property claim"); Japanese {忘|わす}れ{物|もの} (wasuremono, "something forgotten"). Short: `LOST & FOUND` (12). Fits: a real con counter, covers unplanned and forgotten moments. Avoids: any making-of meaning. Matches concept D.
+  6. **After Hours**, Japanese {後夜祭|こうやさい} (kōyasai, "the night party after the main festival"). Short: `AFTER HOURS` (11). Fits: what happens after the hall closes, relaxed and funny. Avoids: sounding like a staff-only area. Note: "after hours" can sound adult in English; tone check with the user.
+  7. **Hall ???**, Japanese {番外|ばんがい} (bangai, "outside the numbering, extra"). Short: `HALL ???` (8). Fits: a hall with no letter, the con-map joke. Avoids: clashing with real hall letters; do NOT use "HALL Z" because the hall letters will reach Z at the 26th event (today there are 21).
+  8. **Gift Shop**, Japanese お{土産|みやげ} (omiyage, "souvenir"). Short: `GIFT SHOP` (9). Fits: the "you exit through the gift shop" joke at the very end of the hall. Avoids: serious tone. Playful, one joke only, so keep the subtitle short.
+  9. **Pass No. 000**, no Chinese or Japanese needed. Short: `PASS NO. 000` (12). Fits: the intro guest pass is `No. 001`; this is the spare pass nobody was meant to see. Avoids: "backstage pass" (too close to behind the scenes). Subtle, but needs the guest pass to be seen first to be understood.
+  10. **Omake**, おまけ (omake, "a free extra / bonus"); Chinese 彩蛋 (cǎi dàn, "easter egg", also the bonus scene after the film credits). Short: `OMAKE` (5). Fits: it is the closest Japanese word to 花絮, small, cheeky, and teaches a word with the site's pronunciation block. Avoids: making-of meaning.
+
+  ### Recommendation (user's terms)
+  - Structure: **D, the lost-and-found counter, placed as the very last stop (so it is also A: simply last)**. Reason: you get "always at the very bottom" with no sorting tricks for the visitor, one clear end marker on the strip, and an easter-egg beat (open the tray) without hiding it from people. It holds all your funny and special moments in ONE entry. It avoids the "too messy" problem of the Avengers branch: B needs a fork, a spur and an explanation on a phone-width strip, so keep B for later only if you still want it after seeing D.
+  - Top name: **Lost & Found** (`LOST & FOUND`, 12). Reason: it is a real con thing, it means "unplanned things that turned up", and it can never be mistaken for "behind the scenes". Pair it with the subtitle "Funny and special moments, all years".
+  - Runner-up: **Omake おまけ** (`OMAKE`). Reason: closest to your 花絮 idea, short, and a bonus extra at the end reads as an easter egg. It needs the full pronunciation block, which also suits the site.
+
+  ### Open questions for the planner
+  1. How is "always last" enforced in `data/events.json`? Events are sorted by date descending. Options for the planner to choose (not solved here): a flag such as `"special": true` that sorts after all dates, or a separate field/file for the special entry, or a special year bucket. Also: does it still need a valid `date` (validateEvent requires one)?
+  2. How does it appear in the YOU ARE HERE strip, which allows year labels only? One non-year end marker is assumed; the planner should confirm the rule and its tap target (at least 44px) and `aria-label`.
+  3. Does it take a hall letter? Assumed no (it has its own plate). Hall letters reach Z at event 26, so a "HALL Z" name should not be used.
+  4. One entry or one per year? Assumed one for all time.
+  5. What does it hold? Assumed many moments (photo, short caption, optional link). The current event schema has only one `photo`, `photoFull` and `link`, so the planner must decide a `moments` list or similar, and how admin and Publish handle it, including the watermark rule and the 20-photo-per-publish limit.
+  6. Where does it show? Home hall and strip, Events page (final section), and Gallery (its photos, labelled)? Assumed yes to all three.
+  7. Is the tray always open, or opened with a button (easter-egg beat)? Assumed a button, with a plain keyboard-friendly disclosure and no animation under reduced motion.
+  8. Is there a sample/placeholder state while the user has no moments yet (like the existing `sample` tag)?
+  9. Final name and subtitle: the user decides; the short form must be 12 characters or less.
+  ### User decisions (2026-11-23)
+  - Name chosen: **Hall ??? 番外 (bangai)** (ばんがい, "extra, outside the numbering"). Replaces the Lost & Found / Omake recommendation.
+  - Home timeline: a detached **???** cross at the far right of the horizontal strip (far bottom on a vertical timeline). Not joined to the main line.
+  - The Hall ??? polaroid carries a shy kaomoji, e.g. (*/ω＼*). **Only this hall/polaroid is clickable**; it opens a pop-up (modal) instead of flipping.
+  - Pop-up shows the album: photos, videos, or embedded social-media links.
+  - Artifacts updated for review: storyboard (clickable) and "Puzz Kezz homepage concepts" canvas (6B v4 boards: desktop, phone, album pop-up desktop and phone).
+  - Still open for the planner: questions 1, 4, 5, 6 and 8 above (how "always last" is stored, one entry or one per year, `moments` schema, Gallery inclusion, sample state). Question 7 is superseded: the album opens in a pop-up.
+- References: none (user message 2026-11-23); related: IDEA-3, IDEA-5 (the し reel category "Behind the scenes"), IDEA-6, IDEA-7, IDEA-9, IDEA-10
+- Priority (user's view): nice-to-have (assumed, the user did not say)
+
 ## Comparison and recommendation (for the user to decide)
 - UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
 

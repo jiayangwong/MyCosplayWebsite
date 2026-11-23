@@ -12,6 +12,7 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-18 by the planner after the user answered questions 15-18 and wrote "Plan approved and storyboard approved". Density is **2x**: `WM_DIVISOR` = 80, so `f` = round(shorter side / 80), min 8px. Changed: F9, the Media row, TASK-7 criteria, note and test numbers, the build-order lines. Share image: the site screenshot stays until a photo is uploaded. Portrait and reel covers: one 1200px file each. GitHub Action check on every push: out of scope (future idea). Questions 15-18 moved to "Already decided". TASK-14 and TASK-15 are approved. Review/QA lines no longer wait for STORYBOARD APPROVED (docs/approval.md now contains it).
 - Revised: 2026-11-19 by the planner for IDEA-11 ("Remove from publish" can break an event photo and delete its old photo). New: TASK-16 (both protections, option (c)), open questions 19-20, and a new build-order line (TASK-16 before TASK-15). TASK-16 is **proposed, waiting for user approval**; the rest of the plan stays approved.
 - Revised: 2026-11-19 by the planner after the user wrote "TASK-16 approved, yes" (answers to questions 19, 20 and 22: yes to all). TASK-16 is **approved** and now also covers site photos (BUG-4: a portrait or reel cover link to a file that is not on GitHub). New: TASK-17 (repo guard accepts a marked file whose allowlist hash is stale, question 22 (b)). Build order: TASK-16 -> TASK-17. Questions 19, 20 and 22 moved to answered.
+- Revised: 2026-11-23 by the planner for IDEA-12 (Hall ??? 番外 bangai). New: section 7 "IDEA-12 addition" (planner assumptions A1-A9, `data/moments.json` format, TASK-19 to TASK-22, questions 23-26). Task numbers start at 19 because TASK-18 (admin layout) is already used in docs/changelog.md. TASK-19 (Home part) is **already built on branch `feature/hall-bangai` (commit 7988c22) but not reviewed, not QA-tested and its tests have never been run**. The IDEA-12 tasks are **PROPOSED and wait for the user's approval**. The rest of the plan stays approved.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
@@ -792,3 +793,131 @@ Detail decided by the planner (say if you disagree): if GitHub's file list is ev
     - **User answer (2026-11-19): yes, the narrow guard fix (b)** as the reviewer proposed: exact-hash allowlisting stays; a marked file with a stale hash passes and is reported as stale; an unmarked file with a stale hash still fails. See TASK-17.
 
 No open questions remain for IDEA-11 or the TASK-14 / TASK-15 follow-ups. Questions 1-12 above are still open.
+
+---
+
+## 7. IDEA-12 addition: Hall ??? 番外 (bangai) - PROPOSED 2026-11-23, waiting for user approval
+
+- Source: docs/ideas.md IDEA-12 and its "User decisions (2026-11-23)" block. The user approved the updated storyboard (storyboard/, HOME screen) on 2026-11-23.
+- Note: IDEA-12 still has `Status: new` in docs/ideas.md (the idea-collector should set it to `ready-for-planning`).
+- Branch: `feature/hall-bangai`, made from `site-v1`. Merge back into `site-v1` (read "main" as `site-v1`, see the branch note at the top).
+
+### What it is
+One special entry, **Hall ??? 番外** (ばんがい, ban-gai, "extra, outside the numbering"). It holds funny and special moments from every year. It is not a con. It always sits at the very end of the hall, after the oldest year and before `END OF HALL · 5 REELS`. On the YOU ARE HERE strip it is the last label, `???`, set apart from the years. Its polaroid shows a shy kaomoji `(*/ω＼*)`. It is the **only** polaroid that opens a pop-up instead of flipping. The pop-up is an album of photos, videos and social links.
+
+### Planner assumptions (decided by the planner, the user can veto any of them, see questions 23-26)
+- **A1 - "Always last" lives in the code, not in the data.** `js/hall.js` always adds Hall ??? after the last year group. It is **not** an event in `data/events.json`. So `validateEvent`, `makeEventId`, the date sort, the admin move up / move down and Publish do not change, and it cannot be moved by mistake. It has no hall letter (the letters A, B, C... count real events only) and is not counted in the hero summary ("21 events · 2026 → 2023").
+- **A2 - One entry for all time.** There is exactly one Hall ???. It is not one per year.
+- **A3 - Moments live in a separate file, `data/moments.json`** (format below). Each moment has a `year` label for its caption. There is no date, because moments are not sorted into the timeline.
+- **A4 - Moment photos are one watermarked 1200px file each** (like the portrait and reel covers, TASK-14), at `media/moments/<moment-id>.webp`. They are made by the same uploader pipeline: the same lattice watermark, `WM_DIVISOR` = 80, and the TASK-15 marker. There is no full-size master, because the album shows photos at layout size only. The IDEA-10 rule applies: no unwatermarked photo is ever committed, and the repo guard checks `data/moments.json` too (TASK-22).
+- **A5 - Where it shows:** Home (hall + strip + pop-up, TASK-19) and the Events page (a last section after the oldest year that opens the same album, TASK-20). **Not on the Gallery** for now. That keeps it a small easter egg and keeps the Gallery to con photos only.
+- **A6 - Empty state, no sample moments.** Today `data/moments.json` is `{ "version": 1, "moments": [] }`. Hall ??? still shows on Home (it is always there). The album shows "Nothing here yet. (>///<) Come back later." No fake sample moments are added.
+- **A7 - Adding moments through `/admin/` is separate work** (TASK-21 data, TASK-22 photos). Until then, moments can be added by hand in `data/moments.json` (links only, or photos that came out of the uploader's Download).
+- **A8 - Album order:** newest `year` first. Moments without a year go last. Moments with the same year keep their array order.
+- **A9 - Filter chips:** All / Photos / Videos & links. A moment with a `link` counts as "Videos & links" even if it also has a photo (the photo is its preview).
+
+### `data/moments.json` (new, contract for TASK-19 to TASK-22)
+```json
+{
+  "version": 1,
+  "moments": [
+    {
+      "id": "2025-wig-fell-off",
+      "year": 2025,
+      "caption": "Wig fell off on the escalator",
+      "alt": "Puzz holding a pink wig, laughing",
+      "photo": "media/moments/2025-wig-fell-off.webp",
+      "link": "https://www.instagram.com/reel/XXXX/"
+    }
+  ]
+}
+```
+- Required: `id` (lowercase letters, digits and `-`, unique) and at least one of `photo` or `link`.
+- Optional: `year` (a whole number from 2000 to 2100), `caption` (1-140 characters), `alt` (plain text; defaults to the caption, then to "Special moment"), `photo` (a relative path in plain form, rules as in TASK-10), `link` (http/https only).
+- Embeds use `detectEmbed` / `renderMedia` from `js/embed.js`, behind the same click-to-load facade as the Events page. Facebook and other links show the photo (or a placeholder) and an external link.
+- A moment that breaks the rules is skipped with one console warning. It does not break the album.
+
+### Sitemap and flow additions
+- `/index.html` HOME: after the oldest year group, a `???` year sign, then the Hall ??? station: a hall sign `HALL ???` with 番外 (furigana ばんがい) and "bangai · the extra one", the shy polaroid, and a pronunciation block. On the strip, `???` is the last label, with one tick.
+- `/events.html` EVENTS: after the oldest year, a last section "Hall ??? 番外" with one card that opens the same album (TASK-20).
+- `/admin/`: a **Moments** panel (TASK-21) and a "Moment photo" uploader target (TASK-22).
+
+**F13 - Finding Hall ??? (visitor)**
+Home -> scroll past the oldest year (or tap `???` on the YOU ARE HERE strip) -> the `???` sign and the shy polaroid -> tap the polaroid -> the album pop-up opens (focus on CLOSE) -> filter Photos / Videos & links -> tap a video facade -> the embed loads -> Esc, CLOSE or a tap on the backdrop -> the pop-up closes and focus goes back to the polaroid.
+
+**F14 - Puzz adds a moment (admin, after TASK-21/22)**
+Admin -> Moments -> "New moment" -> year, caption, alt, link and/or "Moment photo" upload (watermarked 1200px file) -> Save (draft) -> Publish to GitHub -> one commit with `data/moments.json` (and the photo) -> the moment shows in the album after GitHub Pages redeploys.
+
+### TASK-19: Home - Hall ??? 番外 station, `???` on the timeline, album pop-up from `data/moments.json`
+- Linked idea(s): IDEA-12 (with IDEA-3, IDEA-6, GLOBAL NOTES pronunciation)
+- State: **already built** on `feature/hall-bangai` (commit 7988c22: `js/bangai.js`, `js/hall.js`, `css/home.css`, `data/moments.json`, `tests/task-3.spec.js`, storyboard). **Not reviewed, not QA-tested, tests never run** (no Playwright browsers in the cloud session). The reviewer checks it against the criteria below; gaps go back to the programmer as normal review items.
+- Amends TASK-3: the strip's text labels are the years **plus the one `???` label at the end**. The hall ends with Hall ??? and then `END OF HALL · 5 REELS`.
+- Acceptance criteria:
+  - **Placement:** after the last (oldest) year group, the hall always has a year sign `???` (`id="year-bangai"`) and then one station `id="hall-bangai"`, right before `END OF HALL · 5 REELS`. This is true for any `data/events.json`, including after an event is added. If there are no events, the hall shows "Events coming soon." and no Hall ???.
+  - Hall ??? takes no hall letter: with N events the labels are `HALL A` ... `HALL <Nth letter>` then `HALL ???`. The hero summary counts real events only.
+  - **Sign:** `HALL ???`, 番外 with furigana ばんがい (`<ruby>`, `lang="ja"`), and "bangai · the extra one". The plate looks different from con signs (dashed purple border, dark card), as in the storyboard.
+  - **Pronunciation rule:** the station has a full pronunciation block for 番外 (Japanese with furigana, romaji `ban-gai`, English "Extra, outside the numbering", speaker with `aria-label="Play pronunciation: ban-gai"`). The pop-up title 番外 also has romaji, English **and a speaker** (no Japanese without all parts; the current build has no speaker in the pop-up title).
+  - **Polaroid:** a `<button>` with the kaomoji `(*/ω＼*)` (`aria-hidden="true"`), a caption, `aria-haspopup="dialog"`, `aria-controls="bangai"`, `aria-expanded` false/true, and a clear `aria-label` ("Hall ???, bangai. Open the special album..."). It does **not** flip. Every other polaroid still flips (TASK-3 tests pass). The kaomoji peek animation only runs without reduced motion.
+  - **Timeline:** the last label is `???` (after the oldest year), with one tick after it (`aria-label="Hall ???, bangai"`). It is set apart from the year line as in the approved storyboard. Clicking `???` scrolls to `#year-bangai` and the tick to `#hall-bangai`. The current-position highlight reaches `???` when the user scrolls there. Targets are at least 44px on phone.
+  - **Pop-up:** a native `<dialog id="bangai">` opened with `showModal()`, labelled by its heading. It has a lace edge, the eyebrow `HALL ??? · ALL YEARS`, the title, a short intro, the chips All / Photos / Videos & links (`aria-pressed`), and the album grid (1 column on a narrow phone under 600px, 2 columns from 600px, 3 on desktop; the user chose 1 column on phone on 2026-11-23, and keeps "Videos & links" as one chip for now). Focus goes to CLOSE when it opens. Esc, CLOSE and a click on the backdrop close it, and focus returns to the polaroid. The page behind does not scroll while it is open.
+  - **Data:** `data/moments.json` is fetched only when the pop-up is first opened, not on page load, and only once. Moments are validated as in the format above (bad ones are skipped with one console warning) and shown in the A8 order. Each item shows its media (photo with `loading="lazy"` and alt, or a click-to-load facade for YouTube / Instagram / TikTok, or photo + external link with `rel="noopener"`) and a caption `<year> · <caption>`. No iframe is in the DOM before a facade is clicked. No request to youtube / instagram / tiktok happens before a click.
+  - **Filters:** Photos shows only moments without a `link`. Videos & links shows only moments with a `link`. All shows everything. When a filter has nothing, the empty message shows.
+  - **Empty state:** with today's empty `moments` list, or when the file fails to load, the album shows "Nothing here yet. (>///<) Come back later." and nothing crashes.
+  - Opening twice quickly (double click) opens the pop-up once, with no console error.
+  - Reduced motion: Hall ??? is in the stacked list like the other stations, with no transforms.
+  - No horizontal scroll at 360px. The pop-up fits a 360px-wide screen.
+  - Matches the approved storyboard (HOME screen and the album pop-up on desktop and phone) and uses only style-guide tokens.
+  - **Automated tests:** `tests/task-3.spec.js` (as edited on the branch) and a new `tests/task-19.spec.js` (desktop + phone) covering: order and placement with mocked events; no letter for Hall ???; strip labels `2026 2025 2024 ???`; the click on `???` scrolls and highlights; polaroid opens the dialog, does not flip; focus on CLOSE, Esc / CLOSE / backdrop close, focus back; `moments.json` not requested before the first open and requested once; filters with a mocked list (photo only, link only, both); bad moment skipped (`javascript:` link, `/abs.webp` photo, no photo and no link); empty list and 404 show the empty message; facade loads an iframe only after a click; speaker buttons present for both 番外 blocks; reduced-motion stack. The full suite must still pass.
+- Status: in-progress (built, waiting for review) - finished 2026-11-23 on branch `task/TASK-19-home-hall-bangai`: speaker in the pop-up title, moments validation (id, year, caption, http/https links, safe relative photo paths, duplicate ids), A8 order, one fetch per page, double-open guard, scroll lock on Home, album code shared via `bindAlbumTrigger()`. tests/task-19.spec.js + tests/task-3.spec.js pass (desktop + phone, run with system Chrome)
+- Review: approved 2026-11-23
+- QA: pending
+
+### TASK-20: Events page - last section "Hall ??? 番外" that opens the same album
+- Linked idea(s): IDEA-12 (with IDEA-6)
+- Depends on: TASK-19 (reuses its pop-up and moments loader)
+- Acceptance criteria:
+  - After the oldest year section, `events.html` has one last section with the heading "Hall ??? 番外" (pronunciation block for 番外) and the anchor `id="hall-bangai"` (not `bangai`, which is the pop-up's id), so `events.html#hall-bangai` scrolls to it. The year jump row ends with a `???` link to it.
+  - The section has one card: the shy kaomoji, the line "Funny and special moments, all years", and an "Open album" button that opens the same pop-up as Home (same code from `js/bangai.js`, not a copy). Focus goes back to the button when it closes.
+  - It is not counted as an event, has no date or "Sample" tag, and does not change the order of the real events.
+  - With no events, the page shows "Events coming soon." and no Hall ??? section (same rule as Home).
+  - No horizontal scroll at 360px. TASK-5 tests still pass.
+  - **Automated tests (`tests/task-20.spec.js`, desktop + phone):** the section is last, the jump row ends with `???`, `#hall-bangai` deep link works, "Open album" opens the dialog with the mocked moments, Esc closes it and focus returns.
+- Status: in-progress (built, waiting for review) - built 2026-11-23 on branch `task/TASK-20-events-hall-bangai` (made from the TASK-19 branch). tests/task-20.spec.js + tests/task-5.spec.js pass (desktop + phone, run with system Chrome)
+- Review: approved 2026-11-23
+- QA:
+
+### TASK-21: Admin - Moments panel (list, add, edit, delete, reorder) and Publish `data/moments.json`
+- Linked idea(s): IDEA-12 (with IDEA-7, IDEA-8)
+- Depends on: TASK-19 (the format), TASK-12 / TASK-14 (Publish and the per-file stale check)
+- Acceptance criteria:
+  - A **Moments** panel in `/admin/` lists the moments in album order (A8) with Edit, Delete (asks for confirmation), Move up / Move down (only between moments of the same year).
+  - The form has labelled fields: year (optional number), caption (max 140), alt text, link (URL), photo path (filled by TASK-22, or typed). Validation follows the moments format: errors show next to the field and nothing is saved. A new moment gets an id `<year or "x">-<slug(caption)>` with `-2`, `-3`... when taken.
+  - The draft is kept in `localStorage` key `puzzkezz.moments.draft` with its own base SHA, like the site draft. "Discard draft" also restarts the moments draft.
+  - Publish puts `data/moments.json` (sorted as A8, 2-space indent, trailing newline) in the **same single commit** as the other changes. The stale check covers it (a different SHA on GitHub stops the publish with the stale message). `data/moments.json` is added to the allowed paths. Nothing else in Publish changes.
+  - All moment text is rendered with `textContent` (no `innerHTML`). The token rules of TASK-11 stay.
+  - **Automated tests (`tests/task-21.spec.js`, fake repo + fake token):** add / edit / delete / reorder with reload; validation errors; Publish commits `data/moments.json` in one tree with the expected text; stale `moments.json` stops with no `POST` / `PATCH`; publishing events only does not touch `data/moments.json`; earlier admin tests pass.
+- Status: in-progress (built, waiting for review) - built 2026-11-23 on branch `task/TASK-21-admin-moments` (made from the TASK-20 branch). New `js/admin/moments-draft.js` (draft in `puzzkezz.moments.draft` with its own base SHA, A8 text, ids, edits; reuses `validateMoment` / `sortMoments` / `cleanMoments` from js/bangai.js) and `js/admin/moments.js` (Moments panel), small additions in js/admin/publish.js. tests/task-21.spec.js passes (desktop + phone, run with system Chrome). Note: the storyboard has no Moments screen, so the panel reuses the existing event list / form layout of /admin/.
+- Review: approved 2026-11-23
+- QA:
+
+### TASK-22: Moment photos - uploader target, Publish, unused-photo removal, link check and repo guard
+- Linked idea(s): IDEA-12 (with IDEA-9, IDEA-10, IDEA-11)
+- Depends on: TASK-21, TASK-14, TASK-15, TASK-16
+- Acceptance criteria:
+  - The uploader gets a target "Moment photo" (for the moment open in the Moments form). It makes **one** WebP q0.85, longest side 1200px, not enlarged, with the same lattice watermark (`watermarkLayout`, `WM_DIVISOR`) and the TASK-15 marker. Path `media/moments/<moment-id>.webp` (`-2`, `-3`... if taken). "Use for moment" fills the moment's `photo`, saves the draft and adds the file to the pending list (it counts towards the 20-photo limit). Download works as a backup.
+  - Publish allows new files only at `media/moments/<id of a moment in the draft>.webp`. The marker check (TASK-15) runs on them.
+  - **Unused-photo removal** (TASK-13 rules) is extended to `.webp` files under `media/moments/` that no moment uses, in the same confirmation dialog and the same single commit. Nothing else is removable.
+  - **Broken-link check** (TASK-16) is extended: a moment `photo` under `media/moments/` that is neither in the repo tree nor in this publish stops the publish with a message naming the moment. "Remove from publish" on a moment photo puts back the published photo (or clears it), as in TASK-16.
+  - **Repo guard** (`tests/wm-guard.js`): every `photo` in `data/moments.json` must exist and carry the marker (or be allowlisted). Self-test reports a missing and an unmarked moment photo.
+  - **Automated tests (`tests/task-22.spec.js`):** upload the 2400 x 1600 fixture as a moment photo (1200 x 800, marker, every cell of a 3 x 3 grid watermarked); Publish commits it with `data/moments.json` in one commit; replace a moment photo -> removal dialog lists the old file; a broken moment link stops with no write; guard self-test. Full suite passes.
+- Status: in-progress (built, waiting for review) - built 2026-11-23 on branch `task/TASK-22-moment-photos` (made from the TASK-21 branch). New `js/admin/moment-photo.js` ("Moment photo" block at the end of the uploader, uses `makeSitePhoto` 'webp' = same lattice / `WM_DIVISOR` / marker); moment files go in the existing site-photo pending list with target `moment`; js/admin/publish.js gets `momentPathProblem`, `isRemovableMoment`, `brokenMomentPhotoLinks` and the moment "Remove from publish"; tests/wm-guard.js checks `data/moments.json` photos. tests/task-22.spec.js passes (desktop + phone, system Chrome). Notes for review: (1) "Moment photo" is its own small block, not an 8th option in the Site photos picker, because TASK-14 requires exactly 7 choices there; (2) the storyboard has no screen for it; (3) a file used by a moment is never removed by an events publish (and the other way round); (4) a moment left with no photo and no link (after "Remove from publish") stops Publish with a message instead of being committed.
+- Review: approved 2026-11-23
+- QA: passed 2026-11-23
+
+Build order for IDEA-12: **TASK-19** (review + QA of the existing build) -> **TASK-20** -> **TASK-21** -> **TASK-22**. TASK-19 and TASK-20 together give the visitor-facing feature. TASK-21 and TASK-22 can wait; until then moments are added to `data/moments.json` by hand (A7).
+
+### Questions for IDEA-12 (2026-11-23) - the planner's defaults, say if you disagree
+23. **Storage and order (A1, A3, A8):** Hall ??? is always last in code, not an event in events.json. Moments live in `data/moments.json`, newest year first. OK?
+24. **Where it shows (A5):** Home and the Events page, **not** the Gallery. OK, or do you want the moment photos in the Gallery too (labelled "Hall ???")?
+25. **Moment photos (A4):** one watermarked 1200px file per photo, no full-size version and no full-size viewer in the album. OK, or do you want tap-to-enlarge with a full-size master like the Gallery?
+26. **Admin (A7):** Moments in `/admin/` (TASK-21, TASK-22) are separate tasks after the Home and Events parts. Until then moments are added to `data/moments.json` by hand. Build the admin part now, later, or never?

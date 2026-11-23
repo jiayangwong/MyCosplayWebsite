@@ -2,6 +2,8 @@
 import { loadEvents, groupByYear, formatDate } from './events-data.js';
 import { renderMedia } from './embed.js';
 import { siteUrl } from './nav.js';
+import { pronunciationBlock } from './pronounce.js';
+import { BANGAI, KAOMOJI, bindAlbumTrigger } from './bangai.js';
 
 function make(tag, className, text) {
   const node = document.createElement(tag);
@@ -50,6 +52,36 @@ function eventCard(event) {
   return card;
 }
 
+/** Hall ??? 番外: the last section. Not an event: no date, no tag. Its button opens the shared album (js/bangai.js). */
+function bangaiSection() {
+  const section = make('section', 'year-group bangai-section');
+  section.id = 'hall-bangai';
+  section.setAttribute('aria-labelledby', 'hall-bangai-h');
+  const h2 = make('h2', 'year-heading bangai-heading');
+  h2.id = 'hall-bangai-h';
+  h2.append(make('span', 'bangai-heading-num', 'Hall ???'), ' ');
+  const jp = make('span', 'bangai-heading-jp');
+  jp.lang = 'ja';
+  const ruby = make('ruby', '', '番外');
+  ruby.append(make('rt', '', 'ばんがい'));
+  jp.append(ruby);
+  h2.append(jp);
+  section.append(h2, pronunciationBlock(BANGAI, { className: 'bangai-pron' }));
+
+  const card = make('article', 'bangai-card');
+  card.setAttribute('aria-labelledby', 'bangai-card-t');
+  const kao = make('p', 'bangai-card-kao', KAOMOJI);
+  kao.setAttribute('aria-hidden', 'true');
+  const text = make('p', 'bangai-card-text', 'Funny and special moments, all years');
+  text.id = 'bangai-card-t';
+  const button = make('button', 'btn btn-accent bangai-open', 'Open album');
+  button.type = 'button';
+  bindAlbumTrigger(button);
+  card.append(kao, text, button);
+  section.append(card);
+  return section;
+}
+
 export async function mountEventsPage(root) {
   const events = await loadEvents();
   if (!events.length) {
@@ -58,14 +90,19 @@ export async function mountEventsPage(root) {
   }
   const groups = groupByYear(events);
 
-  const jump = make('nav', 'year-jump');
-  jump.setAttribute('aria-label', 'Jump to year');
+  const jumpRow = make('nav', 'year-jump-row');
+  jumpRow.setAttribute('aria-label', 'Jump to year');
+  const jump = make('div', 'year-jump');
   groups.forEach((g) => {
     const a = make('a', 'btn btn-secondary btn-sm', String(g.year));
     a.href = `#y-${g.year}`;
     jump.append(a);
   });
-  root.append(jump);
+  const toBangai = make('a', 'btn btn-secondary btn-sm jump-bangai', '???');
+  toBangai.href = '#hall-bangai';
+  toBangai.setAttribute('aria-label', 'Hall ???, bangai, the extra one');
+  jumpRow.append(jump, toBangai);
+  root.append(jumpRow);
 
   for (const group of groups) {
     const section = make('section', 'year-group');
@@ -81,6 +118,7 @@ export async function mountEventsPage(root) {
     section.append(grid);
     root.append(section);
   }
+  root.append(bangaiSection());
 
   if (location.hash) {
     const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));

@@ -16,7 +16,7 @@
   }
   document.querySelectorAll('.polaroid').forEach(function (p) {
     p.addEventListener('click', function (e) {
-      if (e.target.closest('.back a')) return;
+      if (p.hasAttribute('data-open-bangai') || e.target.closest('.back a')) return;
       var on = p.classList.toggle('flipped');
       p.setAttribute('aria-pressed', on);
     });
@@ -44,4 +44,32 @@
       dots.forEach(function (x, i) { x.setAttribute('aria-current', i === best ? 'true' : 'false'); });
     });
   });
+
+  /* Hall ??? album modal (IDEA-12). Only this polaroid opens a modal. */
+  var bm = document.getElementById('bangai');
+  var bOpen = document.querySelector('[data-open-bangai]');
+  if (bm && bOpen) {
+    bOpen.addEventListener('click', function () {
+      if (bm.showModal) bm.showModal(); else bm.setAttribute('open', '');
+      bOpen.setAttribute('aria-expanded', 'true');
+    });
+    function bClose() { if (bm.close) bm.close(); else bm.removeAttribute('open'); bOpen.setAttribute('aria-expanded', 'false'); bOpen.focus(); }
+    bm.querySelector('[data-close-bangai]').addEventListener('click', bClose);
+    bm.addEventListener('click', function (e) { if (e.target === bm) bClose(); });
+    bm.addEventListener('close', function () { bOpen.setAttribute('aria-expanded', 'false'); });
+    bm.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        bm.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', x === c ? 'true' : 'false'); });
+        bm.querySelectorAll('.bm-item').forEach(function (it) { it.hidden = !(c.dataset.f === 'all' || it.dataset.type === c.dataset.f); });
+      });
+    });
+    bm.querySelectorAll('.bm-sb [data-state]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var empty = b.dataset.state === 'empty';
+        bm.classList.toggle('is-empty', empty);
+        document.getElementById('bm-empty').hidden = !empty;
+        bm.querySelectorAll('.bm-sb [data-state]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
 })();

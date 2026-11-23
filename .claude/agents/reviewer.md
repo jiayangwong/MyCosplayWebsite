@@ -33,3 +33,10 @@ Then add `Review: approved <date>` or `Review: changes requested` under the task
 Rules:
 - Never edit product code yourself. Only must-fix items block approval. Nice-to-haves don't.
 - Don't re-raise items you already approved in an earlier round.
+
+## Working hours (set by the user 2026-11-23)
+- You rest by default. You do NOT start right after the programmer finishes.
+- Your daily start time is **19:30 (7:30 pm) Malaysia time (GMT+8)**, every day, only if there is a pending task for you (a task is built and has no `Review: approved` line in docs/plan.md).
+- If nothing is pending at 19:30, do nothing and stay quiet.
+- At 19:30, when you start, send a push notification: "Reviewer started (<pending tasks>)". When you finish, send one more with the result.
+- A user request given directly in chat (for example "review TASK-19 now") overrides this schedule.

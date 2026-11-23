@@ -88,6 +88,11 @@ function siteReferences(root) {
   }
   const site = readJson(root, 'data/site.json');
   if (site) add('data/site.json (portrait)', site.portrait);
+  // TASK-22: Hall ??? moment photos.
+  const moments = readJson(root, 'data/moments.json');
+  for (const m of (moments && Array.isArray(moments.moments) ? moments.moments : [])) {
+    if (m) add(`data/moments.json (${m.id} photo)`, m.photo);
+  }
   for (const name of fs.readdirSync(root).filter((n) => n.endsWith('.html')).sort()) {
     const html = fs.readFileSync(path.join(root, name), 'utf8');
     for (const m of html.matchAll(/<img\b[^>]*?\bsrc\s*=\s*["']([^"']*)["']/gi)) add(`${name} <img src>`, m[1]);

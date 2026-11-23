@@ -347,7 +347,7 @@ async function loadFromRepo() {
 }
 
 async function discardDraft() {
-  if (!window.confirm('Discard your browser draft (events and site photos) and reload the published data/events.json?')) return;
+  if (!window.confirm('Discard your browser draft (events, site photos and moments) and reload the published data/events.json?')) return;
   localStorage.removeItem(DRAFT_KEY);
   // While the published copy loads, Publish, Import and Discard are locked so nothing races the swap.
   draftLoading = true;

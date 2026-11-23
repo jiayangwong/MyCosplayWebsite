@@ -27,4 +27,21 @@ async function mockEvents(page, events) {
   }));
 }
 
-module.exports = { PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents };
+/** Replace data/moments.json (Hall ??? album) for one test. Returns a list that counts the requests. */
+async function mockMoments(page, moments, { status = 200 } = {}) {
+  const requests = [];
+  await page.route('**/data/moments.json', (route) => {
+    requests.push(route.request().url());
+    if (status !== 200) return route.fulfill({ status, body: 'not found' });
+    return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: 1, moments }) });
+  });
+  return requests;
+}
+
+/**
+ * The 8 placeholder SAMPLE events that were in data/events.json before the real events went in (commit 8b057d5).
+ * Tests that need a fixed, known event list (counts, "Sample" tags, Omatsuri first) mock with these.
+ */
+const SAMPLE_EVENTS = require('./fixtures/sample-events.json').events;
+
+module.exports = { PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };

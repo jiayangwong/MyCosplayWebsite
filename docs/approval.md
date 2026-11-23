@@ -29,3 +29,9 @@ Notes from user: (none yet)
 ## Online preview (any device)
 https://claude.ai/artifact/JqLvB1N5ycBaANcdiTYpYZ - republished to this same link after every storyboard change.
 Design source (Concept 6B canvas, "6B v2" row): https://claude.ai/code/artifact/799d4278-9b04-4a21-b73b-f0638b4f1680 - updated together with the storyboard.
+
+## Addendum 2026-11-23: IDEA-12 Hall ??? 番外
+STORYBOARD APPROVED (HOME screen update with Hall ??? as the last year, shy-kaomoji polaroid and album pop-up). The user said "storyboard approved" in chat on 2026-11-23. The IDEA-12 plan (TASK-19 to TASK-22 in docs/plan.md) is still PROPOSED and is NOT approved yet.
+
+## Plan approval 2026-11-23
+The user told the planner team to start TASK-19 and TASK-20, then continue with TASK-21 and TASK-22. IDEA-12 tasks TASK-19 to TASK-22 are approved to be built. Review, QA, bug fixing and release are done by the daily 19:30 (GMT+8) run.

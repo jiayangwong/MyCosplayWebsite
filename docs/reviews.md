@@ -389,3 +389,57 @@ Round 1. Branch `task-17-guard-marked-stale-hash` (e75b801), diffed against site
 - **Extra `v:2` test:** fine to keep. It pins the version rule in the reader as well as in `isValidMarker`.
 - [nice-to-have] tests/wm-guard.js:104 - `'puzzkezz-lattice'` and `1` repeat `WM_ID` / `WM_VERSION` from js/admin/wm-marker.js. The repetition is understandable, because the guard is CommonJS and the marker module is loaded asynchronously. A one-line test assertion would stop silent drift if the version is ever bumped: `isValidMarker({ wm: marker.WM_ID, v: marker.WM_VERSION })` is true.
 - [nice-to-have] tests/wm-guard.js:145 - files that are not on the allowlist still pass on any truthy `readMarker` result. This is safe with the real reader, which validates the marker. Using `isValidMarker` there too would close the injected-reader case everywhere. That is outside this task ("nothing else in the guard changes"), so it is for the planner to decide later.
+
+## Review TASK-19 - 2026-11-23
+Result: APPROVED
+
+Round 1. Reviewed `feature/hall-bangai` (first Home commit 7988c22) together with `task/TASK-19-home-hall-bangai` (ae65ee9, 8dc9c53), diffed against site-v1. Run with system Chrome on a separate port and worktree: task-19 + task-3 + task-4 = 66 passed (desktop + phone). The suite failures seen (task-2:6, task-6, task-10:202, task-11:135) also fail on site-v1 and are BUG-8 (old tests expect the 8 sample events), not this task.
+
+- **Criteria:** all met. Hall ??? is always added after the last year group and before END OF HALL, there is no Hall ??? with no events, there is no hall letter, and the summary counts real events only. The sign has 番外 with ruby + `lang="ja"`. The station pronunciation block has the furigana, `ban-gai`, the English and the speaker `Play pronunciation: ban-gai`. The pop-up title now has furigana, romaji, English **and** a speaker. The polaroid is a `<button>` with the right aria-* set, the kaomoji is `aria-hidden` and it does not flip. The peek animation is off under reduced motion. The strip has `???` + one tick, click-to-scroll and the highlight. Native `<dialog>`, `showModal()`, `aria-labelledby`, focus on CLOSE, Esc / CLOSE / backdrop, focus back, scroll lock. moments.json is fetched once, only on the first open. A8 order. Filters, empty and 404 states, the double-open guard, and 1 / 2 / 3 columns (user choice: 1 column under 600px, one "Videos & links" chip).
+- **Security:** every moment string goes through `textContent`. `innerHTML` is only used for the fixed SVG icons. Links are http/https only (`isHttpUrl`), and `javascript:` is rejected and tested. Photo paths must be relative with no `..`, no scheme and no leading `/`. Duplicate ids are skipped. Other links get `rel="noopener"`. No iframe and no third-party request before a click (tested).
+- **Storyboard:** matches the approved HOME screen and album pop-up. The approved storyboard draws `???` as a normal year on the line (storyboard/style.css comment "??? is a normal year (same dot, label and line)"), and the build does the same.
+- **Tests:** tests/task-19.spec.js covers every listed case with real assertions. These include the request counts, `:modal`, focus targets, the warning count for bad moments, the third-party request list and the column counts.
+- [nice-to-have] docs/plan.md TASK-19 "Timeline" says `???` is "set apart from the year line", and docs/ideas.md says "detached, not joined to the main line". The approved storyboard and the build join it to the line. I followed the storyboard (it is the approved one). The planner should make the wording match, or the user can ask for a detached `???` as a new change.
+- [nice-to-have] css/components.css:344 - on a 375px phone the title wraps as "番外 THE EXTRA / ONE" with the speaker on its own line. `white-space: nowrap` on `.bm-en` (or a smaller size under 600px) would keep it on one line.
+- [nice-to-have] js/bangai.js:191 - with no moments at all, the chips still show above the empty message. The storyboard's empty state hides the chips (`.is-empty .bm-filters`). This is not required by the criteria.
+- [nice-to-have] js/bangai.js:180 - `opening` can never be true when `open()` is entered (the body is synchronous). `dialog.open` is the real guard, so `opening` can go.
+- [nice-to-have] css/components.css:350 - `.bm-chip` uses literal `0.8125rem` and `22px` radius. These copy the storyboard, but a token (or the existing chip style) would be better.
+- [nice-to-have] js/embed.js:106 (pre-existing) - when a facade becomes an iframe inside the dialog, focus falls back to the document. Moving focus to the new iframe would keep keyboard users in place.
+- [nice-to-have] commit 8dc9c53 also changes `.claude/agents/programmer.md` (model). This is not TASK-19 work. Keep agent config changes in their own commit.
+
+## Review TASK-20 - 2026-11-23
+Result: APPROVED
+
+Round 1. Diff `task/TASK-19-home-hall-bangai..task/TASK-20-events-hall-bangai` (4f03d69). task-20 + task-5 + task-19 = 56 passed (desktop + phone, system Chrome).
+
+- **Criteria:** all met. The last section has `id="hall-bangai"` with the heading "Hall ??? 番外" (ruby, `lang="ja"`) and a full pronunciation block with a speaker. The jump row ends with `???` -> `#hall-bangai`, and the deep link works. There is one card: kaomoji (`aria-hidden`), the line "Funny and special moments, all years" and "Open album". The card uses `bindAlbumTrigger()` from js/bangai.js (shared code, not a copy), and focus returns to the button. It is not an event: no date, no tag, and the order is unchanged. With no events there is no section. No horizontal scroll at 360px with the album open.
+- **Scope/style:** only js/events-page.js, css/pages.css, the test, the plan and the changelog changed. Tokens are used throughout. The storyboard has no Events screen for Hall ???, and the card reuses the dark-card, dashed-purple look of the approved Home sign.
+- [nice-to-have] css/pages.css:5 - the `div.year-jump { display: contents }` wrapper inside `nav.year-jump-row` exists so that the TASK-5 selector still counts only years. A one-line comment saying so would help the next reader.
+
+## Review TASK-21 - 2026-11-23
+Result: APPROVED
+
+Round 1. Diff `task/TASK-20-events-hall-bangai..task/TASK-21-admin-moments` (e70f71a). task-21 + task-12 + task-14 = 94 passed (desktop + phone). task-6 fails the same way on site-v1 (BUG-8).
+
+- **Criteria:** all met. The list is in A8 order with Edit, Delete (with a confirm) and up/down moves only within the same year. The form fields are labelled, errors show next to the field with `aria-invalid`, and nothing is saved on error. Ids are `<year|x>-<slug>` with `-2`, `-3`... The draft is in `puzzkezz.moments.draft` with its own base `{sha, text}`. "Discard draft" restarts it (through `addDiscardHook`, from GitHub when there is a token). Publish puts `data/moments.json` (A8 order, 2-space indent, trailing newline) in the same single tree and commit. The stale check uses its own base SHA, and an events-only publish does not touch moments.json (tested). The rules are reused from js/bangai.js (`validateMoment` / `sortMoments` / `cleanMoments`), so there is one copy.
+- **Security:** moment text is shown with `textContent` only. There is a test with an HTML caption. The token rules are unchanged: the token is only passed to `githubFetch`, and nothing token-related goes into the draft or the logs.
+- **Storyboard:** there is no Moments screen. The panel reuses the approved event list and form patterns of /admin/. This is acceptable. The storyboard-creator may add a screen later.
+- [nice-to-have] js/admin/moments-draft.js:206 - the base text is `formatMoments(list)` of the raw file, but the draft is `cleanMoments(list)`. If the live file ever holds an invalid moment, the panel shows "data/moments.json changed" right away, and the next publish drops that moment without saying so. Consider showing a note naming the skipped moments.
+- [nice-to-have] js/admin/moments-draft.js:270 - moments read back from localStorage are not run through `validateMoment`. TASK-22's publish-time `validateMoment` check now covers what gets committed, so this is only about the panel.
+
+## Review TASK-22 - 2026-11-23
+Result: APPROVED
+
+Round 1. Diff `task/TASK-21-admin-moments..task/TASK-22-moment-photos` (c66dc93 + merge 726206e). task-22 + task-21 + task-13 + task-15 + task-16 = 190 passed. task-7 / 12 / 14 / 18 = 104 passed. task-1..5, 8..11, 19, 20 = 145 passed, 3 skipped, and 6 failed, which are exactly the BUG-8 tests that also fail on site-v1. All runs were desktop + phone with system Chrome.
+
+- **Criteria:** all met.
+  - **Uploader:** "Moment photo" uses `makeSitePhoto(file, 'webp')`, the same pipeline as the other uploads: 1200px longest side, never enlarged, q0.85, `watermarkLayout` / `WM_DIVISOR`, and the TASK-15 marker. The test checks 1200x800, the marker contents and watermark pixels in all 9 cells. The path is `media/moments/<id>.webp`, or `-2`, `-3`... when the name is taken. "Use for moment" saves the moment and adds the file to the pending list, which counts towards the 20-photo limit. Download works.
+  - **Publish:** `momentPathProblem` allows only `media/moments/<own id>(-n).webp` of a draft moment that uses exactly that path. Anything else is refused before any request (tested).
+  - **Removal:** `isRemovableMoment` is limited to `.webp` files directly in `media/moments/`, only when moments.json is in the commit, and never when the tree is truncated. Files used by any event or moment, and files new in this publish, are never removed. The removal goes through the same dialog, the same guard and the same single commit.
+  - **Broken links:** `brokenMomentPhotoLinks` stops the publish with no write.
+  - **Remove from publish:** puts back the published photo, or clears it.
+  - **Repo guard:** checks `data/moments.json`. The self-test covers a missing and an unmarked file.
+- **Programmer notes (1)-(4)** in the TASK-22 status line: (1) a separate "Moment photo" block, not an 8th picker option; (2) no storyboard screen; (3) a file used by a moment is never removed by an events publish, and the other way round; (4) a moment with no photo and no link stops Publish. All four are accepted, implemented as described, and tested.
+- **Security:** the publish-time `validateMoment` also re-checks links (http/https only) and photo paths of draft moments, so a tampered localStorage draft cannot commit a `javascript:` link. All new admin text is set with `textContent`. No token handling changed.
+- [nice-to-have] admin/index.html:354 - `#mp-for` has `role="status"` and is re-rendered on every keystroke in the Moments form (because the new-moment id follows the caption). Screen readers will announce it over and over. Drop `role="status"`, or announce only when the target moment changes.
+- [nice-to-have] js/admin/publish.js (render, `expectedMomentRemovals`) - the Publish preview lists only old moment photos taken from the base moments.json. The real run also removes stray `.webp` files found in the `media/moments/` tree. The confirmation dialog shows the full list before anything happens, so this is only a preview gap.

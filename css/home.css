@@ -198,3 +198,16 @@
 .pass-photo.has-photo { padding: 0; overflow: hidden; background: var(--color-surface); }
 .pass-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .pass-photo img[hidden] { display: none; }
+
+/* ---------- IDEA-12: Hall ??? 番外 (the special last "year") ---------- */
+.hall-sign-special { border: 2px dashed var(--color-purple); border-bottom-width: 4px; background: var(--color-dark-card); }
+.hall-sign-special .hall-sign-name { line-height: 1.6; }
+.hall-sign-special rt { color: var(--color-on-dark-muted); }
+.hall-sign-rom { font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-on-dark-muted); }
+.bangai .pron-inline { margin-top: var(--space-3); max-width: var(--polaroid-w, 260px); }
+.polaroid-shy { border-style: dashed; }
+.shy-ph { flex-direction: column; gap: var(--space-1); --ph: var(--ph-lilac); }
+.shy-ph .kao { font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); font-weight: 700; white-space: nowrap; display: inline-block; }
+.polaroid-shy:hover .kao, .polaroid-shy:focus-visible .kao { animation: shy-peek 700ms ease-in-out 1; }
+@keyframes shy-peek { 0%, 100% { transform: translateX(0) rotate(0); } 30% { transform: translateX(-6px) rotate(-4deg); } 65% { transform: translateX(5px) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .polaroid-shy:hover .kao, .polaroid-shy:focus-visible .kao { animation: none; } }
