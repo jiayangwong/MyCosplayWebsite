@@ -14,6 +14,7 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-19 by the planner after the user wrote "TASK-16 approved, yes" (answers to questions 19, 20 and 22: yes to all). TASK-16 is **approved** and now also covers site photos (BUG-4: a portrait or reel cover link to a file that is not on GitHub). New: TASK-17 (repo guard accepts a marked file whose allowlist hash is stale, question 22 (b)). Build order: TASK-16 -> TASK-17. Questions 19, 20 and 22 moved to answered.
 - Revised: 2026-11-23 by the planner for IDEA-12 (Hall ??? 番外 bangai). New: section 7 "IDEA-12 addition" (planner assumptions A1-A9, `data/moments.json` format, TASK-19 to TASK-22, questions 23-26). Task numbers start at 19 because TASK-18 (admin layout) is already used in docs/changelog.md. TASK-19 (Home part) is **already built on branch `feature/hall-bangai` (commit 7988c22) but not reviewed, not QA-tested and its tests have never been run**. The IDEA-12 tasks are **PROPOSED and wait for the user's approval**. The rest of the plan stays approved.
 - Revised: 2026-11-24 by the planner for IDEA-13 (admin polish). New: section 8, TASK-23 (one task, four changes), planner assumptions B1-B8. Amends TASK-18 (fold behaviour and phone order). The rest of the plan is unchanged.
+- Revised: 2026-11-25 by the planner for IDEA-14 (every admin panel collapsible + Events list paging). New: section 9, TASK-24 (one task), planner assumptions C1-C12. **Waiting for user approval**; the rest of the plan is unchanged.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
@@ -995,3 +996,100 @@ Build order for IDEA-12: **TASK-19** (review + QA of the existing build) -> **TA
 - QA: passed 2026-11-23
 
 Build order for IDEA-13: TASK-23 alone (it touches only `/admin/`; no public page changes).
+
+---
+
+## 9. IDEA-14 addition: Admin - every panel collapsible + Events list paging - 2026-11-25
+
+- Plan status: **waiting for user approval** (not approved yet; do not start the programmer on TASK-24 until the user approves).
+- Source: docs/ideas.md IDEA-14 (`ready-for-planning`). User's words: "In admin pages, all panel able to expand and collapse. The list of events can choose whether showing paging per 5 or per 10. Phone web default 5, PC web default 10".
+- One task, TASK-24. Branch from `site-v1` (for example `task/TASK-24-admin-folds-paging`), merged back into `site-v1`. Only `/admin/` changes; no public page changes.
+- Real files today:
+  - `admin/index.html`: two fold panels already exist, `#gh-panel` (`.fold-head` > `h2#gh-title` + `button.fold-btn[aria-controls="gh-body"]` with `span.fold-chip#gh-chip` and a `<i>` chevron, body `#gh-body`) and `#publish-panel` (same, body `#pub-body`; `#publish-btn`, `#publish-hint` and the result boxes sit outside the body and stay visible). Not foldable yet: the Events list section (`h2#list-title` with `span#event-count` "(n)", `ol#event-list`), the Event form section (`h2#form-title`, text changed by manager.js to "New event" / "Edit CF · 6 Dec 2025", `form#event-form`, embed preview), the Moments panel (`section#moments-panel`, `h2#mo-title` with `span#mo-count`, `ol#moment-list`, `form#moment-form`), and the Media uploader (`section.uploader`, `h2#wm-title`, with the sub-blocks `#site-photos` and `#moment-photo`, both `div role="group"` with an `h3`, not panels).
+  - `js/admin/folds.js`: `fold(btn, open)`, the header-row click handler (already loops over every `.fold-head`), chips and auto-open rules for GitHub (`syncGithub`) and Publish (`syncPublish`, `RESULT_IDS`). `init()` returns early unless `#gh-panel` and `#publish-panel` exist.
+  - `css/admin.css`: `.fold-head`, `.fold-btn` (min-height `--tap-min` 44px), `.fold-chip`, `.fold-body[hidden]`, chevron rotation, reduced-motion rule; `.event-row` phone layout below 768px (TASK-23); one column below 1000px.
+  - `js/admin/manager.js`: `renderList()` draws every event (no paging), `move()`, `remove()`, `onSubmit()` -> `startEdit(saved.id)`, `importEvents()`, `discardDraft()`, `attachPhoto()`, `revertPhoto()`; all call `renderList()`.
+  - `js/admin/moments.js`: `renderList()` for `#moment-list` (same `.event-row` classes), `useMomentPhoto()` (called by the Moment photo block, saves the form and can show validation errors).
+
+### Planner assumptions (defaults for IDEA-14's open questions; the user can veto any)
+- **C1 - One fold header for every panel.** The Events list, Event form, Moments and Media uploader panels get exactly the GitHub/Publish header: the existing `h2` title (same id) + a `button.fold-btn` with `aria-expanded`, `aria-controls` (the body id) and `aria-labelledby` (title + chip), a `span.fold-chip`, and the chevron. The whole header row toggles, the button is the keyboard control (Enter / Space), 44px target, visible focus. Same CSS classes, no second fold system: `js/admin/folds.js` gets one shared `setFold(panelId, open)` export and the general wiring; the GitHub/Publish rules stay as they are.
+- **C2 - Defaults on load (same on phone and desktop):** GitHub **collapsed**, Publish **collapsed** (B5, unchanged); Events list **open**; Event form **open**; Moments **open**; Media uploader **open**. Reason: these are the working panels, and today's tests and habits expect them visible. The open/closed choice is **not remembered** across reloads (same rule as B5).
+- **C3 - Site photos and Moment photo are not separate folds.** They are sub-blocks of the uploader (not panels) and fold together with it. (Veto -> they get their own nested fold, collapsed by default.)
+- **C4 - Auto-open rules (a panel opens by itself, never closes by itself):**
+  - Event form opens when: a row's Edit is pressed, the toolbar "New event" is pressed, or "Attach to selected event" in the uploader fills the form. Focus then goes where it goes today (`#f-date` for Edit / New event).
+  - Moments opens when the Moment photo block's "Use for moment" runs (the form may show validation errors that must be seen).
+  - Events list, Moments and the uploader do not open by themselves for anything else. GitHub and Publish keep the B6 rules.
+- **C5 - Collapsing only hides.** Unsaved form input, activity rows, the embed preview, uploader cards (even while processing), pending files, the current page number and the page size all stay. If focus is inside a body when the user collapses it, focus moves to that panel's fold button (never to `<body>`).
+- **C6 - Chips:** Events list `#event-count` shows "21 events" / "1 event" / "No events"; Event form `#form-chip` shows "New" or "Editing"; Moments `#mo-count` shows "4 moments" / "1 moment" / "No moments"; uploader `#wm-chip` shows "3 photos" / "1 photo" / "No photos" (number of cards in `#wm-previews`). The counts move out of the `h2` into the chip (so the title is not read twice). Existing ids are kept.
+- **C7 - Page size control (Events list only):** a labelled `<select id="event-page-size">` ("Per page", options 5 and 10) above the list. Default when nothing is saved: **5 below 768px, 10 from 768px up**, measured once on load (`matchMedia('(max-width: 767px)')`); resizing later does not change it. Same breakpoint as the TASK-23 phone rows.
+- **C8 - The choice is remembered in this browser:** `localStorage` key `puzzkezz.admin.eventsPerPage` (`"5"` or `"10"`), read and written inside `try/catch`; a missing, invalid or unreadable value falls back to the device default; storage errors never break the page. A saved choice beats the device default. "Discard draft" does not reset it.
+- **C9 - Pager:** below the list, `<nav aria-label="Events pages">` with `button#event-prev` "Previous", `#event-page` "Page n of m" (`aria-live="polite"`), `button#event-next` "Next". Real `<button>`s, 44px targets, `disabled` at the ends. Shown whenever there is at least 1 event (with one page both buttons are disabled, so the control is easy to find). With 0 events the list shows "No events yet. Use "New event"." and the pager and size select are hidden.
+- **C10 - Which page is shown:**
+  - Load, Import, Discard draft: page 1.
+  - Save a new event, or save an edit (the date may move it): the page that holds that event (it is highlighted as today, `.is-editing`).
+  - Delete: stay on the current page; if that page no longer exists, go to the new last page.
+  - Move up / down: if the event crosses a page edge (first row of a page moving up, last row moving down), the list follows it to the neighbouring page. Focus goes to the same move button on the moved row, or to its Edit button if that move button is now disabled. (Move still only swaps events with the same date, TASK-6.)
+  - Attach photo, "Remove from publish" / X revert (TASK-16, TASK-23): stay on the current page.
+  - Changing the page size: show the page that holds the first event of the old page.
+- **C11 - Moments list gets no paging in this task.** The user asked for the events list; moments are few today (the shipped file is empty). (Veto -> the same control is added to Moments with its own key `puzzkezz.admin.momentsPerPage` and the same defaults; `tests/task-21.spec.js` then also changes on phone, because its lists reach 7 moments.)
+- **C12 - Paging is display only.** Sorting, `data/events.json` text, Export, Publish, ids and the draft are unchanged; paging is never written to the draft.
+
+### TASK-24: Admin - collapsible panels + event list paging
+- Linked idea(s): IDEA-14 (with IDEA-7, IDEA-12, IDEA-13)
+- Plan: **waiting for user approval** (proposed 2026-11-25)
+- Depends on: TASK-6, TASK-18, TASK-21, TASK-23 (all built)
+- Acceptance criteria:
+  - **(a) Every panel folds the same way**
+    - `#gh-panel`, `#events-panel` (new id on the Events list section), `#form-panel` (new id on the Event form section), `#moments-panel` and `#wm-panel` (new id on the uploader section) each have a `.fold-head` with: the existing `h2` (`#gh-title`, `#list-title`, `#form-title`, `#mo-title`, `#wm-title`, ids unchanged), a `button.fold-btn` with `aria-expanded`, `aria-controls` pointing at its body (`#gh-body`, `#events-body`, `#form-body`, `#mo-body`, `#wm-body`), `aria-labelledby` = title + chip, a `.fold-chip`, and the chevron (`aria-hidden="true"`). `#publish-panel` keeps its header and `#pub-body` as today.
+    - Each fold button is at least 44 x 44 px, reachable with Tab, has a visible focus style, and toggles with Enter and Space. A click anywhere on the header row also toggles (links excluded, as today).
+    - Collapsed: the body is `hidden`, the chevron points down, `aria-expanded="false"`. Open: the reverse. Only style-guide tokens; reduced motion = no chevron animation.
+    - On every load: GitHub and Publish collapsed (B5); Events list, Event form, Moments and uploader open (C2). Reload after collapsing any panel -> back to these defaults.
+    - Chips show C6 texts and update live: add / delete an event updates `#event-count`; Edit / Clear form switches `#form-chip` between "Editing" and "New"; moments add / delete updates `#mo-count`; adding / removing uploader cards updates `#wm-chip`.
+    - Auto-open (C4): with the Event form collapsed, pressing Edit on a row or "New event" opens it and focuses `#f-date`; "Attach to selected event" opens it. With Moments collapsed, "Use for moment" opens it. Nothing closes a panel except the user.
+    - Collapsing keeps everything (C5): typed form values, activity rows, uploader cards (also while processing; the card still finishes), pending files, page and page size are the same after collapse + expand. Collapsing while focus is inside the body moves focus to that fold button.
+    - Site photos and Moment photo are inside `#wm-body` and fold with the uploader (C3).
+    - Desktop two-column layout and phone one-column order (TASK-23) are unchanged; folding a panel does not move panels into another column. No horizontal scroll at 360px, 412px and 1280px with any mix of open and collapsed panels.
+  - **(b) Events list paging**
+    - A labelled select `#event-page-size` ("Per page") with exactly the options 5 and 10, at least 44px tall, sits above `#event-list`; the pager `nav[aria-label="Events pages"]` with `#event-prev` "Previous", `#event-page` "Page n of m" and `#event-next` "Next" sits below it. Both are inside `#events-body`.
+    - Default with nothing saved: 5 at a viewport under 768px (phone project, Pixel 7), 10 at 768px and wider (desktop 1280). Measured once on load.
+    - Choosing a size saves it to `localStorage` `puzzkezz.admin.eventsPerPage`; after a reload the saved size is used on both phone and desktop. An invalid stored value (for example `"7"` or `"abc"`) and a `localStorage` that throws (stubbed in `addInitScript`) both fall back to the device default with no console error.
+    - `#event-list` shows only the events of the current page, in the usual order (date descending, same-date order kept). The chip still counts all events.
+    - Prev / Next move one page; Previous is `disabled` on page 1, Next is `disabled` on the last page; each is a real button with a 44px target. `#event-page` text is exactly `Page <n> of <m>`.
+    - With 21 events: size 10 -> 3 pages (10, 10, 1 rows); size 5 -> 5 pages (5, 5, 5, 5, 1 rows). With 10 events at size 10 -> "Page 1 of 1", both buttons disabled. With 0 events: "No events yet. Use "New event"." shows and the select and pager are hidden.
+    - Page rules of C10: add -> page of the new event (highlighted); edit that changes the date -> page of the event; delete the only row of the last page -> previous page; delete elsewhere -> same page; move up from the first row of page 2 (same date as the last row of page 1) -> page 1, the event is the last row, focus on its "Move ... up" button (or Edit if disabled); move down from the last row of a page likewise; changing the size keeps the first event of the old page on screen; Import and Discard draft -> page 1; attach / revert photo -> same page.
+    - Moments list is not paged (C11).
+    - Export, Publish and the draft text are byte-for-byte the same as before paging (C12).
+  - Matches the style guide (tokens only, no new colours) and the existing admin look. The approved storyboard has no screen for this; the programmer records that in the task notes.
+- Files (expected): `admin/index.html` (fold headers, body wrappers, new ids, select and pager), `css/admin.css` (pager / select row; reuse `.fold-*`), `js/admin/folds.js` (generic wiring + `setFold()`; GitHub/Publish rules unchanged), `js/admin/manager.js` (paging in `renderList()`, C10 page rules, chip text, auto-open of the form), `js/admin/moments.js` (chip text, auto-open in `useMomentPhoto`), `js/admin/watermark.js` (uploader chip count, "Attach" auto-open; or via a small listener), optionally a pure helper `js/admin/paging.js` (`defaultPageSize(width)`, `pageCount(n, size)`, `pageOf(index, size)`, `readPageSize()` / `savePageSize()` with try/catch) so the rules can be unit-tested, plus tests.
+- **Automated tests (`tests/task-24.spec.js`, `desktop` 1280x800 and `phone` Pixel 7 projects; fake repo + fake token via `tests/github-mock.js`; events mocked with `mockEvents` from `tests/helpers.js`):**
+  - Folds: every one of the 6 panels has a fold button with `aria-expanded`, `aria-controls` that points at an existing body, a chip, a 44 x 44 box; defaults on load (GitHub/Publish false, the other 4 true); toggle each by header click, by button click, and by Enter / Space; reload -> defaults again.
+  - Collapse keeps input: type into `#f-short` and `#m-caption`, add a card to the uploader, collapse and expand each panel, values and card still there; focus inside a body -> collapse -> focus is on that fold button.
+  - Auto-open: collapse the Event form, press Edit on a row -> form opens, `#f-date` focused; collapse, press "New event" -> opens; collapse, attach an uploader card -> opens. Collapse Moments, "Use for moment" with an invalid form -> opens and the error is visible.
+  - Chips: `#event-count` "21 events" with 21 mocked events, "1 event", "No events"; `#form-chip` "New" -> "Editing" -> "New"; `#mo-count` with mocked moments; `#wm-chip` after adding and X-removing a card.
+  - Page size default: phone -> select value 5 and 5 rows; desktop -> 10 and 10 rows (21 mocked events). Choose the other size -> rows change, `localStorage` value saved, reload keeps it. Invalid stored value and a throwing `localStorage` -> device default, no console error.
+  - Pager: 21 events at 10 -> "Page 1 of 3", Previous disabled; Next twice -> "Page 3 of 3", 1 row, Next disabled; at 5 -> 5 pages. Buttons 44 x 44. Keyboard: Tab reaches select, rows, Previous, Next.
+  - Page rules: add an event that sorts onto page 2 -> page 2 shown with that row `.is-editing`; delete the only row of the last page -> previous page; two events with the same date across the page-5/6 edge (size 5): move up from the first row of page 2 -> page 1, row is last, focus on its move button; move down back -> page 2; change size from 5 (on page 3) to 10 -> page 2 (the old first event visible); Import -> page 1; Discard draft -> page 1.
+  - Empty list: 0 mocked events -> empty message, select and pager hidden.
+  - Paging is display only: Export after paging equals Export before (same text).
+  - Moments: 7 mocked moments -> 7 rows, no pager in `#moments-panel`.
+  - No horizontal scroll at 360px, 412px and 1280px with everything open and with everything collapsed.
+- **Existing tests likely to change (expectations only, not weakened; the programmer confirms by searching tests/ for `event-row`, `#event-list`, `event-count`, `list-title`, `form-title`, `mo-count`, `wm-title`, `.uploader`, `moments-panel`):**
+  - `tests/task-6.spec.js`: on phone (default 5) the counts `.event-row` = 8 (load, validation, import-reject, discard) and 9 (after add) and the "delete the last row -> 7" step no longer hold for the visible rows. Change to the chip (`#event-count` "8 events" / "9 events" / "7 events") or to the visible page plus the pager text; `.event-row.last()` becomes the last row of the last page.
+  - `tests/task-23.spec.js`: (1) "Publish opens by itself for the over-20-photos message" uses 21 events and `edit(page, id)` on `.event-row[data-id=...]`; most rows are on later pages -> the helper must first go to the event's page (new shared helper, for example `showEvent(page, id)` in `tests/helpers.js`). (2) Row layout phone test checks the row of `longestEvent` from the real `data/events.json` (21 events), which may not be on page 1 at 5 per page -> go to its page first. (3) Tab test "from the last Events row button reaches the Event form": Tab now reaches the pager (Previous / Next) first and then the Event form fold button -> expect pager, then form panel. (4) "Tab from the GitHub fold button goes to the Events list" now lands on the Events fold button (inside the section labelled by `#list-title`): likely still passes, re-check.
+  - `tests/task-21.spec.js`: `#mo-count` text "(4)", "(5)", "(1)", "(0)" -> "4 moments", "5 moments", "1 moment", "No moments" (C6).
+  - `tests/task-18.spec.js`: positions of `#list-title`, `#form-title`, `#publish-panel`: expected unchanged (titles keep their ids); re-run, change only if the new header row shifts the "same height" check.
+  - Any other spec that loads the real `data/events.json` (21 events) or mocks more than 5 events and finds a row by `data-id`, by `.nth()` / `.last()`, or counts `.event-row` (likely candidates: `task-10`, `task-12`, `task-13`, `task-16`, `task-7`, `task-14`; most mock 2-3 events and are unaffected) -> use `showEvent()` or the chip count.
+  - Any spec checking `#event-count` "(n)" text -> C6 text.
+  - The full suite passes in both projects.
+- Status: todo
+- Review: -
+- QA: -
+
+Build order for IDEA-14: TASK-24 alone, after user approval (it touches only `/admin/`).
+
+### Questions for IDEA-14 (2026-11-25) - the planner's defaults, say if you disagree
+27. **Default open/closed (C2):** GitHub and Publish collapsed; Events list, Event form, Moments and uploader open, the same on phone and PC, not remembered after reload. Or should some start collapsed (for example Moments and the uploader on phone), or should your last open/closed choice be remembered?
+28. **Site photos / Moment photo (C3):** they fold together with the uploader, not on their own. OK?
+29. **Page size remembered (C8):** your 5/10 choice is saved in this browser and beats the phone/PC default. OK, or always start from the default?
+30. **Moments paging (C11):** no paging for the Moments list for now. Add it too (same 5/10 control, own setting)?
+31. **Page after add / move (C10):** the list jumps to the page of the event you just saved or moved. OK, or stay on the current page?

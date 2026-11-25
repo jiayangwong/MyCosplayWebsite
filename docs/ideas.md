@@ -449,6 +449,26 @@ Mobile:
 - References: user message 2026-11-24 (a phone screenshot of the wrapped event names, mentioned by the user)
 - Priority (user's view): must-have (assumed, the user did not say)
 
+## IDEA-14: Admin: every panel collapsible + event list paging (5 / 10)
+- Date: 2026-11-25
+- Status: ready-for-planning
+- Summary: In /admin/, every panel can be expanded and collapsed, and the Events list can be shown 5 or 10 per page, with 5 as the default on phone web and 10 as the default on PC web.
+- Details:
+  - User's words (verbatim): "In admin pages, all panel able to expand and collapse. The list of events can choose whether showing paging per 5 or per 10. Phone web default 5, PC web default 10"
+  - Today (admin/index.html): the GitHub and Publish panels already collapse (TASK-23, collapsed on load, see IDEA-13). Not collapsible yet: Events list, New/Edit event form, Moments (Hall ??? bangai), Media uploader (with its Site photos and Moment photo blocks).
+- Open questions / assumptions (nobody could be asked):
+  1. Fold header: assumed every panel uses the same header as GitHub/Publish (title, state or count chip, chevron, aria-expanded).
+  2. Default state of the newly collapsible panels on load: not decided. Assumed open on desktop for Events, event form and uploader; the planner should ask the user (and say whether phone differs).
+  3. Paging scope: applies to the Events list. Probably also the Moments list (same row layout, IDEA-13); open question for the planner.
+  4. Page-size control: a choice of 5 or 10 per page. Defaults: phone (<768px) 5, PC 10.
+  5. Is the choice remembered in this browser (localStorage)? Assumed yes, and a saved choice beats the device default.
+  6. Pager controls: Previous / Next and "Page 2 of 5", with 44px touch targets, keyboard friendly, and a disabled state at the ends.
+  7. After an event is added, edited or deleted: which page is shown? Assumed stay on the current page, and go to the last valid page if the current one no longer exists; after adding, planner decides (new event's page or stay).
+  8. Move up / down across a page edge: the first item of a page moving up (or the last moving down) should follow the event onto the neighbouring page, or the buttons are disabled at the edge. Planner to decide.
+  9. Does collapsing a panel keep unsaved form input and pending photos? Assumed yes (hide only, do not reset).
+- References: user message 2026-11-25; related: IDEA-13 (collapsed GitHub/Publish panels, phone layout), IDEA-12 (Moments), IDEA-11
+- Priority (user's view): must-have (assumed, the user did not say)
+
 ## Comparison and recommendation (for the user to decide)
 - UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
 
