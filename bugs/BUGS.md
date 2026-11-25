@@ -101,3 +101,21 @@
 - Fix (tests only, no product code): the old 8 samples are kept as tests/fixtures/sample-events.json, exported from tests/helpers.js as `SAMPLE_EVENTS`. tests/task-6.spec.js mocks data/events.json with them in beforeEach (all checks unchanged: 8 rows, 9 after add, 7 after delete, sample flag removed on edit, export 8, import/discard). tests/task-10.spec.js:202 mocks them for that test (the new 2026-09-12 event must be first; with real data a 2026-11-07 event sorts above it). tests/task-11.spec.js:135 counts rows before adding and expects one more (works with any data). tests/task-2.spec.js: the old file check now runs on the fixture (8+ samples, 2024-2026, all `sample: true`), plus a new test that the real data/events.json has version 1, 8+ events across 2024-2026, unique ids, every event passing `validateEvent`, and no `sample` flag. Flakes: tests/task-3.spec.js waits for the 4 polaroid images before reading `loading`, and the reduced-motion test waits for the 4 stations before reading transforms (and checks it read 4, so an empty list cannot pass); tests/task-12.spec.js waits for the reloaded page's `load` event before the ready check.
 - Not fixed here: tests/task-19.spec.js:295 is only on the TASK-19..22 branches (not touched). It calls `noHorizontalScroll` right after `goto`, before the hall / Hall ??? section has rendered, so the scroll check can run on an unfinished page. Suggested fix on that branch: wait for `#hall-bangai` (or the station count) to be visible before `noHorizontalScroll`. Also note tests/task-3.spec.js on TASK-22 expects 5 stations in the reduced-motion test; the merge of this branch will need that number kept at 5 there.
 - How verified (system Chrome, /tmp/pwconf config): task-2/6/10/11 specs 57 passed, 1 skipped; task-6 + task-10:204 + task-11:135 --repeat-each=3 48 passed; task-3 + task-12:266 --repeat-each=3 54 passed; full suite twice: 369 passed, 3 skipped, 0 failed (5.7m, 5.8m).
+
+## BUG-9: gallery.html renders an image without alt text (exists on site-v1, found during TASK-24 QA)
+- Found by: QA
+- Task: none (public Gallery, TASK-8 area; not caused by TASK-24, which only changes /admin/)
+- Severity: major (accessibility: the missing alt breaks the "every image has alt" rule)
+- Steps to reproduce: 1. Open gallery.html with the real data/events.json (22 events). 2. Run `document.images` filtered by `!hasAttribute('alt')`, or run tests/task-9.spec.js:23 and tests/qa-idea-12.spec.js:158.
+- Expected: every img has an alt attribute (empty alt only for decorative images).
+- Actual: one img has no alt attribute; both tests fail on site-v1 and on the TASK-24 branch (same result, both projects).
+- Status: open
+
+## BUG-10: stale public-page tests expect old data (21 events / empty Gallery) after the data now has 22 events with photos (site-v1, found during TASK-24 QA)
+- Found by: QA
+- Task: none (tests only; exists on site-v1)
+- Severity: minor
+- Steps to reproduce: run tests/qa-idea-12.spec.js:175 (expects "21 events") and tests/task-8.spec.js:5 (expects "Photos coming soon" when the real data now has photos).
+- Expected: tests follow the real data (or mock their own events).
+- Actual: both fail in desktop and phone on site-v1 and on the TASK-24 branch. The app is fine.
+- Status: open
