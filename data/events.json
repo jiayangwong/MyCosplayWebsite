@@ -14,6 +14,18 @@
       "photoFull": "media/events/2026-11-07-nikke/33873-full.webp"
     },
     {
+      "id": "2026-10-17-af",
+      "date": "2026-10-17",
+      "short": "AF+",
+      "name": "Anime Fest Plus",
+      "venue": "LaLaport BBCC",
+      "activities": [
+        "Casual big sis look"
+      ],
+      "photo": "media/events/2026-10-17-af/33187.webp",
+      "photoFull": "media/events/2026-10-17-af/33187-full.webp"
+    },
+    {
       "id": "2026-08-28-amg",
       "date": "2026-08-28",
       "short": "AMG",
