@@ -1089,6 +1089,7 @@ Build order for IDEA-13: TASK-23 alone (it touches only `/admin/`; no public pag
 - Status: built, waiting for review (2026-11-25, branch task/TASK-24-admin-folds-paging). Notes: the approved storyboard (storyboard/admin/index.html) does have the fold headers, chips, `Per page` select and pager, and the build follows it. Pre-existing failures on the base branch, not caused by this task: tests/qa-idea-12.spec.js (2 tests), tests/task-8.spec.js:5 and tests/task-9.spec.js:23 (public pages, real data/events.json changed).
 - Review: approved 2026-11-26
 - QA: passed 2026-11-25 (TASK-24 code; the failures listed in BUG-9 / BUG-10 are older, on site-v1 too; see tests/qa-task-24.spec.js)
+- QA re-test 2026-11-25: BUG-9 and BUG-10 verified on bugfix/BUG-9-10 (266d43d); full suite 642 passed, 1 timing flake (task-13:679) passed solo; see tests/qa-bug-9-10.spec.js
 
 Build order for IDEA-14: TASK-24 alone, after user approval (it touches only `/admin/`).
 

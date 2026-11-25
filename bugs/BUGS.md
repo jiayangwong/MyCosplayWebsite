@@ -109,7 +109,7 @@
 - Steps to reproduce: 1. Open gallery.html with the real data/events.json (22 events). 2. Run `document.images` filtered by `!hasAttribute('alt')`, or run tests/task-9.spec.js:23 and tests/qa-idea-12.spec.js:158.
 - Expected: every img has an alt attribute (empty alt only for decorative images).
 - Actual: one img has no alt attribute; both tests fail on site-v1 and on the TASK-24 branch (same result, both projects).
-- Status: fixed
+- Status: verified (QA 2026-11-25)
 - Cause: js/gallery.js buildViewer() creates the viewer's main photo `<img class="lightbox-img v-img">` inside the closed dialog with no alt; alt was only set in show() when a photo is opened, so with any photo in the data the page had one alt-less img.
 - Fix: the viewer img gets a default alt "Selected gallery photo" at creation (show() still replaces it with the photo's own "<event> <year>" alt). File: js/gallery.js. tests/task-9.spec.js:23 and tests/qa-idea-12.spec.js:158 pass (desktop + phone).
 
@@ -120,6 +120,6 @@
 - Steps to reproduce: run tests/qa-idea-12.spec.js:175 (expects "21 events") and tests/task-8.spec.js:5 (expects "Photos coming soon" when the real data now has photos).
 - Expected: tests follow the real data (or mock their own events).
 - Actual: both fail in desktop and phone on site-v1 and on the TASK-24 branch. The app is fine.
-- Status: fixed
+- Status: verified (QA 2026-11-25)
 - Cause: the two tests read the real data/events.json but hard-coded its old state (21 events, no photos).
 - Fix: tests/task-8.spec.js:5 now mocks its own photo-less events (mockEvents); tests/qa-idea-12.spec.js:175 gets the count from the real data through the app's own loadEvents() and checks "<count> events" instead of a fixed number. Tests only, no app change. Both pass desktop + phone.
