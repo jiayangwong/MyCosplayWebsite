@@ -3,6 +3,15 @@
 ## v1.0.0 - released 2026-11-19
 First public version. Release notes are in docs/release.md. Entries below were made while building it.
 
+## v1.1.0 - released 2026-11-26
+- Admin: every panel folds (GitHub, Events, Event form, Publish, Moments, photo uploader); on load only the Events list is open, and each header shows a short chip (for example "21 events").
+- Admin: the Events list is paged with a "Per page" choice of 5 or 10 (5 on phones, 10 on larger screens, remembered in the browser) and Previous / Next buttons.
+- Fixed: the Gallery photo viewer always has alt text (BUG-9).
+- Fixed: two old tests no longer depend on the real event list (BUG-10).
+- Includes your published site data: events, and the portrait photo for Home and About.
+- Known: 18 test checks (tests only, the site works) still assume no portrait photo; logged as BUG-11.
+- Rollback: redeploy tag v1.0.0 (or `git revert` the release merge).
+
 ## Unreleased
 - 2026-11-25 BUG-9 / BUG-10: Gallery viewer photo now always has alt text (default "Selected gallery photo" until a photo is opened) so no img is alt-less (js/gallery.js). Stale tests no longer depend on the real event data: task-8 "Photos coming soon" mocks photo-less events, qa-idea-12 hero count is read from data/events.json via loadEvents() (tests/task-8.spec.js, tests/qa-idea-12.spec.js). Fixed, waiting for QA re-test.
 - 2026-11-25 TASK-24: Admin: every panel folds (GitHub, Events, Event form, Publish, Moments, Media uploader) with the same header (title, chip, chevron, aria-expanded/controls, 44px, Enter/Space); on load only the Events list is open. Chips: "21 events", form "New"/"Editing", "4 moments", uploader "3 photos". Edit / New event / Attach open the form, "Use for moment" opens Moments; collapsing keeps input and moves focus to the fold button. Events list is paged: `Per page` select (5 or 10; default 5 under 768px, 10 above; saved in localStorage `puzzkezz.admin.eventsPerPage`, falls back on bad or blocked storage) and a Previous / Next pager; page follows add / edit / move, stays on delete, size change keeps the first event on screen, Import / Discard go to page 1. Built, waiting for review (admin/index.html, css/admin.css, js/admin/folds.js, js/admin/manager.js, js/admin/moments.js, js/admin/paging.js, tests/task-24.spec.js, tests/helpers.js `openFold` / `showEvent`, tests/github-mock.js, existing admin specs updated to open panels / use the chip counts: task-6, 7, 10, 11, 12, 13, 16, 18, 21, 22, 23, qa-task-23, qa-idea-12-admin)

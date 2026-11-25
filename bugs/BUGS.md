@@ -123,3 +123,12 @@
 - Status: verified (QA 2026-11-25)
 - Cause: the two tests read the real data/events.json but hard-coded its old state (21 events, no photos).
 - Fix: tests/task-8.spec.js:5 now mocks its own photo-less events (mockEvents); tests/qa-idea-12.spec.js:175 gets the count from the real data through the app's own loadEvents() and checks "<count> events" instead of a fixed number. Tests only, no app change. Both pass desktop + phone.
+
+## BUG-11 - 2026-11-26 - stale tests after the first portrait publish (release check)
+- Linked task: none (found by the release manager on the v1.1.0 full run)
+- Severity: minor (tests only, the app is fine)
+- Steps: publish a portrait from /admin (data/site.json now has `"portrait": "media/site/portrait.webp"`), run the full suite.
+- Expected: tests mock their own site data or follow the real one.
+- Actual: 18 failures (9 tests x desktop + phone): task-14 lines 133, 151, 245, 432; task-16 lines 484, 505, 515, 553; task-8 line 34 (About `.portrait` is a photo now, no "Portrait" aria-label). They assumed `portrait: null` in the real data/site.json.
+- Status: open (minor, does not block the release; for the bugfixer)
+
