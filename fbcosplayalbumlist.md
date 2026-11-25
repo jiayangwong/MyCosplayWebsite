@@ -26,10 +26,6 @@ Events Puzz attended, taken from the Facebook album names and cross-checked agai
 | 2023-07-22 | Bon Odori | Bon Odori 2023 | Kompleks Sukan Panasonic, Shah Alam | Bon Odori 2023 |  |
 | 2023-04-29 | AF+ | Anime Fest+ | Tropicana Gardens Mall | Anime Fest+ 2023 Day 2 |  |
 
-## Not events (skipped)
-
-Profile pictures, Cover photos, Featured Photos, 母校, 跨年, 日常, 节日, 废文, 贵贵的东西们, 自恋一下很开心, 自己的黑历史, cos团, (ΦωΦ), 节操可以当饭吃吗, 漫展的小活动.
-
 ## Notes
 
 - AMG = AniManGaki.
