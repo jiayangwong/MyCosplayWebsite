@@ -44,4 +44,27 @@ async function mockMoments(page, moments, { status = 200 } = {}) {
  */
 const SAMPLE_EVENTS = require('./fixtures/sample-events.json').events;
 
-module.exports = { PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };
+/** TASK-24: opens an admin panel ('form-panel', 'moments-panel', 'wm-panel', ...) if it is collapsed. Safe to call twice. */
+async function openFold(page, panelId) {
+  panelId = { gh: 'gh-panel', pub: 'publish-panel' }[panelId] || panelId;
+  const btn = page.locator(`#${panelId} > .fold-head .fold-btn`);
+  if ((await btn.getAttribute('aria-expanded')) === 'false') await btn.click();
+  await expect(page.locator(`#${await btn.getAttribute('aria-controls')}`)).toBeVisible();
+}
+
+/** TASK-24: pages the Events list until the row of event `id` is shown (starts at page 1). */
+async function showEvent(page, id) {
+  const row = page.locator(`.event-row[data-id="${id}"]`);
+  while (!(await row.count())) {
+    const prev = page.locator('#event-prev');
+    if (await prev.isEnabled()) await prev.click(); else break;
+  }
+  for (let i = 0; i < 50 && !(await row.count()); i += 1) {
+    const next = page.locator('#event-next');
+    if (!(await next.isEnabled())) break;
+    await next.click();
+  }
+  await expect(row).toHaveCount(1);
+}
+
+module.exports = { openFold, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };

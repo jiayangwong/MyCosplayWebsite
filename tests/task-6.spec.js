@@ -1,7 +1,7 @@
 // TASK-6: admin event manager.
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
-const { mockEvents, SAMPLE_EVENTS } = require('./helpers');
+const { mockEvents, openFold, SAMPLE_EVENTS } = require('./helpers');
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept());
@@ -9,12 +9,13 @@ test.beforeEach(async ({ page }) => {
   await mockEvents(page, SAMPLE_EVENTS);
   await page.goto('admin/index.html');
   await expect(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
+  await openFold(page, 'form-panel'); // TASK-24: the Event form starts collapsed
 });
 
 test('noindex, not linked from public pages, loads published data first', async ({ page }) => {
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
   await expect(page.locator('#source-banner')).toContainText('published data/events.json');
-  await expect(page.locator('.event-row')).toHaveCount(8);
+  await expect(page.locator('#event-count')).toHaveText('8 events'); // TASK-24: the list is paged, so the chip counts
   // Help text replaced by TASK-12 (Publish to GitHub).
   await expect(page.locator('.help-box')).toContainText('Changes stay on this browser until you press Publish to GitHub. Export events.json is a backup you can commit by hand.');
   for (const p of ['index.html', 'events.html', 'gallery.html']) {
@@ -29,7 +30,7 @@ test('validation errors block saving', async ({ page }) => {
   await page.click('#save-event');
   await expect(page.locator('#err-date')).toBeVisible();
   await expect(page.locator('#err-name')).toBeVisible();
-  await expect(page.locator('.event-row')).toHaveCount(8);
+  await expect(page.locator('#event-count')).toHaveText('8 events'); // TASK-24: the list is paged, so the chip counts
 });
 
 test('add an event: saved to draft, survives reload, gets an id, appears in order', async ({ page }) => {
@@ -47,7 +48,7 @@ test('add an event: saved to draft, survives reload, gets an id, appears in orde
   await page.reload();
   await expect(page.locator('#source-banner')).toContainText('browser draft');
   await expect(page.locator('.event-row').first()).toContainText('CF · Comic Fiesta');
-  await expect(page.locator('.event-row')).toHaveCount(9);
+  await expect(page.locator('#event-count')).toHaveText('9 events'); // TASK-24: the list is paged, so the chip counts
   const draft = await page.evaluate(() => JSON.parse(localStorage.getItem('puzzkezz.events.draft')).events[0]);
   expect(draft).toMatchObject({ id: '2026-12-12-cf', activities: ['Frieren', 'Stage'], venue: 'KL' });
   expect(draft.sample).toBeUndefined();
@@ -62,7 +63,7 @@ test('editing a sample removes the sample flag; move buttons only for same date;
   expect(first.sample).toBeUndefined();
   await expect(page.locator('.event-row').first().getByRole('button', { name: /up$/ })).toBeDisabled();
   await page.locator('.event-row').last().getByRole('button', { name: /^Delete/ }).click();
-  await expect(page.locator('.event-row')).toHaveCount(7);
+  await expect(page.locator('#event-count')).toHaveText('7 events'); // TASK-24: the list is paged, so the chip counts
 });
 
 test('export downloads a sorted events.json', async ({ page }) => {
@@ -77,12 +78,12 @@ test('export downloads a sorted events.json', async ({ page }) => {
 test('import replaces the draft; a bad file is rejected without changes', async ({ page }) => {
   await page.setInputFiles('#import-file', { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{"events":[{"id":"x","date":"2025-02-30","short":"X","name":"X"}]}') });
   await expect(page.locator('#import-error')).toContainText('Import failed');
-  await expect(page.locator('.event-row')).toHaveCount(8);
+  await expect(page.locator('#event-count')).toHaveText('8 events'); // TASK-24: the list is paged, so the chip counts
   const good = { version: 1, events: [{ id: '2023-12-01-cf', date: '2023-12-01', short: 'CF', name: 'Comic Fiesta' }] };
   await page.setInputFiles('#import-file', { name: 'good.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(good)) });
   await expect(page.locator('.event-row')).toHaveCount(1);
   await page.click('#discard-draft');
-  await expect(page.locator('.event-row')).toHaveCount(8);
+  await expect(page.locator('#event-count')).toHaveText('8 events'); // TASK-24: the list is paged, so the chip counts
   await expect(page.locator('#source-banner')).toContainText('published');
 });
 

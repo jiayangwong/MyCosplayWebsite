@@ -420,3 +420,13 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 @media (min-width: 1000px) { .moments-grid { grid-template-columns: minmax(320px, 0.9fr) 1.1fr; } }
 .mo-form-head { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; justify-content: space-between; margin: var(--space-4) 0 var(--space-3); }
 .mo-form-head .panel-subtitle { margin: 0; }
+
+/* TASK-24: every panel folds (same .fold-* rules as GitHub / Publish); Events list page size + pager. */
+.panel.fold .fold-head .panel-title { margin: 0; }
+.moments-panel .fold-body, .uploader .fold-body { margin-top: var(--space-3); }
+.pg-size { max-width: 160px; margin-top: var(--space-3); }
+.pg-size select { min-height: var(--tap-min, 44px); }
+.pg-size[hidden], .pager[hidden] { display: none; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); }
+.pager .btn { min-height: var(--tap-min, 44px); min-width: var(--tap-min, 44px); }
+.pager .btn:disabled { opacity: 0.5; cursor: not-allowed; }

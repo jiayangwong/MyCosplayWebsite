@@ -1039,7 +1039,7 @@ Build order for IDEA-13: TASK-23 alone (it touches only `/admin/`; no public pag
 
 ### TASK-24: Admin - collapsible panels + event list paging
 - Linked idea(s): IDEA-14 (with IDEA-7, IDEA-12, IDEA-13)
-- Plan: **waiting for user approval** (proposed 2026-11-25)
+- Plan: **approved by the user 2026-11-25** ("Approved all")
 - Depends on: TASK-6, TASK-18, TASK-21, TASK-23 (all built)
 - Acceptance criteria:
   - **(a) Every panel folds the same way**
@@ -1086,7 +1086,7 @@ Build order for IDEA-13: TASK-23 alone (it touches only `/admin/`; no public pag
   - Any other spec that loads the real `data/events.json` (21 events) or mocks more than 5 events and finds a row by `data-id`, by `.nth()` / `.last()`, or counts `.event-row` (likely candidates: `task-10`, `task-12`, `task-13`, `task-16`, `task-7`, `task-14`; most mock 2-3 events and are unaffected) -> use `showEvent()` or the chip count.
   - Any spec checking `#event-count` "(n)" text -> C6 text.
   - The full suite passes in both projects.
-- Status: todo
+- Status: built, waiting for review (2026-11-25, branch task/TASK-24-admin-folds-paging). Notes: the approved storyboard (storyboard/admin/index.html) does have the fold headers, chips, `Per page` select and pager, and the build follows it. Pre-existing failures on the base branch, not caused by this task: tests/qa-idea-12.spec.js (2 tests), tests/task-8.spec.js:5 and tests/task-9.spec.js:23 (public pages, real data/events.json changed).
 - Review: -
 - QA: -
 

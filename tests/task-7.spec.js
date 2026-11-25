@@ -3,7 +3,7 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
-const { noHorizontalScroll } = require('./helpers');
+const { noHorizontalScroll, openFold } = require('./helpers');
 
 const BIG = path.join(__dirname, 'fixtures', 'flat-2400x1600.png');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -22,6 +22,8 @@ async function open(page) {
   await page.goto('admin/index.html');
   await expect(page.locator('html')).toHaveAttribute('data-uploader-ready', 'true');
   await expect(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
+  await openFold(page, 'form-panel'); // TASK-24: these panels start collapsed
+  await openFold(page, 'wm-panel');
 }
 
 const card = (page, i = 0) => page.locator('.wm-card').nth(i);
@@ -309,7 +311,7 @@ test('attach fills both photo fields, saves the draft, and adds a pending pair',
 
 test('a pair attached to an unsaved new event follows a changed date or short form', async ({ page }) => {
   await open(page);
-  await page.getByRole('button', { name: 'New event' }).click();
+  await page.getByRole('button', { name: 'New event', exact: true }).click();
   await page.fill('#f-date', '2026-09-12');
   await page.fill('#f-short', 'TST');
   await page.fill('#f-name', 'Test Fest');

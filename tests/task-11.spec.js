@@ -149,13 +149,14 @@ test('the token never reaches the draft or an exported events.json', async ({ pa
   await page.click('#gh-test');
   await expect(page.locator('#gh-status')).toHaveAttribute('data-state', 'ok');
   // Make a draft (one more row than the published events, whatever data/events.json holds; BUG-8).
-  const rows = await page.locator('.event-row').count();
+  const rows = Number((await page.locator('#event-count').textContent()).match(/\d+/)[0]); // TASK-24: the list is paged, count from the chip
   expect(rows).toBeGreaterThan(0);
+  await openFold(page, 'form-panel');
   await page.fill('#f-date', '2026-12-12');
   await page.fill('#f-short', 'TT');
   await page.fill('#f-name', 'Token Test Con');
   await page.click('#save-event');
-  await expect(page.locator('.event-row')).toHaveCount(rows + 1);
+  await expect(page.locator('#event-count')).toHaveText(`${rows + 1} events`);
   const others = await page.evaluate((k) => Object.keys(localStorage).filter((key) => key !== k).map((key) => localStorage.getItem(key)), TOKEN_KEY);
   expect(others.length).toBeGreaterThan(0);
   for (const value of others) expect(value).not.toContain(FAKE_TOKEN);

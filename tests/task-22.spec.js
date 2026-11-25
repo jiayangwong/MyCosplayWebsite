@@ -48,6 +48,8 @@ async function open(page) {
   for (const flag of ['manager', 'uploader', 'github', 'publish', 'moments', 'moment-photo']) {
     await expectResult(page.locator('html')).toHaveAttribute(`data-${flag}-ready`, 'true');
   }
+  // TASK-24: these panels start collapsed
+  for (const id of ['form-panel', 'moments-panel', 'wm-panel']) await openFold(page, id);
 }
 
 async function setup(page, github) {

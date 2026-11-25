@@ -366,11 +366,8 @@ const test = base.test.extend({
 });
 
 /** TASK-23: the GitHub and Publish panels start collapsed. Opens one (which = 'gh' | 'pub') if it is closed. */
-async function openFold(page, which) {
-  const btn = page.locator(which === 'gh' ? '#gh-panel .fold-btn' : '#publish-panel .fold-btn');
-  if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
-  await expect(btn).toHaveAttribute('aria-expanded', 'true');
-}
+// TASK-24: one shared helper (tests/helpers.js); 'gh' and 'pub' still work, panel ids ('form-panel', ...) too.
+const { openFold } = require('./helpers');
 
 /** Saves the fake token through the admin GitHub panel (opens the panel first). */
 async function saveFakeToken(page, token = FAKE_TOKEN) {

@@ -84,15 +84,23 @@
       </div>
       </div>
     </section>
-      <section class="panel" aria-labelledby="list-title">
-        <h2 id="list-title" class="panel-title">Events <span class="panel-count" id="event-count"></span></h2>
+      <section class="panel fold" id="events-panel" aria-labelledby="list-title">
+        <div class="fold-head"><h2 id="list-title" class="panel-title">Events</h2><button type="button" class="fold-btn" aria-expanded="true" aria-controls="events-body" aria-labelledby="list-title event-count"><span class="fold-chip" id="event-count"></span><i aria-hidden="true">&#9662;</i></button></div>
+        <div class="fold-body" id="events-body">
         <p class="panel-hint">Newest first. Move up/down only changes the order of events on the same date.</p>
+        <div class="field pg-size" id="event-size-box">
+          <label for="event-page-size">Per page</label>
+          <select id="event-page-size"><option value="5">5</option><option value="10">10</option></select>
+        </div>
         <ol class="event-list" id="event-list"></ol>
+        <nav class="pager" id="event-pager" aria-label="Events pages"><button type="button" class="btn btn-secondary" id="event-prev">Previous</button><span class="mono" id="event-page" aria-live="polite">Page 1 of 1</span><button type="button" class="btn btn-secondary" id="event-next">Next</button></nav>
+        </div>
       </section>
       </div>
       <div class="adm-side adm-right">
-      <section class="panel" aria-labelledby="form-title">
-        <h2 id="form-title" class="panel-title">New event</h2>
+      <section class="panel fold" id="form-panel" aria-labelledby="form-title">
+        <div class="fold-head"><h2 id="form-title" class="panel-title">New event</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="form-body" aria-labelledby="form-title form-chip"><span class="fold-chip" id="form-chip">New</span><i aria-hidden="true">&#9662;</i></button></div>
+        <div class="fold-body" id="form-body" hidden>
         <form id="event-form" novalidate>
           <div class="field">
             <label for="f-date">When (date)</label>
@@ -149,6 +157,7 @@
         <div class="preview-block">
           <h3 class="panel-subtitle">Embed preview</h3>
           <div id="embed-preview" class="embed-preview"></div>
+        </div>
         </div>
       </section>
     <section class="panel pub-panel fold" id="publish-panel" aria-labelledby="pub-title">
@@ -220,8 +229,9 @@
       </div>
     </div>
 
-    <section class="panel moments-panel" id="moments-panel" aria-labelledby="mo-title">
-      <h2 id="mo-title" class="panel-title">Moments · Hall ??? (bangai) <span class="panel-count" id="mo-count"></span></h2>
+    <section class="panel moments-panel fold" id="moments-panel" aria-labelledby="mo-title">
+      <div class="fold-head"><h2 id="mo-title" class="panel-title">Moments · Hall ??? (bangai)</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="mo-body" aria-labelledby="mo-title mo-count"><span class="fold-chip" id="mo-count"></span><i aria-hidden="true">&#9662;</i></button></div>
+      <div class="fold-body" id="mo-body" hidden>
       <p class="panel-hint">Funny and special moments of all years, shown in the Hall ??? album on Home and Events. Album order: newest year first, moments without a year last. Move up/down only changes the order of moments of the same year.</p>
       <div class="moments-grid">
         <div>
@@ -271,10 +281,12 @@
           </form>
         </div>
       </div>
+      </div>
     </section>
 
-    <section class="panel uploader" aria-labelledby="wm-title">
-      <h2 id="wm-title" class="panel-title">Media uploader · automatic watermark</h2>
+    <section class="panel uploader fold" id="wm-panel" aria-labelledby="wm-title">
+      <div class="fold-head"><h2 id="wm-title" class="panel-title">Media uploader · automatic watermark</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="wm-body" aria-labelledby="wm-title wm-chip"><span class="fold-chip" id="wm-chip">No photos</span><i aria-hidden="true">&#9662;</i></button></div>
+      <div class="fold-body" id="wm-body" hidden>
       <p class="panel-hint">Everything happens in this browser. Nothing is uploaded anywhere.</p>
 
       <div class="up-grid">
@@ -370,6 +382,7 @@
             <button type="button" class="btn btn-secondary btn-sm" id="mp-download" disabled>Download</button>
           </div>
         </div>
+      </div>
       </div>
     </section>
 

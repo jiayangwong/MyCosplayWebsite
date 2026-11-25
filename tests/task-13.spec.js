@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, gitBlobSha, openFold } = require('./github-mock');
+const { showEvent } = require('./helpers');
 
 const BIG = path.join(__dirname, 'fixtures', 'flat-2400x1600.png');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -48,6 +49,8 @@ async function setup(page, github, { events, files = {}, truncated = false }) {
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter'); // keyboard, not a click: no lost clicks on the phone layout
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
+  await openFold(page, 'form-panel');
+  await openFold(page, 'wm-panel');
 }
 
 const card = (page, i) => page.locator('.wm-card').nth(i);
@@ -55,6 +58,7 @@ const row = (page, id) => page.locator(`.event-row[data-id="${id}"]`);
 
 /** Opens an event in the form with the keyboard (Enter on its Edit button). */
 async function edit(page, id) {
+  await showEvent(page, id); // TASK-24: the row may be on a later page
   await row(page, id).getByRole('button', { name: /^Edit/ }).press('Enter');
   await expect(page.locator('#wm-event-id')).toHaveText(id);
 }
