@@ -35,3 +35,6 @@ STORYBOARD APPROVED (HOME screen update with Hall ??? as the last year, shy-kaom
 
 ## Plan approval 2026-11-23
 The user told the planner team to start TASK-19 and TASK-20, then continue with TASK-21 and TASK-22. IDEA-12 tasks TASK-19 to TASK-22 are approved to be built. Review, QA, bug fixing and release are done by the daily 19:30 (GMT+8) run.
+
+## Addendum 2026-11-25: IDEA-14 / TASK-24 admin collapsible panels + event paging
+STORYBOARD APPROVED (admin screen: all panels collapsible, only Events open on load, events list 5/10 per page). The user said "Approved all" in chat on 2026-11-25, covering the TASK-24 plan and the admin storyboard. Deploy is NOT approved yet; the release-manager must ask.

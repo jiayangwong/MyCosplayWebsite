@@ -458,7 +458,7 @@ Mobile:
   - Today (admin/index.html): the GitHub and Publish panels already collapse (TASK-23, collapsed on load, see IDEA-13). Not collapsible yet: Events list, New/Edit event form, Moments (Hall ??? bangai), Media uploader (with its Site photos and Moment photo blocks).
 - Open questions / assumptions (nobody could be asked):
   1. Fold header: assumed every panel uses the same header as GitHub/Publish (title, state or count chip, chevron, aria-expanded).
-  2. Default state of the newly collapsible panels on load: not decided. Assumed open on desktop for Events, event form and uploader; the planner should ask the user (and say whether phone differs).
+  2. Default state of the newly collapsible panels on load: DECIDED by the user 2026-11-25 (verbatim: "1 more, except for events, all panel default collapse when page just loaded"). Only the Events list is open on load; GitHub, Publish, Event form, Moments and the Media uploader (with Site photos / Moment photo) start collapsed, the same on phone and PC, not remembered after reload. The auto-open rules still apply (Edit / New event / Attach to selected event open the form; Use for moment opens Moments). See docs/plan.md C2.
   3. Paging scope: applies to the Events list. Probably also the Moments list (same row layout, IDEA-13); open question for the planner.
   4. Page-size control: a choice of 5 or 10 per page. Defaults: phone (<768px) 5, PC 10.
   5. Is the choice remembered in this browser (localStorage)? Assumed yes, and a saved choice beats the device default.
