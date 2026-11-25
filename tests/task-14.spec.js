@@ -53,6 +53,8 @@ async function setup(page, github) {
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter'); // keyboard: no lost clicks on the phone layout
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
+  await openFold(page, 'form-panel');
+  await openFold(page, 'wm-panel');
 }
 
 /** Picks a target, uploads one image and waits for the preview. Returns { width, height, bytes }. */

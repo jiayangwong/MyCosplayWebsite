@@ -3,6 +3,11 @@ const { test, expect } = require('@playwright/test');
 const { mockEvents } = require('./helpers');
 
 test('gallery shows "Photos coming soon" when no event has a photo', async ({ page }) => {
+  // Own data (BUG-10): the real events.json now has photos, so mock events without any.
+  await mockEvents(page, [
+    { id: '2025-12-06-cf', date: '2025-12-06', short: 'CF', name: 'Comic Fiesta' },
+    { id: '2026-02-01-amg', date: '2026-02-01', short: 'AMG', name: 'AMG' },
+  ]);
   await page.goto('gallery.html');
   await expect(page.getByText('Photos coming soon.')).toBeVisible();
   await expect(page.locator('.tabs a[aria-current="page"], .menu-link[aria-current="page"]').first()).toContainText('GALLERY');

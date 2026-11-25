@@ -23,6 +23,8 @@ test('X is disabled on a pending card while publishing and enabled again after',
   await page.goto('admin/index.html');
   await ready(page);
   await saveFakeToken(page);
+  await openFold(page, 'form-panel');
+  await openFold(page, 'wm-panel');
   await page.setInputFiles('#wm-files', SMALL);
   await expect(page.locator('.wm-card').first()).toHaveAttribute('data-state', 'ready', { timeout: 30000 });
   await page.locator(`.event-row[data-id="${X}"]`).getByRole('button', { name: /^Edit/ }).press('Enter');

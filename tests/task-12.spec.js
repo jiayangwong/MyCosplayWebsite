@@ -3,7 +3,8 @@
 // a test on any unhandled api.github.com call, and if the token shows up anywhere except the Authorization
 // header of a request to https://api.github.com.
 const fs = require('fs');
-const { test, expect, BRANCH, API, FAKE_TOKEN, gitBlobSha, openFold } = require('./github-mock');
+const { test, expect, BRANCH, API, FAKE_TOKEN, FakeRepo, gitBlobSha, openFold } = require('./github-mock');
+const { SAMPLE_EVENTS } = require('./helpers');
 
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
 const REF_GET = `GET ${REPO}/git/ref/heads/${BRANCH}`;
@@ -23,12 +24,19 @@ const expectResult = expect.configure({ timeout: RESULT_TIMEOUT });
 // Some tests publish twice (or Discard + Publish); give the whole test room for two slow publishes.
 test.describe.configure({ timeout: 60000 });
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, github }) => {
   page.on('dialog', (d) => d.accept());
+  // Fixed published data without photos, the same bytes on the site and in the fake repo (the real
+  // data/events.json now has photos that the fake repo does not hold, so Publish would stop on them).
+  const eventsText = `${JSON.stringify({ version: 1, events: SAMPLE_EVENTS }, null, 2)}\n`;
+  github.repo = new FakeRepo({ files: { 'data/events.json': eventsText } });
+  await page.route('**/data/events.json', (route) => route.fulfill({ contentType: 'application/json', body: eventsText }));
   await page.goto('admin/index.html');
   await expectResult(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
   await expectResult(page.locator('html')).toHaveAttribute('data-github-ready', 'true');
   await expectResult(page.locator('html')).toHaveAttribute('data-publish-ready', 'true');
+  await openFold(page, 'form-panel');
+  await openFold(page, 'wm-panel');
 });
 
 /** Saves the fake token and waits until it is stored. Uses Enter in the field (keyboard focus, not a

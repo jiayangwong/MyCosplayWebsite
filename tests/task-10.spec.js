@@ -2,7 +2,7 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
-const { mockEvents, trackErrors, SAMPLE_EVENTS } = require('./helpers');
+const { mockEvents, trackErrors, openFold, SAMPLE_EVENTS } = require('./helpers');
 
 const PNG = fs.readFileSync(path.join(__dirname, 'fixtures', 'flat-2400x1600.png'));
 const SVG = fs.readFileSync(path.join(__dirname, '..', 'favicon.svg'));
@@ -205,6 +205,7 @@ test('admin: Display photo and Full-size photo are saved, kept after reload and 
   await mockEvents(page, SAMPLE_EVENTS);
   await page.goto('admin/index.html');
   await expect(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');
+  await openFold(page, 'form-panel'); // TASK-24
   await expect(page.getByLabel('Display photo')).toHaveAttribute('id', 'f-photo');
   await expect(page.getByLabel('Full-size photo')).toHaveAttribute('id', 'f-photo-full');
 
@@ -215,11 +216,11 @@ test('admin: Display photo and Full-size photo are saved, kept after reload and 
   await page.fill('#f-photo-full', 'media/events/2026-09-12-tst/cover-full.webp');
   await page.click('#save-event');
   await expect(page.locator('#err-photoFull')).toBeVisible();
-  await expect(page.locator('.event-row')).toHaveCount(8);
+  await expect(page.locator('#event-count')).toHaveText('8 events'); // TASK-24: paged list, the chip counts
 
   await page.fill('#f-photo', 'media/events/2026-09-12-tst/cover.webp');
   await page.click('#save-event');
-  await expect(page.locator('.event-row')).toHaveCount(9);
+  await expect(page.locator('#event-count')).toHaveText('9 events');
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-manager-ready', 'true');

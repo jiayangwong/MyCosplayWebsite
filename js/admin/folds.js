@@ -6,8 +6,17 @@ const $ = (id) => document.getElementById(id);
 function fold(btn, open) {
   const body = $(btn.getAttribute('aria-controls'));
   if (!body) return;
+  // TASK-24: collapsing while focus is inside the body moves focus to the fold button (never to <body>).
+  const hadFocus = !open && body.contains(document.activeElement);
   body.hidden = !open;
   btn.setAttribute('aria-expanded', String(open));
+  if (hadFocus) btn.focus();
+}
+
+/** Opens or closes a panel by its id (for example 'form-panel'). Other scripts use this to auto-open a panel. */
+export function setFold(panelId, open) {
+  const btn = document.querySelector(`#${panelId} > .fold-head .fold-btn`);
+  if (btn) fold(btn, open);
 }
 
 const GH_CHIP = { none: 'Not connected', saved: 'Token saved', testing: 'Testing...', ok: 'Connected', err: 'Error' };
@@ -38,8 +47,18 @@ function openForResult(records) {
   if (records.some((r) => !r.target.hidden)) fold(document.querySelector('#publish-panel .fold-btn'), true);
 }
 
+// Uploader chip: number of cards in #wm-previews.
+function syncUploader() {
+  const n = $('wm-previews').children.length;
+  $('wm-chip').textContent = n ? `${n} ${n === 1 ? 'photo' : 'photos'}` : 'No photos';
+}
+
 function init() {
   if (!$('gh-panel') || !$('publish-panel')) return;
+  if ($('wm-previews') && $('wm-chip')) {
+    new MutationObserver(syncUploader).observe($('wm-previews'), { childList: true });
+    syncUploader();
+  }
   // The whole header row (title, chip, arrow) toggles; the button stays the keyboard control.
   document.querySelectorAll('.fold-head').forEach((head) => {
     const btn = head.querySelector('.fold-btn');

@@ -15,6 +15,7 @@ async function setup(page, github, moments) {
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter');
   await ok(page.locator('#gh-saved')).toContainText('Token saved');
+  await openFold(page, 'moments-panel');
 }
 const add = async (page, caption, link) => {
   await page.press('#new-moment', 'Enter');

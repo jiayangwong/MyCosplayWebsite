@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect, FAKE_TOKEN, FakeRepo, openFold, saveFakeToken } = require('./github-mock');
-const { noHorizontalScroll, mockMoments } = require('./helpers');
+const { noHorizontalScroll, mockMoments, showEvent } = require('./helpers');
 
 const ROOT = path.join(__dirname, '..');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -38,6 +38,9 @@ async function plain(page) {
   page.on('dialog', (d) => d.accept());
   await page.goto('admin/index.html');
   await ready(page);
+  await openFold(page, 'form-panel'); // TASK-24: these panels start collapsed
+  await openFold(page, 'wm-panel');
+  await openFold(page, 'moments-panel');
 }
 
 /** Fake repo + same events.json on the site; opens /admin/ with the fake token saved. */
@@ -50,6 +53,7 @@ async function setup(page, github, { events = [ev(X), ev('2025-08-09-omt')], fil
 }
 
 async function edit(page, id) {
+  await showEvent(page, id); // TASK-24: the row may be on a later page
   await page.locator(`.event-row[data-id="${id}"]`).getByRole('button', { name: /^Edit/ }).press('Enter');
   await expect(page.locator('#wm-event-id')).toHaveText(id);
 }
@@ -115,6 +119,7 @@ test.describe('X remove button', () => {
     await page.setInputFiles('#wm-files', SMALL);
     await expectResult(card(page, 0)).toHaveAttribute('data-state', 'ready', { timeout: 30000 });
     const b = xBtn(page, 0, 'flat-800x600.png');
+    await page.keyboard.press('Shift'); // keyboard use, so the focus ring (:focus-visible) shows after the earlier mouse clicks
     await b.focus();
     const outline = await b.evaluate((el) => getComputedStyle(el).outlineStyle);
     expect(outline).not.toBe('none');
@@ -484,6 +489,7 @@ test.describe('row layout', () => {
     for (const size of [null, { width: 360, height: 800 }]) {
       if (size) await page.setViewportSize(size);
       await checkPhoneRow(first);
+      await showEvent(page, longestEvent.id); // TASK-24: 5 per page on the phone
       await checkPhoneRow(long);
       await checkPhoneRow(moment);
       await checkPhoneRow(page.locator('#moment-list .event-row').nth(1));
@@ -497,7 +503,9 @@ test.describe('row layout', () => {
   test('phone: Comic Fiesta (real event) is not broken in the middle of a word', async ({ page }, info) => {
     test.skip(info.project.name !== 'phone', 'phone only');
     await page.setViewportSize({ width: 360, height: 800 });
-    const title = page.locator('#event-list .event-row-title', { hasText: 'Comic Fiesta' }).first();
+    const cf = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'events.json'), 'utf8')).events.find((e) => /Comic Fiesta/.test(e.name));
+    await showEvent(page, cf.id); // TASK-24: the list is paged
+    const title = page.locator(`#event-list .event-row[data-id="${cf.id}"] .event-row-title`);
     const lines = await title.evaluate((el) => {
       const range = document.createRange();
       range.selectNodeContents(el);
@@ -546,9 +554,14 @@ test.describe('panel order', () => {
     expect(dom.every(Boolean)).toBe(true);
   });
 
-  test('one column: Tab from the last Events row button reaches the Event form, and the form leads on to Publish', async ({ page }, info) => {
+  test('one column: Tab from the last Events row button reaches the pager, then the Event form, and the form leads on to Publish', async ({ page }, info) => {
     test.skip(info.project.name !== 'phone', 'phone only');
     await page.locator('#event-list .event-row').last().locator('.event-row-actions button').last().focus();
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => document.activeElement.closest('#event-pager') !== null)).toBe(true); // TASK-24: the pager comes first
+    await page.locator('#event-next').focus();
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => document.activeElement === document.querySelector('#form-panel .fold-btn'))).toBe(true);
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => document.activeElement.closest('#event-form') !== null)).toBe(true);
     await page.locator('#cancel-edit').focus();

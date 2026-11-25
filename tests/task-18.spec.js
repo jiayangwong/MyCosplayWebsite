@@ -52,6 +52,7 @@ test('Publish folds, but the button and its hint stay visible; chip counts pendi
   await expect(page.locator('#publish-hint')).toBeVisible();
   await expect(page.locator('#pub-chip')).toHaveText('Nothing pending');
   await expect(page.locator('#pub-pending')).toBeHidden();
+  await openFold(page, 'form-panel'); // TASK-24: the Event form starts collapsed
   await page.fill('#f-date', '2026-03-14');
   await page.fill('#f-short', 'CF');
   await page.fill('#f-name', 'Comic Fiesta');

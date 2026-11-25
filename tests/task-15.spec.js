@@ -104,6 +104,8 @@ async function setup(page, github, { events }) {
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter'); // keyboard, not a click: no lost clicks on the phone layout
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
+  await openFold(page, 'form-panel');
+  await openFold(page, 'wm-panel');
 }
 
 const card = (page, i) => page.locator('.wm-card').nth(i);

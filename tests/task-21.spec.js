@@ -36,6 +36,7 @@ async function open(page) {
   for (const flag of ['manager', 'github', 'publish', 'moments']) {
     await expectResult(page.locator('html')).toHaveAttribute(`data-${flag}-ready`, 'true');
   }
+  await openFold(page, 'moments-panel'); // TASK-24: Moments starts collapsed
 }
 
 /** /admin/ with a fake repo and a site that both hold EVENTS_TEXT and MOMENTS_TEXT; saves the fake token. */
@@ -78,7 +79,7 @@ async function addMoment(page, data) {
 test('lists the moments in album order (A8) with labelled form fields; move only within the same year', async ({ page, github }) => {
   await setup(page, github, { token: false });
   await expect(page.locator('#mo-title')).toContainText('Moments');
-  await expect(page.locator('#mo-count')).toHaveText('(4)');
+  await expect(page.locator('#mo-count')).toHaveText('4 moments');
   expect(await rowIds(page)).toEqual(['2025-a', '2025-b', '2024-old', 'x-no-year']);
   for (const label of ['Year (optional)', 'Caption (optional, max 140)', 'Alt text (describes the photo)', 'Link (video or post)', 'Photo path']) {
     await expect(page.getByLabel(label, { exact: true })).toBeVisible();
@@ -271,10 +272,10 @@ test('Publishing events only does not touch data/moments.json', async ({ page, g
 test('Discard draft also restarts the moments draft (from GitHub with a token)', async ({ page, github }) => {
   await setup(page, github);
   await addMoment(page, { year: 2025, caption: 'To be discarded', link: 'https://example.com/d' });
-  await expect(page.locator('#mo-count')).toHaveText('(5)');
+  await expect(page.locator('#mo-count')).toHaveText('5 moments');
   github.repo.pushOutside({ 'data/moments.json': `${JSON.stringify({ version: 1, moments: [PUBLISHED[0]] })}\n` });
   await page.locator('#discard-draft').press('Enter');
-  await expectResult(page.locator('#mo-count')).toHaveText('(1)');
+  await expectResult(page.locator('#mo-count')).toHaveText('1 moment');
   expect(await rowIds(page)).toEqual(['2024-old']);
   expect(await draft(page)).toBeNull();
   await expect(page.locator('#pub-pending')).toHaveText('No pending changes.');
@@ -285,7 +286,7 @@ test('Discard draft also restarts the moments draft (from GitHub with a token)',
 test('the shipped data/moments.json (empty) loads with nothing pending', async ({ page }) => {
   page.on('dialog', (d) => d.accept());
   await open(page);
-  await expect(page.locator('#mo-count')).toHaveText('(0)');
+  await expect(page.locator('#mo-count')).toHaveText('No moments');
   await expect(page.locator('#moment-list')).toHaveText('No moments yet. Use "New moment".');
   await expect(page.locator('#pub-pending')).not.toContainText('data/moments.json');
 });

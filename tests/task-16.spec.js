@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
+const { showEvent } = require('./helpers');
 
 const ROOT = path.join(__dirname, '..');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -67,12 +68,16 @@ async function setup(page, github, { events = [ev(X), ev(Y)], files = {}, trunca
   await page.fill('#gh-token', FAKE_TOKEN);
   await page.press('#gh-token', 'Enter');
   await expectResult(page.locator('#gh-saved')).toHaveText(`Token saved, ends in ...${FAKE_TOKEN.slice(-4)}`);
+  await openFold(page, 'form-panel');
+  await openFold(page, 'wm-panel');
 }
 
 /** Reloads /admin/: pending files (memory only) are gone, the drafts (localStorage) and the token stay. */
 async function reload(page) {
   await page.reload();
   await ready(page);
+  await openFold(page, 'form-panel');
+  await openFold(page, 'wm-panel');
   await expectResult(page.locator('#gh-saved')).toContainText('Token saved');
 }
 
@@ -80,6 +85,7 @@ const card = (page, i) => page.locator('.wm-card').nth(i);
 const row = (page, id) => page.locator(`.event-row[data-id="${id}"]`);
 
 async function edit(page, id) {
+  await showEvent(page, id); // TASK-24: the row may be on a later page
   await row(page, id).getByRole('button', { name: /^Edit/ }).press('Enter');
   await expect(page.locator('#wm-event-id')).toHaveText(id);
 }

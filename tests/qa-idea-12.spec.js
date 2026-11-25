@@ -172,11 +172,14 @@ test('all public pages: no console errors/404s, images have alt, internal links 
   expect(bad.filter((b) => !/fonts\.g|ERR_NAME_NOT_RESOLVED/.test(b))).toEqual([]);
 });
 
-test('home with the real (empty) moments.json: Hall ??? shows, album empty, hero counts 21 events', async ({ page }) => {
+test('home with the real (empty) moments.json: Hall ??? shows, album empty, hero counts the real events', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('index.html');
   await expect(page.locator('#hall-list > li').last()).toHaveAttribute('id', 'hall-bangai');
-  await expect(page.locator('#hall-summary')).toContainText('21 events');
+  // Count derived from the real data/events.json via the app's own loader (BUG-10), not hard-coded.
+  const count = await page.evaluate(async () => (await (await import('/js/events-data.js')).loadEvents()).length);
+  expect(count).toBeGreaterThan(0);
+  await expect(page.locator('#hall-summary')).toContainText(`${count} events`);
   await (await open(page)).click();
   await expect(page.locator('dialog#bangai .bm-empty')).toBeVisible();
   expect(errors).toEqual([]);

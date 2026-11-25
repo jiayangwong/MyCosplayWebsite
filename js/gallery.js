@@ -27,6 +27,7 @@ function buildViewer(items) {
   const box = make('div', 'vbox');
   const stage = make('div', 'vstage');
   const disp = make('img', 'lightbox-img v-img');
+  disp.alt = 'Selected gallery photo'; // replaced by the photo's own alt in show(); never alt-less (BUG-9)
   disp.decoding = 'async';
   const full = make('img', 'v-img v-full');
   full.alt = '';

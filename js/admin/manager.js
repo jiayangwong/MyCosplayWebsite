@@ -7,6 +7,8 @@ import { renderMedia } from '../embed.js';
 import { gitBlobSha } from './git-blob.js';
 import { githubFetch, readToken } from './github-token.js';
 import { GITHUB } from './github-config.js';
+import { setFold } from './folds.js';
+import { defaultPageSize, pageCount, pageOf, readPageSize, savePageSize } from './paging.js';
 
 export const DRAFT_KEY = 'puzzkezz.events.draft';
 const FIELDS = ['date', 'short', 'name', 'venue', 'link', 'photo', 'photoFull'];
@@ -16,7 +18,7 @@ const inputId = (field) => `f-${field.replace(/[A-Z]/g, (c) => `-${c.toLowerCase
 const EXPORT_ORDER = ['id', 'date', 'short', 'name', 'venue', 'activities', 'link', 'photo', 'photoFull', 'sample'];
 
 const $ = (id) => document.getElementById(id);
-const state = { events: [], editingId: null, base: { sha: null, text: '' } };
+const state = { events: [], editingId: null, base: { sha: null, text: '' }, page: 0, size: 10 };
 const listeners = new Set();
 const draftListeners = new Set();
 const REPO_READ_TIMEOUT_MS = 30000;
@@ -91,11 +93,21 @@ async function loadPublished() {
 function renderList() {
   const list = $('event-list');
   list.replaceChildren();
-  $('event-count').textContent = `(${state.events.length})`;
-  if (!state.events.length) {
+  const total = state.events.length;
+  $('event-count').textContent = total ? `${total} ${total === 1 ? 'event' : 'events'}` : 'No events';
+  const pages = pageCount(total, state.size);
+  state.page = Math.min(Math.max(0, state.page), pages - 1);
+  $('event-size-box').hidden = !total;
+  $('event-pager').hidden = !total;
+  $('event-page').textContent = `Page ${state.page + 1} of ${pages}`;
+  $('event-prev').disabled = state.page === 0;
+  $('event-next').disabled = state.page >= pages - 1;
+  if (!total) {
     list.append(make('li', 'panel-hint', 'No events yet. Use "New event".'));
   }
-  state.events.forEach((event, i) => {
+  const first = state.page * state.size;
+  state.events.slice(first, first + state.size).forEach((event, k) => {
+    const i = first + k;
     const li = make('li', `event-row${event.id === state.editingId ? ' is-editing' : ''}`);
     li.dataset.id = event.id;
     const info = make('div');
@@ -131,7 +143,25 @@ function move(index, delta) {
   if (!a || !b || a.date !== b.date) return;
   state.events[index] = b;
   state.events[j] = a;
+  state.page = pageOf(j, state.size); // the list follows the moved row to its page
   saveDraft();
+  renderList();
+  const row = $('event-list').querySelector(`.event-row[data-id="${a.id}"]`);
+  const btn = row && [...row.querySelectorAll('.icon-btn')][delta < 0 ? 1 : 2];
+  (btn && !btn.disabled ? btn : row && row.querySelector('.icon-btn'))?.focus();
+}
+
+function setPage(page) {
+  state.page = page;
+  renderList();
+}
+
+function onPageSize() {
+  const size = Number($('event-page-size').value);
+  const firstIndex = state.page * state.size;
+  state.size = size;
+  state.page = pageOf(firstIndex, size);
+  savePageSize(size);
   renderList();
 }
 
@@ -203,6 +233,7 @@ function fillForm(event) {
 
 function clearForm() {
   state.editingId = null;
+  $('form-chip').textContent = 'New';
   $('form-title').textContent = 'New event';
   $('save-event').textContent = 'Save event';
   fillForm({});
@@ -213,7 +244,10 @@ function clearForm() {
 function startEdit(id) {
   const event = state.events.find((e) => e.id === id);
   if (!event) return;
+  setFold('form-panel', true);
   state.editingId = id;
+  state.page = pageOf(state.events.indexOf(event), state.size);
+  $('form-chip').textContent = 'Editing';
   $('form-title').textContent = `Edit ${event.short} · ${formatDate(event.date)}`;
   $('save-event').textContent = 'Save changes';
   fillForm(event);
@@ -310,6 +344,7 @@ async function importEvents(file) {
     });
     state.events = sortEvents(events);
     saveDraft(); // keeps the base: the repo copy this browser started from has not changed
+    state.page = 0;
     clearForm();
     $('save-status').textContent = `Imported ${events.length} events from ${file.name}.`;
   } catch (error) {
@@ -361,6 +396,7 @@ async function discardDraft() {
     state.events = sortEvents(published.events);
     state.base = published.base;
     setBanner(fromRepo ? 'Source: published data/events.json (newest copy from GitHub)' : 'Source: published data/events.json');
+    state.page = 0;
     clearForm();
     // Other drafts (TASK-14 site photos) start again too, still inside the lock.
     for (const hook of discardHooks) {
@@ -430,6 +466,7 @@ export function usedPhotoPaths() {
 /** Puts a photo path (display copy) and, optionally, the full-size path into the form.
  *  When editing an existing event it is saved to the draft right away. */
 export function attachPhoto(path, fullPath) {
+  setFold('form-panel', true);
   $('f-photo').value = path;
   if (fullPath !== undefined) $('f-photo-full').value = fullPath || '';
   updatePreview();
@@ -537,7 +574,7 @@ async function init() {
     setBanner('Source: published data/events.json');
   }
   $('event-form').addEventListener('submit', onSubmit);
-  $('new-event').addEventListener('click', () => { clearForm(); $('f-date').focus(); });
+  $('new-event').addEventListener('click', () => { setFold('form-panel', true); clearForm(); $('f-date').focus(); });
   $('cancel-edit').addEventListener('click', clearForm);
   $('add-activity').addEventListener('click', () => addActivityRow().focus());
   $('f-link').addEventListener('input', updatePreview);
@@ -551,6 +588,11 @@ async function init() {
     e.target.value = '';
   });
   $('discard-draft').addEventListener('click', discardDraft);
+  state.size = readPageSize(matchMedia('(max-width: 767px)').matches ? defaultPageSize(0) : defaultPageSize(768));
+  $('event-page-size').value = String(state.size);
+  $('event-page-size').addEventListener('change', onPageSize);
+  $('event-prev').addEventListener('click', () => setPage(state.page - 1));
+  $('event-next').addEventListener('click', () => setPage(state.page + 1));
   clearForm();
   document.documentElement.dataset.managerReady = 'true';
   resolveReady();

@@ -6,6 +6,7 @@ import {
   discardMomentsDraft, makeMomentId,
 } from './moments-draft.js';
 import { addDiscardHook } from './manager.js';
+import { setFold } from './folds.js';
 
 const $ = (id) => document.getElementById(id);
 const FIELDS = ['year', 'caption', 'alt', 'link', 'photo'];
@@ -26,7 +27,7 @@ function renderList() {
   const list = $('moment-list');
   const moments = draftMoments();
   list.replaceChildren();
-  $('mo-count').textContent = `(${moments.length})`;
+  $('mo-count').textContent = moments.length ? `${moments.length} ${moments.length === 1 ? 'moment' : 'moments'}` : 'No moments';
   if (!moments.length) list.append(make('li', 'panel-hint', 'No moments yet. Use "New moment".'));
   for (const m of moments) {
     const li = make('li', `event-row${m.id === editingId ? ' is-editing' : ''}`);
@@ -171,6 +172,7 @@ export function currentMomentId() {
  * created). Returns the saved moment, or null when the form has errors (the photo field gets its old value back).
  */
 export function useMomentPhoto(path) {
+  setFold('moments-panel', true); // the form may show errors that must be seen
   const field = $('m-photo');
   const before = field.value;
   field.value = path;
