@@ -446,6 +446,8 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
   .dtab { position: relative; overflow: hidden; min-width: 64px; min-height: var(--tap-min); border: var(--outline); border-radius: var(--radius-sm); background: var(--ph-lilac); color: var(--color-ink); font: 700 13px var(--font-mono); cursor: pointer; }
   .dtab:nth-child(2) { transform: rotate(1.5deg); } .dtab:nth-child(3) { transform: rotate(-1deg); }
   .dtab .fill { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--color-purple-deep); color: var(--color-surface); clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0); pointer-events: none; }
+  .dtab .fill { transition: opacity 200ms; }
+  .pile.xf .dtab .fill { opacity: 0; }
   .pile.stopped .dtab .fill { display: none; }
   .pile.stopped .dtab[aria-selected="true"] { background: var(--color-pink); box-shadow: var(--shadow-hover); }
   .dtab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }

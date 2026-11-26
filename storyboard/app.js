@@ -76,7 +76,7 @@
 
 /* IDEA-16: hall photos. Storyboard-only behaviour.
    768px and up: peek pile that spreads when the hall is about 60% visible, back to a pile below about 25%.
-   Under 768px: one photo; the D1 D2 D3 tabs are story-style bars (1.5 s each), play once, stop on D3; pressing a tab stops it until reload. */
+   Under 768px: one photo; the D1 D2 D3 tabs are story-style bars (1.5 s each), play two rounds, stop on D3; pressing a tab stops it until reload. */
 (function () {
   var STEP = 1500;
   var wide = matchMedia('(min-width: 768px)'), rm = matchMedia('(prefers-reduced-motion: reduce)');
@@ -92,7 +92,7 @@
     var tabs = Array.prototype.slice.call(pile.querySelectorAll('.dtab'));
     var toggle = pile.querySelector('.pile-toggle');
     var ratio = 0, inView = false, open = false, manual = false;           /* PC state */
-    var cur = 0, el = 0, last = 0, raf = 0, running = false, started = false, stopped = false; /* phone state: stopped = user pressed a tab, for good */
+    var cur = 0, el = 0, last = 0, raf = 0, running = false, started = false, stopped = false, round = 0, resetting = false; /* phone state: stopped = user pressed a tab, for good */
 
     function anyFlipped() { return pls.some(function (pl) { return pl.querySelector('.polaroid').classList.contains('flipped'); }); }
     function setFill() {
@@ -127,15 +127,26 @@
       if (!running) return;
       el += Math.min(t - last, 100); last = t;
       if (el >= STEP) {
-        if (cur >= n - 1) { el = STEP; setFill(); running = false; started = true; return; }
+        if (cur >= n - 1) {
+          el = STEP; setFill(); running = false; started = true;
+          if (round < 1) {
+            resetting = true; pile.classList.add('xf'); show(0);
+            setTimeout(function () {
+              resetting = false; pile.classList.remove('xf');
+              if (stopped) return;
+              round = 1; cur = 0; el = 0; setFill(); evaluate();
+            }, 200);
+          }
+          return;
+        }
         cur++; el = 0; show(cur);
       }
       setFill();
       raf = requestAnimationFrame(tick);
     }
     function evaluate() {
-      var done = cur >= n - 1 && el >= STEP;
-      var go = !wide.matches && !rm.matches && !stopped && !done && inView && (started || ratio >= 0.6) && !document.hidden && !anyFlipped();
+      var done = round >= 1 && cur >= n - 1 && el >= STEP;
+      var go = !resetting && !wide.matches && !rm.matches && !stopped && !done && inView && (started || ratio >= 0.6) && !document.hidden && !anyFlipped();
       if (go) started = true;
       if (go && !running) { running = true; last = performance.now(); raf = requestAnimationFrame(tick); }
       else if (!go && running) { running = false; cancelAnimationFrame(raf); }

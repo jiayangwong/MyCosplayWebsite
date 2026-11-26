@@ -19,10 +19,11 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-26 by the planner for IDEA-15 (Hall polaroid: first activity under date and short name). New: section 10, TASK-25 (one task), planner assumptions D1-D9. **Waiting for user approval**; the rest of the plan is unchanged.
 - Revised: 2026-11-26 by the planner for IDEA-16 (Hall photo pile, up to 3 photos per event; user chose Hall A pile on PC and Hall D tabs + 1.5 s autoswap on phone). New: section 11, TASK-26 to TASK-29, planner assumptions E1-E14, questions 35-41. **Waiting for user approval**; the rest of the plan is unchanged.
 - Revised: 2026-11-26 by the planner after the user's feedback on IDEA-16. **Approved by the user on 2026-11-26 ("pc web approved"): TASK-26, TASK-28 and the PC half of the home storyboard (unchanged).** The phone design was CHANGED by the user: the D1 D2 D3 tabs are the meter, like Instagram / Facebook story segments; no separate meter bar, no pause button; pressing a tab stops the animation on that photo until the page is reloaded. Changed: section 11 status / storyboard lines, E10 (now "story tabs"), E12, E13, TASK-29 (rewritten), questions 37 (replaced) and 42 (new: no loop, stops on D3). **TASK-27 (admin) and TASK-29 (phone) are still waiting for user approval.**
+- Revised: 2026-11-26 by the planner after the user's answer (verbatim): "two rounds then, all approved, after programmer done, just merge and deploy 1st". **Approved by the user on 2026-11-26 ("all approved"): TASK-25, TASK-26, TASK-27, TASK-28 and TASK-29.** Questions 35-42 answered (the plan's own assumptions accepted; question 42: two rounds). TASK-29 phone story tabs now play **two rounds** (D1 D2 D3, reset, D1 D2 D3, stop on D3; 9 s, once per page load). Changed: section 10 status, section 11 status, E10, TASK-29 (criteria, tests, risks), build order (with the user's release instruction), questions 35-42.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
-- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11 + BUG-4) and TASK-17 (question 22) were approved by the user on 2026-11-19.**
+- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11 + BUG-4) and TASK-17 (question 22) were approved by the user on 2026-11-19.** **TASK-25 (IDEA-15) and TASK-26 to TASK-29 (IDEA-16) were approved by the user on 2026-11-26 ("all approved").**
 
 ### Branch note (this job only)
 The integration branch is **`site-v1`**. It takes the place of `main`, because the real `main` is checked out somewhere else. Each task branch (for example `task-3-home-hall`) is created from `site-v1` and merged back into `site-v1`. Wherever CLAUDE.md says "main", read `site-v1`.
@@ -1107,7 +1108,7 @@ Build order for IDEA-14: TASK-24 alone, after user approval (it touches only `/a
 
 ## 10. IDEA-15 addition: Hall polaroid - first activity under date and short name - 2026-11-26
 
-- Plan status: **waiting for user approval** (not approved yet; do not start the programmer on TASK-25 until the user approves).
+- Plan status: **APPROVED by the user on 2026-11-26** ("all approved").
 - Source: docs/ideas.md IDEA-15 (`ready-for-planning`). User's words (verbatim): "in the polaroid of Halls, show the 1st activity of the event under the date and event shortform".
 - One task, TASK-25. Branch from `site-v1` (for example `task/TASK-25-hall-polaroid-activity`), merged back into `site-v1`. Only Home (the hall) changes; no admin, data format or other page changes.
 - **Storyboard first:** the approved storyboard home Hall screen (`storyboard/index.html`, the `.hall-item` polaroids, front caption `span.mono.cap` such as `14 Mar 2026 · CF`) has no activity line. It needs a small update before the programmer starts: add the second line under `.cap` on the sample polaroids (one short activity, one long activity that shows the 2-line ellipsis, one event with no activity that keeps the empty reserved space), with tokens only. The storyboard-creator does this, and the user approves it in docs/approval.md, as with earlier storyboard changes.
@@ -1130,7 +1131,7 @@ Build order for IDEA-14: TASK-24 alone, after user approval (it touches only `/a
 
 ### TASK-25: Hall polaroid: first activity under date and short name
 - Linked idea(s): IDEA-15 (with IDEA-3, IDEA-7)
-- Plan: **waiting for user approval**
+- Plan: **approved by the user 2026-11-26** ("all approved")
 - Depends on: TASK-3 (built); the storyboard home Hall screen update above (approved by the user) before building.
 - Acceptance criteria:
   - On the front of each event polaroid in the Home hall, a second line `.polaroid-activity` sits directly under `.polaroid-caption` ("date · short") and shows `activities[0]` exactly (trimmed). Example: `{ "activities": ["cosplay as Dorothy", "Stage"] }` -> line 1 `6 Dec 2025 · CF`, line 2 `cosplay as Dorothy` (not "Stage").
@@ -1173,7 +1174,8 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 
 ## 11. Hall photo pile (IDEA-16) - 2026-11-26
 
-- Plan status (2026-11-26): **TASK-26 and TASK-28 APPROVED by the user** ("pc web approved"), together with the PC half of the home storyboard (unchanged). **TASK-27 (admin) and TASK-29 (phone) are waiting for user approval**; do not start the programmer on them until the user approves.
+- Plan status (2026-11-26): **TASK-26, TASK-27, TASK-28 and TASK-29 APPROVED by the user on 2026-11-26** (first "pc web approved" for TASK-26 / TASK-28 and the PC half of the home storyboard, then "all approved" for the rest). Questions 35-42 are answered (section end).
+- Phone change 2 by the user (verbatim, 2026-11-26): "two rounds then, all approved, after programmer done, just merge and deploy 1st". The story tabs play two rounds, then stop on D3 (TASK-29).
 - Phone change by the user (verbatim, 2026-11-26): "phone web i need the meter or countdown timer is the D1, D2, D3 tab and it like fb or ig story auto flip. no need pause button. when user press the D1,D2,D3, animation stop at the selected polaroid, it wont able to play again except page load again."
 - Source: docs/ideas.md IDEA-16. One event lasts up to 3 days, so it can have up to 3 photos (3 looks). User decision (verbatim): "On the PC web, use a neat pile (Hall A), but spread it when scrolling to the hall. Go back to the pile when scrolling away. On the mobile web, use Hall D, but with a 1.5-second timer and a meter shown to autoswap photos. The main target is minimum action for user but able to show more things to user to see".
 - Four tasks: TASK-26 (data), TASK-27 (admin), TASK-28 (Hall PC), TASK-29 (Hall phone). Each on its own branch from `site-v1`, merged back into `site-v1`.
@@ -1198,7 +1200,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 - **E7 - No layout shift:** on PC the stage reserves the spread size in both states (pile and spread), so spreading or piling never moves the page and never re-triggers the observer.
 - **E8 - Tap on a photo = flip to details** (as today) in the spread (PC) and on the shown photo (phone). The back shows the event name, `<date> · Day n` (only when 2-3 photos), activities, and "Watch reel" / "See event" + "Flip back".
 - **E9 - Gallery and Events page show only the first photo** (`photo` / `photoFull`). Showing all days there is a later idea.
-- **E10 - Story tabs (phone, user change 2026-11-26):** the D1 D2 D3 tabs ARE the meter (like Instagram / Facebook story segments). No separate meter bar and **no pause / play button**. The sequence plays D1, D2, D3 **once** and stops on D3 (no loop, 3 x 1.5 s = 4.5 s; this also keeps it inside the WCAG 2.2.2 exception: auto-updating content that lasts under 5 s and does not repeat needs no pause control). Pressing a tab stops the animation for good on that photo until the page is reloaded. Details in TASK-29.
+- **E10 - Story tabs (phone, user change 2026-11-26):** the D1 D2 D3 tabs ARE the meter (like Instagram / Facebook story segments). No separate meter bar and **no pause / play button**. The sequence plays **two rounds** and then stops on D3 (user answer to question 42, 2026-11-26): round 1 D1, D2, D3; at the start of round 2 all tabs reset to empty and D1, D2, D3 play again; it stops on D3 with all tabs full (6 x 1.5 s = 9 s, once per page load). Pressing a tab stops the animation for good on that photo until the page is reloaded. Because 9 s is over the 5 s of the WCAG 2.2.2 exception, the press-a-tab stop is the stop mechanism (see TASK-29 risks). Details in TASK-29.
 - **E11 - Hall ??? (bangai)** and the YOU ARE HERE strip are untouched. The hall letter, sign and timeline tick stay one per event.
 - **E12 - Tokens only;** no new colours. New timing values (650 ms spread, 90 ms stagger, 400 ms collapse, 200 ms crossfade, 1.5 s tab fill per photo) go into `css/tokens.css` as duration tokens if the style guide has no matching ones (the designer confirms).
 - **E13 - 2 photos** behave like 3 without a gap (pile of 2; tabs D1 D2). **1 photo** looks and behaves exactly as today (no pile, no tabs, no auto-flip).
@@ -1207,6 +1209,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 ### TASK-26: Data model + loader for up to 3 photos per event (`photos`)
 - Linked idea(s): IDEA-16 (with IDEA-7, IDEA-9, IDEA-10)
 - Depends on: TASK-10 (photo pairs). No UI, no storyboard needed.
+- Plan: **approved by the user 2026-11-26** ("pc web approved", confirmed by "all approved")
 - Acceptance criteria:
   - `validateEvent(e)` accepts an optional `photos` array and rejects with a `{ field: 'photos' }` error: not an array; 0 entries; more than 3 entries; an entry that is not an object or has no `photo`; any `photo` / `photoFull` that fails `photoPathError`; the same display path twice in one event; top-level `photo` / `photoFull` that do not equal `photos[0]` (when both are present).
   - New export `eventPhotos(e)` returns `[{ photo, photoFull }]` in day order: `e.photos` when present, else `[{ photo, photoFull }]` from the top-level fields when `photo` is set, else `[]`. Never returns more than 3. `photoFull` is `undefined` (not `''`) when missing.
@@ -1223,14 +1226,13 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - `normalizeEvent` fills the mirror; leaves an old-shape event deep-equal to the input.
   - `loadEvents` with the fixture routed in: invalid events dropped, valid multi-photo events present with the mirror set.
 - Existing specs likely to change: none expected. Run `task-2`, `task-10` (validateEvent cases) and the full suite.
-- Plan: **approved by the user 2026-11-26** ("pc web approved")
 - Status: todo
 - Review: pending
 - QA: pending
 
 ### TASK-27: Admin - attach up to 3 photos per event, order, remove, publish
 - Linked idea(s): IDEA-16 (with IDEA-7, IDEA-8, IDEA-9, IDEA-11, IDEA-13, IDEA-14)
-- Plan: **waiting for user approval** (not covered by "pc web approved")
+- Plan: **approved by the user 2026-11-26** ("all approved")
 - Depends on: TASK-26; TASK-7, TASK-13, TASK-16, TASK-23, TASK-24 (built); updated admin storyboard approved.
 - Acceptance criteria:
   - **Photo slot list in the Event form:** a group "Photos (up to 3)" with one row per photo, labelled D1, D2, D3. Row D1 keeps the existing inputs `#f-photo` / `#f-photo-full` (ids unchanged, so typed paths still work); rows D2 / D3 use `#f-photo-2` / `#f-photo-full-2` and `#f-photo-3` / `#f-photo-full-3`. Each row shows a small preview of its display copy (or "No photo"), and buttons Move up (↑), Move down (↓) and Remove (X), each a real `<button>` with `aria-label` such as "Move photo D2 up" / "Remove photo D2", at least 44 x 44 px, tokens only.
@@ -1292,57 +1294,68 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - 2-photo event: pile of 2. Hall ??? has no `.pile`. No horizontal scroll at 768 and 1280.
   - A viewport of 767px wide shows the phone mode (TASK-29) instead; resizing to 800px switches to the pile without a reload.
 - Existing specs likely to change (the programmer confirms by searching tests/ for `polaroid`, `.flip`, `polaroid-caption`, `aria-expanded`, `loading`, `hall-`): `task-3` (count of `.polaroid` per station, eager count) - only if fixtures add multi-photo events; `task-19` ("every other polaroid flips": the pile toggle is not a polaroid); `task-25` (activity line now on every polaroid of a pile); `task-9` (a11y: button names). The full suite passes.
-- Plan: **approved by the user 2026-11-26** ("pc web approved"; the PC half of the home storyboard is approved unchanged)
+- Plan: **approved by the user 2026-11-26** ("pc web approved", confirmed by "all approved"; the PC half of the home storyboard is approved unchanged)
 - Status: todo
 - Review: pending
 - QA: pending
 
-### TASK-29: Hall phone (under 768px) - one polaroid, story tabs D1 D2 D3 that fill and auto-flip once
+### TASK-29: Hall phone (under 768px) - one polaroid, story tabs D1 D2 D3 that fill and auto-flip for two rounds
 - Linked idea(s): IDEA-16 (with IDEA-3, IDEA-15)
-- Plan: **waiting for user approval** (phone design changed by the user 2026-11-26, see the verbatim quote at the top of section 11; questions 37 and 42)
+- Plan: **approved by the user 2026-11-26** ("all approved"; two rounds per the user's answer to question 42, see the verbatim quotes at the top of section 11)
 - Depends on: TASK-28 (shared station markup); phone half of the home storyboard updated to story tabs and approved by the user.
 - Acceptance criteria:
   - **Look (variant D, story tabs):** one polaroid per station. Three tabs `D1 D2 D3` in one row across the polaroid's full width, each one third of it (2 photos: halves), each **44px tall**, in a `role="tablist"` (`aria-label` "<full name> <year>: choose the day"); each tab is a `role="tab"` button with its label, `aria-selected` and `aria-controls` = the photo panel. The station grows by at most the 44px tab row compared with a 1-photo station of the same depth. Roving focus: Left / Right arrows move between tabs, Home / End go to the first / last (and select it, which counts as a press).
   - **The tabs are the meter (like Instagram / Facebook stories):** each tab has a fill layer (`aria-hidden="true"`, decorative) that fills left to right from 0 to 100 percent in **1.5 s** while its photo is shown. Finished tabs stay full; upcoming tabs stay empty. When a tab is full, the photo flips to the next day. **There is no separate meter bar and no pause / play button.**
-  - **Plays once, stops on D3 (no loop, assumption, question 42):** order D1 -> D2 -> D3; when D3 is full the sequence stops with D3 shown and all tabs full. Total 4.5 s (2 photos: 3 s, stops on D2). It never starts again until the page is reloaded. Because it lasts under 5 s and does not repeat, no pause control is needed (WCAG 2.2.2).
+  - **Plays two rounds, then stops on D3 (user answer to question 42, 2026-11-26):** round 1: D1 -> D2 -> D3 (1.5 s each). At the start of round 2 (when D3 of round 1 is full) all tabs reset to empty at once, D1 is shown and fills again, then D2, then D3. When D3 of round 2 is full the sequence stops with D3 shown and all tabs full. Total 9 s (2 photos: D1 D2, reset, D1 D2, stop on D2 with both full, 6 s). It runs once per page load and never starts again until the page is reloaded.
   - **Start:** the first time the stage is at least 60 percent visible (E6). Before that, D1 is shown with all tabs empty.
   - **Pause / resume (only while the sequence is running and not stopped):** pauses (the fill keeps its width) when the stage goes under 60 percent visible, when the document is hidden (`visibilitychange`), and while the polaroid is flipped to its back. It resumes from the same point when all of these are clear again (back at 60 percent, document visible, "Flip back").
-  - **Press a tab = stop for good:** pressing (tap, click, Enter / Space, or arrow / Home / End selection) any tab at any time shows that day at once and stops the animation for good on that photo. The pressed tab shows the selected / locked look (full fill + selected style); the other tabs show the plain unfilled look. Leaving the view and coming back, flipping, or hiding the page does not restart it; only a page reload does. After that the tabs just switch photos (instant selection, same 200 ms crossfade, no fill animation, no auto-flip).
+  - **Press a tab = stop for good:** pressing (tap, click, Enter / Space, or arrow / Home / End selection) any tab at any time (round 1 or round 2) shows that day at once and stops the animation for good on that photo. The pressed tab shows the selected / locked look (full fill + selected style); the other tabs show the plain unfilled look. Leaving the view and coming back, flipping, or hiding the page does not restart it; only a page reload does. After that the tabs just switch photos (instant selection, same 200 ms crossfade, no fill animation, no auto-flip).
   - **Swap:** a 200 ms crossfade between photos (opacity only). Only the shown photo is in the accessibility tree; the others are `hidden` / `aria-hidden`. The active tab has `aria-selected="true"`.
   - **No announcements:** no `aria-live` region for the auto-flips.
   - **Tap the photo** = flip to the back of the shown day (E8); this pauses, it does not stop.
   - **Reduced motion:** no auto-flip and no fill animation; D1 is shown and the tabs only switch photos (instant).
   - **2 photos** = two tabs D1 D2 (halves); **1 photo** = no tabs, no auto-flip (exactly as today).
   - Photos 2-3 load lazily (not before the station is near the viewport). TASK-25 activity line stays static under the caption. Hall ??? and the strip unchanged. No horizontal scroll at 360px and 412px. Tokens only (E12).
-- Files: `js/hall.js` / `js/hall-pile.js` (phone story controller: state `idle | playing | paused | done | stopped`, pure helper for the timing so it can be unit-tested), `css/home.css` / `css/components.css`, `tests/task-29.spec.js`.
+- Files: `js/hall.js` / `js/hall-pile.js` (phone story controller: state `idle | playing | paused | done | stopped`, plus the current round 1 or 2; pure helper for the timing (elapsed ms -> round, shown day, fill per tab) so it can be unit-tested), `css/home.css` / `css/components.css`, `tests/task-29.spec.js`.
 - **Automated tests (`tests/task-29.spec.js`, phone project (Pixel 7) + a 360px case; `page.clock.install()` before `goto`, steps checked with `page.clock.runFor(1500)`; visibility by scrolling the station into / out of view):**
   - Markup: tablist with 3 tabs, `aria-selected` on D1, each tab 44px tall and about one third of the polaroid width (within 2px), fill layers `aria-hidden`, no pause / play button, no separate meter element, no `aria-live` inside the station.
   - Not yet in view: after 3000 ms D1 still shown, all fills empty.
-  - In view: at 750 ms the D1 fill is about half; after 1500 ms D2 shown and selected, D1 full, D3 empty; after 3000 ms D3 shown, D1 and D2 full; after 4500 ms D3 still shown, all full; after a further 3000 ms still D3 (no loop).
-  - Leave mid-sequence: scroll away at 2000 ms (D2 at about one third) -> no change after 3000 ms; scroll back -> continues from D2 and reaches D3 after the remaining time.
-  - Press D2 at 500 ms: D2 shown at once, locked look on D2, no change after 4500 ms; scroll fully away and back -> still D2, no auto-flip; tap D3 -> D3 shown, still no auto-flip.
-  - Reload after a press -> the sequence plays again from D1 when in view.
+  - Round 1 in view: at 750 ms the D1 fill is about half; after 1500 ms D2 shown and selected, D1 full, D3 empty; after 3000 ms D3 shown, D1 and D2 full.
+  - Round boundary reset: at 4500 ms D1 shown and selected, **all three fills empty** (reset), round 2 started; at 5250 ms the D1 fill is about half and D2 / D3 empty; at 6000 ms D2 shown, D1 full; at 7500 ms D3 shown.
+  - Stop after round 2: at 9000 ms D3 shown, all fills full, state `done`; after a further 6000 ms still D3, all full (no third round).
+  - Leave mid-sequence: scroll away at 2000 ms (D2 at about one third) -> no change after 3000 ms; scroll back -> continues from D2 and the round-2 reset and the stop still come after the remaining time (stop at 9000 ms of in-view time).
+  - Press in round 1: press D2 at 500 ms -> D2 shown at once, locked look on D2, no change after 9000 ms; scroll fully away and back -> still D2, no auto-flip; tap D3 -> D3 shown, still no auto-flip.
+  - Press in round 2: press D1 at 6000 ms -> D1 shown at once, locked look on D1, no reset and no change after 9000 ms.
+  - Reload restarts: after a press, and after a finished run (state `done`), `page.reload()` -> the sequence plays again from D1 round 1 when in view.
   - Flip: tap the photo mid-sequence -> back shows, no step; "Flip back" -> continues.
   - Document hidden (dispatch `visibilitychange` with `document.hidden` stubbed): no step; visible again -> continues.
   - Keyboard: Right / Left / Home / End move focus and selection and stop the sequence.
-  - Reduced motion: D1 shown, no step after 4500 ms, fills not animated, tabs still switch.
-  - 2 photos: two tabs (halves), D1 -> D2 then stop at 3000 ms. 1 photo: no tablist.
+  - Reduced motion: D1 shown, no step after 9000 ms, fills not animated, tabs still switch.
+  - 2 photos: two tabs (halves), D1 -> D2, reset at 3000 ms, D1 -> D2, stop on D2 with both full at 6000 ms. 1 photo: no tablist.
   - Station height grows by at most 44px versus a 1-photo station of the same depth. No horizontal scroll at 360px.
   - A viewport of 768px shows the PC pile instead.
 - Existing specs likely to change: as TASK-28 (`task-3`, `task-19`, `task-25`, `task-9`) on the phone project. The full suite passes.
-- Risks: (1) the IntersectionObserver plus `page.clock` can race in tests -> wait for the observer callback (for example a `data-story-state` attribute) before `runFor`; (2) the CSS fill must be driven by the controller's elapsed time (not a free-running CSS animation), so pause / resume and the clock stay in sync; (3) "stopped" must be kept in memory only (not localStorage), so a reload restarts it as the user asked.
+- Risks: (1) the IntersectionObserver plus `page.clock` can race in tests -> wait for the observer callback (for example a `data-story-state` attribute) before `runFor`; (2) the CSS fill must be driven by the controller's elapsed time (not a free-running CSS animation), so pause / resume and the clock stay in sync; (3) "stopped" and "done" must be kept in memory only (not localStorage), so a reload restarts it as the user asked; (4) the round-2 reset must empty all fills in the same frame that D1 is shown (no flash of full tabs, no CSS transition back to 0); (5) **accessibility trade-off (accepted by the user, 2026-11-26):** the run is 9 s, which is longer than the 5 s WCAG 2.2.2 exception, and there is no pause button by the user's choice. What keeps it acceptable: pressing any tab stops it for good (that is the stop mechanism, reachable by tap and keyboard), the run is finite (two rounds, 9 s, once per page load), it pauses off screen / when flipped / when the page is hidden, there are no `aria-live` announcements, and with reduced motion there is no auto-flip at all. Remaining weak point: the stop-by-tab is not labelled as a stop control, so a visitor may not know it exists; the reviewer / QA should not flag the missing pause button as a bug.
 - Status: todo
 - Review: pending
 - QA: pending
 
-### Build order for IDEA-16
+### Build order and release for IDEA-15 + IDEA-16 (user decision 2026-11-26, replaces the older list below)
+1. **TASK-25**.
+2. **TASK-26**.
+3. **TASK-27 and TASK-28 in parallel**, each in its own worktree and branch (they touch different files: admin vs hall).
+4. **TASK-29**, after TASK-28 is merged (it uses the same hall code: shared station markup in `js/hall.js` / `js/hall-pile.js`).
+- **Release instruction (user, verbatim: "after programmer done, just merge and deploy 1st"):** when the programmer has finished these tasks, merge them into `site-v1` and deploy first. **The full Playwright suite (desktop + phone) must pass before each merge.** The reviewer and QA run afterwards, at the next 19:30 GMT+8 window (CLAUDE.md schedule), and the bugfixer fixes what they find (QA re-tests). This is a user exception to the usual "review + QA before merge" order for these five tasks only; their Review / QA lines stay `pending` until those runs.
+
+Older build order (kept for the reasons it gives):
 1. **TASK-25 first, on its own** (approved, small, its build is paused with work in progress). Do not merge it into TASK-28 / TASK-29: it is approved and ready, and building it first gives one place for the caption + activity line that TASK-28 then reuses on every polaroid of a pile (its tests also become the regression check for the pile). Building them together would mean two agents editing `buildStation()` at once.
 2. Storyboard rewrite to the chosen design (storyboard-creator, user approval in docs/approval.md). TASK-26 can be built in parallel (no UI).
 3. **TASK-26** (data + loader).
 4. **TASK-28** (PC pile, includes the shared multi-photo station markup) -> **TASK-29** (phone). They can be tested with fixture data before the admin part exists.
 5. **TASK-27** (admin) after TASK-26; it can run in parallel with TASK-28 / TASK-29 (different files). The feature is only useful for Puzz once TASK-27 is merged, so the release needs all four.
 
-### Questions for IDEA-16 (2026-11-26) - the planner's defaults, say if you disagree
+### Questions for IDEA-16 (2026-11-26) - ALL ANSWERED 2026-11-26
+The user answered "two rounds then, all approved": questions 35-41 are **answered / accepted with the plan's own assumptions** as written below; question 42 is answered **two rounds**.
 35. **Thresholds (E6):** spread / start the phone story tabs at about 60 percent of the hall visible; pile again below about 25 percent. OK?
 36. **Breakpoint (E5):** PC pile from 768px wide, phone tabs under 768px (same as the admin). Tablets in portrait (768px) get the pile. OK?
 37. **Pressed tab look (TASK-29):** after you press a tab, that tab shows full and selected (locked) and the other tabs show empty. OK, or should the already-played tabs stay full?
@@ -1350,4 +1363,4 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 39. **Day order (E4):** D1-D3 = the order in the admin list (upload order, change with up / down), not by date. OK?
 40. **Caption per day (E4):** every polaroid of an event shows the same event date and the same first activity; only the D1 / D2 / D3 label changes. Or do you want each day to show its own date (event date + 1, + 2) and its own activity (activities[0], [1], [2])?
 41. **Reduced motion on PC (TASK-28):** for visitors who turn off animations, multi-photo halls are always spread (no scroll pile). OK?
-42. **No loop on phone (E10, TASK-29):** the story tabs play D1, D2, D3 once (4.5 s) and stop on D3, like stories; they do not loop. OK, or should it loop (a loop would need a pause control for accessibility)?
+42. **No loop on phone (E10, TASK-29):** ANSWERED 2026-11-26 by the user: "two rounds". The story tabs play D1, D2, D3, reset, D1, D2, D3 and stop on D3 with all tabs full (9 s, once per page load); pressing a tab stops it for good. No pause button (accessibility trade-off accepted, see TASK-29 risks).
