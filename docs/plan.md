@@ -1159,7 +1159,7 @@ Build order for IDEA-14: TASK-24 alone, after user approval (it touches only `/a
   - Read by the planner, no change expected: `tests/task-3.spec.js` (checks `.polaroid-photo` aria-label, flip, depth width, eager loading; no caption text) and `tests/task-19.spec.js` (Hall ??? markup; "every other polaroid still flips").
   - To check (the planner had no shell to search tests/; the programmer searches for `polaroid-caption`, `.polaroid` + `toHaveText` / `toContainText` / `innerText`, `getByRole('button'` with a polaroid name, `SAMPLE`, and `boundingBox` on `.polaroid`): `tests/task-8.spec.js` and `tests/task-9.spec.js` (public pages with the real `data/events.json`), `tests/qa-idea-12.spec.js`, and any `tests/qa-*.spec.js` that reads Home polaroids. A check that compares the whole `.polaroid` text, or the button's accessible name exactly, now also gets the activity line; a check on polaroid height now gets the reserved 2 lines.
   - The full suite passes in both projects.
-- Status: todo
+- Status: built 2026-11-26, waiting for review (branch task/TASK-25-activity-line)
 - Review: pending
 - QA: pending
 

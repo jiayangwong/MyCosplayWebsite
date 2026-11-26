@@ -13,7 +13,8 @@ const REPO = '/repos/jiayangwong/MyCosplayWebsite';
 const TREE_POST = `POST ${REPO}/git/trees`;
 const REF_PATCH = `PATCH ${REPO}/git/refs/heads/${BRANCH}`;
 const SUCCESS = 'Published. The site updates in about 1-2 minutes.';
-const SITE_TEXT = fs.readFileSync(path.join(ROOT, 'data', 'site.json'), 'utf8');
+// BUG-11: fixed fixture (portrait null), independent of the real data/site.json.
+const SITE_TEXT = fs.readFileSync(path.join(__dirname, 'fixtures', 'site-null.json'), 'utf8');
 const REELS_TEXT = fs.readFileSync(path.join(ROOT, 'data', 'reels.json'), 'utf8');
 // A publish is many mocked round trips plus image encoding; every wait on a result uses this timeout.
 const expectResult = expect.configure({ timeout: 15000 });

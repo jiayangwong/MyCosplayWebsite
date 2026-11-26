@@ -19,7 +19,8 @@ const expectResult = expect.configure({ timeout: 15000 });
 test.describe.configure({ timeout: 90000 });
 
 const EVENTS_TEXT = `${JSON.stringify({ version: 1, events: [{ id: '2026-03-14-cf', date: '2026-03-14', short: 'CF', name: 'CF Test Con' }] }, null, 2)}\n`;
-const SITE_TEXT = fs.readFileSync(path.join(ROOT, 'data', 'site.json'), 'utf8');
+// BUG-11: fixed fixture (portrait null), independent of the real data/site.json.
+const SITE_TEXT = fs.readFileSync(path.join(__dirname, 'fixtures', 'site-null.json'), 'utf8');
 const REELS_TEXT = fs.readFileSync(path.join(ROOT, 'data', 'reels.json'), 'utf8');
 const OG = fs.readFileSync(path.join(ROOT, 'og-image.png'));
 
@@ -44,6 +45,7 @@ async function setup(page, github) {
     files: { 'data/events.json': EVENTS_TEXT, 'data/site.json': SITE_TEXT, 'data/reels.json': REELS_TEXT, 'og-image.png': OG },
   });
   await page.route('**/data/events.json', (route) => route.fulfill({ contentType: 'application/json', body: EVENTS_TEXT }));
+  await page.route('**/data/site.json', (route) => route.fulfill({ contentType: 'application/json', body: SITE_TEXT }));
   await page.addInitScript(PAGE_HELPERS);
   await page.goto('admin/index.html');
   for (const flag of ['manager', 'uploader', 'github', 'publish', 'site-photos']) {
@@ -429,6 +431,6 @@ test('Public pages: portrait 404 or portrait null shows the placeholder (same ar
   expect(errors).toEqual([]);
 });
 
-test('data/site.json in the repo: version 1 with portrait null', async () => {
+test('site.json fixture: version 1 with portrait null', async () => {
   expect(JSON.parse(SITE_TEXT)).toEqual({ version: 1, portrait: null });
 });
