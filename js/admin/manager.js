@@ -2,24 +2,31 @@
 // Nothing here changes the live site. Publish (publish.js) commits the draft; Export is the hand-made backup.
 // The draft also remembers which data/events.json it started from (`base`: git blob SHA + export text),
 // so Publish can stop if the repo's copy changed in the meantime.
-import { EVENTS_URL, sortEvents, validateEvent, makeEventId, formatDate } from '../events-data.js';
+import { EVENTS_URL, sortEvents, validateEvent, makeEventId, formatDate, eventPhotos, normalizeEvent, MAX_EVENT_PHOTOS } from '../events-data.js';
 import { renderMedia } from '../embed.js';
 import { gitBlobSha } from './git-blob.js';
 import { githubFetch, readToken } from './github-token.js';
 import { GITHUB } from './github-config.js';
 import { setFold } from './folds.js';
 import { defaultPageSize, pageCount, pageOf, readPageSize, savePageSize } from './paging.js';
+import { askRemove } from './confirm-remove.js';
+import { pendingPairs, removePendingItem } from './pending.js';
 
 export const DRAFT_KEY = 'puzzkezz.events.draft';
-const FIELDS = ['date', 'short', 'name', 'venue', 'link', 'photo', 'photoFull'];
+const FIELDS = ['date', 'short', 'name', 'venue', 'link'];
+/** Photo slot inputs D1 D2 D3 (D1 keeps the ids of the single-photo form). */
+const SLOT_IDS = [['f-photo', 'f-photo-full'], ['f-photo-2', 'f-photo-full-2'], ['f-photo-3', 'f-photo-full-3']];
+/** Error field -> input that gets the focus and aria-invalid. */
+const PHOTO_FIELD_INPUT = { photo: 'f-photo', photoFull: 'f-photo-full', photoFull2: 'f-photo-full-2', photoFull3: 'f-photo-full-3', photos: 'f-photo' };
 /** Form input id for a data field ("photoFull" -> "f-photo-full"). */
 const inputId = (field) => `f-${field.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
 /** Key order used by Export: photoFull is written right after photo. */
-const EXPORT_ORDER = ['id', 'date', 'short', 'name', 'venue', 'activities', 'link', 'photo', 'photoFull', 'sample'];
+const EXPORT_ORDER = ['id', 'date', 'short', 'name', 'venue', 'activities', 'link', 'photo', 'photoFull', 'photos', 'sample'];
 
 const $ = (id) => document.getElementById(id);
 const state = { events: [], editingId: null, base: { sha: null, text: '' }, page: 0, size: 10 };
 const listeners = new Set();
+const slotListeners = new Set();
 const draftListeners = new Set();
 const REPO_READ_TIMEOUT_MS = 30000;
 let draftLoading = false;
@@ -81,7 +88,7 @@ async function loadPublished() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const bytes = await response.arrayBuffer();
     const data = JSON.parse(new TextDecoder().decode(bytes));
-    const events = Array.isArray(data.events) ? data.events : [];
+    const events = (Array.isArray(data.events) ? data.events : []).map(normalizeEvent);
     return { events, base: { sha: await gitBlobSha(bytes), text: exportText(events) } };
   } catch (error) {
     console.warn('Could not load data/events.json:', error.message);
@@ -112,7 +119,12 @@ function renderList() {
     li.dataset.id = event.id;
     const info = make('div');
     info.append(make('p', 'event-row-title', `${event.short} · ${event.name}`));
-    info.append(make('p', 'event-row-meta', `${formatDate(event.date)}${event.sample ? ' · SAMPLE' : ''}`));
+    const meta = make('p', 'event-row-meta', `${formatDate(event.date)}${event.sample ? ' · SAMPLE' : ''}`);
+    const count = eventPhotos(event).length;
+    const chip = make('span', 'ph-chip', count === 0 ? 'No photos' : `${count} ${count === 1 ? 'photo' : 'photos'}`);
+    chip.dataset.n = String(count);
+    meta.append(chip);
+    info.append(meta);
 
     const actions = make('div', 'event-row-actions');
     const prev = state.events[i - 1];
@@ -195,6 +207,36 @@ function addActivityRow(value = '') {
   return input;
 }
 
+/** The three photo slots as typed in the form: [{ photo, photoFull }] (empty strings when blank). */
+function formSlots() {
+  return SLOT_IDS.map(([p, f]) => ({ photo: $(p).value.trim(), photoFull: $(f).value.trim() }));
+}
+
+/** Slots with a Display photo, in order, as [{ photo, photoFull? }] (no gaps). */
+function compactSlots(raw) {
+  return raw.filter((x) => x.photo).map((x) => (x.photoFull ? { photo: x.photo, photoFull: x.photoFull } : { photo: x.photo }));
+}
+
+/** Puts a list of photos into the three slot rows (empty rows after the last one). */
+function setFormSlots(list) {
+  SLOT_IDS.forEach(([p, f], i) => {
+    $(p).value = (list[i] && list[i].photo) || '';
+    $(f).value = (list[i] && list[i].photoFull) || '';
+  });
+  syncSlots();
+}
+
+/** E2 / E3: photo + photoFull = D1; `photos` only for 2-3 photos. No photos = none of the three keys. */
+function setEventPhotos(event, list) {
+  delete event.photo;
+  delete event.photoFull;
+  delete event.photos;
+  if (!list.length) return;
+  event.photo = list[0].photo;
+  if (list[0].photoFull) event.photoFull = list[0].photoFull;
+  if (list.length >= 2) event.photos = list.slice(0, MAX_EVENT_PHOTOS).map((x) => (x.photoFull ? { photo: x.photo, photoFull: x.photoFull } : { photo: x.photo }));
+}
+
 function readForm() {
   const event = {};
   for (const f of FIELDS) {
@@ -202,22 +244,37 @@ function readForm() {
     if (v) event[f] = v;
   }
   event.activities = [...$('activity-list').querySelectorAll('input')].map((i) => i.value.trim()).filter(Boolean);
+  const raw = formSlots();
+  const list = compactSlots(raw);
+  if (list.length) setEventPhotos(event, list);
+  else if (raw[0].photoFull) event.photoFull = raw[0].photoFull; // validateEvent: "needs a Display photo"
   return event;
 }
 
+/** Errors for a Full-size path typed in D2 / D3 without a Display photo (D1 is checked by validateEvent). */
+function slotErrors() {
+  const out = [];
+  formSlots().forEach((x, i) => {
+    if (i > 0 && x.photoFull && !x.photo) out.push({ field: `photoFull${i + 1}`, message: `Full-size photo D${i + 1} needs a Display photo D${i + 1} too.` });
+  });
+  return out;
+}
+
+const fieldInput = (f) => $(PHOTO_FIELD_INPUT[f] || inputId(f));
+
 function showErrors(errors) {
-  for (const f of [...FIELDS, 'activities']) {
+  for (const f of [...FIELDS, 'photo', 'photoFull', 'photoFull2', 'photoFull3', 'photos', 'activities']) {
     const box = $(`err-${f}`);
-    const input = $(inputId(f));
+    const input = fieldInput(f);
     const err = errors.find((e) => e.field === f);
     if (box) {
       box.hidden = !err;
       box.textContent = err ? err.message : '';
     }
-    if (input) input.setAttribute('aria-invalid', err ? 'true' : 'false');
+    if (input && f !== 'photos') input.setAttribute('aria-invalid', err ? 'true' : 'false');
   }
   if (errors.length) {
-    const first = $(inputId(errors[0].field));
+    const first = fieldInput(errors[0].field);
     if (first) first.focus();
   }
 }
@@ -227,6 +284,7 @@ function fillForm(event) {
   $('activity-list').replaceChildren();
   (event.activities || []).forEach((a) => addActivityRow(a));
   if (!(event.activities || []).length) addActivityRow();
+  setFormSlots(eventPhotos(event));
   updatePreview();
   notify();
 }
@@ -259,7 +317,7 @@ function startEdit(id) {
 function onSubmit(e) {
   e.preventDefault();
   const data = readForm();
-  const errors = validateEvent(data);
+  const errors = [...validateEvent(data), ...slotErrors()];
   showErrors(errors);
   if (errors.length) {
     $('save-status').textContent = 'Not saved: please fix the fields marked with !';
@@ -342,7 +400,7 @@ async function importEvents(file) {
       ids.add(ev.id);
       if (errs.length) throw new Error(`Event ${i + 1} (${ev.short || '?'} ${ev.date || '?'}): ${errs.map((x) => x.message).join(' ')}`);
     });
-    state.events = sortEvents(events);
+    state.events = sortEvents(events.map(normalizeEvent));
     saveDraft(); // keeps the base: the repo copy this browser started from has not changed
     state.page = 0;
     clearForm();
@@ -374,7 +432,7 @@ async function loadFromRepo() {
     const binary = atob(file.content.replace(/\s/g, ''));
     const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
     const data = JSON.parse(new TextDecoder().decode(bytes));
-    const events = Array.isArray(data.events) ? data.events : [];
+    const events = (Array.isArray(data.events) ? data.events : []).map(normalizeEvent);
     return { events, base: { sha: file.sha, text: exportText(events) } };
   } catch {
     return null;
@@ -449,58 +507,150 @@ export function isEditingSavedEvent() {
   return state.editingId !== null;
 }
 
-/** Every photo / photoFull path used by an event in the draft or typed into the form. */
+/** Every photo / photoFull path used by an event in the draft (all its slots) or typed into the form. */
 export function usedPhotoPaths() {
   const used = new Set();
   for (const event of state.events) {
     if (event.photo) used.add(event.photo);
     if (event.photoFull) used.add(event.photoFull);
+    for (const p of eventPhotos(event)) {
+      used.add(p.photo);
+      if (p.photoFull) used.add(p.photoFull);
+    }
   }
-  for (const id of ['f-photo', 'f-photo-full']) {
-    const value = $(id).value.trim();
-    if (value) used.add(value);
+  for (const [p, f] of SLOT_IDS) {
+    for (const id of [p, f]) {
+      const value = $(id).value.trim();
+      if (value) used.add(value);
+    }
   }
   return used;
 }
 
-/** Puts a photo path (display copy) and, optionally, the full-size path into the form.
- *  When editing an existing event it is saved to the draft right away. */
+/** True when the three photo slots of the form all hold a Display photo (Attach is disabled then). */
+export function slotsFull() {
+  return formSlots().every((x) => x.photo);
+}
+
+/** Calls `fn` whenever the photo slots of the form change (typed, attached, moved, removed, form filled). */
+export function onSlotsChange(fn) {
+  slotListeners.add(fn);
+}
+
+/** Saves the form's photo slots into the event being edited (right away, like Attach). False if not editing
+ *  a saved event or when a slot holds a path that is not valid yet (then the draft is left alone). */
+function commitSlots() {
+  const event = state.editingId && state.events.find((e) => e.id === state.editingId);
+  if (!event) return false;
+  const list = compactSlots(formSlots());
+  const probe = { date: '2000-01-01', short: 'X', name: 'X' };
+  setEventPhotos(probe, list);
+  if (validateEvent(probe).length) return false;
+  setEventPhotos(event, list);
+  saveDraft();
+  renderList();
+  return true;
+}
+
+/** Puts a photo path (display copy) and, optionally, the full-size path into the next empty slot of the form
+ *  (D1, then D2, then D3); a path that is already in a slot only gets its full-size path updated.
+ *  When editing an existing event it is saved to the draft right away. Returns the slot number (1-3), or 0 when all 3 are full. */
 export function attachPhoto(path, fullPath) {
   setFold('form-panel', true);
-  $('f-photo').value = path;
-  if (fullPath !== undefined) $('f-photo-full').value = fullPath || '';
+  const raw = formSlots();
+  let k = raw.findIndex((x) => x.photo === path);
+  if (k === -1) k = raw.findIndex((x) => !x.photo);
+  if (k === -1) {
+    $('save-status').textContent = 'This event already has 3 photos. Remove one first.';
+    return 0;
+  }
+  $(SLOT_IDS[k][0]).value = path;
+  if (fullPath !== undefined) $(SLOT_IDS[k][1]).value = fullPath || '';
+  syncSlots();
   updatePreview();
   if (state.editingId) {
     const event = state.events.find((e) => e.id === state.editingId);
     if (event) {
-      event.photo = path;
-      if (fullPath) event.photoFull = fullPath;
-      else if (fullPath !== undefined) delete event.photoFull;
       delete event.sample;
-      saveDraft();
-      renderList();
-      $('save-status').textContent = `Attached ${path} to ${event.short} · ${formatDate(event.date)} (draft saved).`;
+      if (commitSlots()) {
+        $('save-status').textContent = `Attached ${path} to ${event.short} · ${formatDate(event.date)} as D${k + 1} (draft saved).`;
+      } else {
+        saveDraft();
+        renderList();
+        $('save-status').textContent = `Photo path filled in as D${k + 1}. Fix the other photo paths, then press "Save changes".`;
+      }
     }
   } else {
-    $('save-status').textContent = `Photo path filled in. Press "Save event" to keep it.`;
+    $('save-status').textContent = 'Photo path filled in. Press "Save event" to keep it.';
   }
+  return k + 1;
+}
+
+/** An unsaved event's pair got a new id: the same slot now holds the new paths (the slot keeps its place). */
+export function replaceSlotPath(oldPath, path, fullPath) {
+  const k = formSlots().findIndex((x) => x.photo === oldPath);
+  if (k === -1) return false;
+  $(SLOT_IDS[k][0]).value = path;
+  $(SLOT_IDS[k][1]).value = fullPath || '';
+  syncSlots();
+  updatePreview();
+  return true;
+}
+
+/** True when a Display path is in one of the form's slots. */
+export function slotHasPath(path) {
+  return formSlots().some((x) => x.photo === path);
 }
 
 /**
- * TASK-16: "Remove from publish" sets an event's photo paths back (the published ones, or none when `photo`
- * is ''). `photoFull` is only kept together with a `photo`. Saves the draft; if the event is open in the
- * form, its photo fields and preview follow. Returns false when the event is not in the draft.
+ * TASK-27 "Remove from publish" on a pending pair: takes the slot holding `photo` out of the event in the
+ * draft and closes the gap (published slots are not touched). Returns the slot number (1-3) it had, or 0
+ * when the event does not hold that photo (the draft is not changed). The open form follows.
+ * `published` (list of published photos) + `sample` put the published "Sample" tag back when the event is back to them.
+ */
+export function removeEventPhoto(eventId, photo, { published, sample } = {}) {
+  const event = state.events.find((e) => e.id === eventId);
+  if (!event) return 0;
+  const list = eventPhotos(event);
+  const k = list.findIndex((x) => x.photo === photo);
+  if (k === -1) return 0;
+  list.splice(k, 1);
+  setEventPhotos(event, list);
+  // BUG-5: attaching dropped the "Sample" tag; when the event is back to exactly its published photos, put it back.
+  const back = Array.isArray(published) ? published : null;
+  if (back && sample !== undefined && back.length === list.length && back.every((x, i) => x.photo === list[i].photo)) event.sample = sample;
+  saveDraft();
+  renderList();
+  if (state.editingId === eventId) {
+    const raw = formSlots();
+    const j = raw.findIndex((x) => x.photo === photo);
+    if (j !== -1) {
+      raw.splice(j, 1);
+      setFormSlots(raw);
+      updatePreview();
+    }
+  }
+  return k + 1;
+}
+
+/** Number of photos the event has in the draft. */
+export function eventPhotoCount(eventId) {
+  const event = state.events.find((e) => e.id === eventId);
+  return event ? eventPhotos(event).length : 0;
+}
+
+/**
+ * TASK-16: "Remove from publish" on a 1-photo event whose only photo is the pending pair sets the event's
+ * photo paths back (the published ones, or none when `photo` is ''). Saves the draft; if the event is open in
+ * the form, its photo fields and preview follow. Returns false when the event is not in the draft.
  * BUG-5: `sample` (when not undefined) is the published event's "Sample" tag, put back since attaching drops it.
- * BUG-6: `formPaths` ({ photo, photoFull }) are the pair's own paths; the open form's photo fields are only
+ * `photos` (optional list) puts back all the published slots. BUG-6: `formPaths` ({ photo, photoFull }) are the pair's own paths; the open form's D1 fields are only
  * updated while they still hold exactly those (an unsaved typed path is left alone; the draft is reverted).
  */
-export function revertPhoto(eventId, photo, photoFull, { sample, formPaths } = {}) {
+export function revertPhoto(eventId, photo, photoFull, { sample, formPaths, photos } = {}) {
   const event = state.events.find((e) => e.id === eventId);
   if (!event) return false;
-  if (photo) event.photo = photo;
-  else delete event.photo;
-  if (photo && photoFull) event.photoFull = photoFull;
-  else delete event.photoFull;
+  setEventPhotos(event, photos || (photo ? [photoFull ? { photo, photoFull } : { photo }] : []));
   if (sample !== undefined) event.sample = sample;
   saveDraft();
   renderList();
@@ -509,9 +659,105 @@ export function revertPhoto(eventId, photo, photoFull, { sample, formPaths } = {
   if (state.editingId === eventId && formUntouched) {
     $('f-photo').value = event.photo || '';
     $('f-photo-full').value = event.photoFull || '';
+    syncSlots();
     updatePreview();
   }
   return true;
+}
+
+/* ---------- Photo slots in the form (TASK-27) ---------- */
+function slotThumb(row, path) {
+  const box = row.querySelector('.slot-th');
+  if (box.dataset.path === path) return;
+  box.dataset.path = path;
+  box.replaceChildren();
+  if (!path || photoPathBad(path)) {
+    box.textContent = 'No photo';
+    return;
+  }
+  const pair = pendingPairs().find((p) => p.photo === path);
+  const blobUrl = pair && pair.item && pair.item.urls && pair.item.urls.display;
+  const img = make('img');
+  img.alt = '';
+  img.addEventListener('error', () => { box.replaceChildren('Not found'); });
+  img.src = blobUrl || new URL(`../../${path}`, import.meta.url).href;
+  box.append(img);
+}
+
+const photoPathBad = (path) => path.startsWith('/') || path.includes('..') || path.includes('\\') || /^[a-z][a-z0-9+.-]*:/i.test(path);
+
+/** Row states: empty or filled, move buttons enabled where a move makes sense, preview of the display copy. */
+function syncSlots(thumbs = true) {
+  const raw = formSlots();
+  const rows = [...$('slots').children];
+  const count = raw.filter((x) => x.photo).length;
+  rows.forEach((row, i) => {
+    const has = Boolean(raw[i].photo);
+    row.classList.toggle('is-empty', !has);
+    if (thumbs) slotThumb(row, raw[i].photo);
+    const [up, down, rm] = row.querySelectorAll('.slot-btn');
+    up.disabled = !has || i === 0;
+    down.disabled = !has || i === rows.length - 1 || !raw[i + 1].photo;
+    rm.disabled = !has && !raw[i].photoFull;
+  });
+  $('slots-sum').textContent = count === 0 ? 'No photos on this event.' : `${count} ${count === 1 ? 'photo' : 'photos'} on this form.`;
+  slotListeners.forEach((fn) => fn());
+}
+
+function focusSlotButton(i, act) {
+  const row = $('slots').children[i];
+  const target = row && (row.querySelector(`[data-act="${act}"]:not(:disabled)`) || row.querySelector('.slot-btn:not(:disabled)') || row.querySelector('input'));
+  if (target) target.focus();
+}
+
+function moveSlot(i, delta) {
+  const raw = formSlots();
+  const j = i + delta;
+  if (j < 0 || j >= raw.length || !raw[i].photo || !raw[j].photo) return;
+  [raw[i], raw[j]] = [raw[j], raw[i]];
+  setFormSlots(raw);
+  updatePreview();
+  commitSlots();
+  focusSlotButton(j, delta < 0 ? 'up' : 'down');
+}
+
+let removing = false;
+async function removeSlot(i) {
+  if (removing) return;
+  const raw = formSlots();
+  const slot = raw[i];
+  if (!slot.photo && !slot.photoFull) return;
+  const pair = slot.photo ? pendingPairs().find((p) => p.photo === slot.photo) : null;
+  if (pair) {
+    removing = true;
+    const event = state.events.find((e) => e.id === (state.editingId || pair.eventId));
+    const who = event ? `${event.short} ${String(event.date).slice(0, 4)}` : 'an event';
+    const ok = await askRemove(`Remove photo D${i + 1} (${pair.item && pair.item.file ? pair.item.file.name : slot.photo})? It is attached to ${who} and will be taken out of the publish.`);
+    removing = false;
+    if (!ok) { $('slots').children[i].querySelector('[data-act="remove"]').focus(); return; }
+    removePendingItem(pair.item);
+  }
+  const now = formSlots();
+  now.splice(i, 1);
+  setFormSlots(now);
+  updatePreview();
+  commitSlots();
+  $('save-status').textContent = `Photo D${i + 1} removed from the form${state.editingId ? ' (draft saved)' : ''}.`;
+  focusSlotButton(Math.min(i, 2), 'remove');
+}
+
+function initSlots() {
+  [...$('slots').children].forEach((row, i) => {
+    row.querySelector('[data-act="up"]').addEventListener('click', () => moveSlot(i, -1));
+    row.querySelector('[data-act="down"]').addEventListener('click', () => moveSlot(i, 1));
+    row.querySelector('[data-act="remove"]').addEventListener('click', () => removeSlot(i));
+  });
+  for (const [p, f] of SLOT_IDS) {
+    for (const id of [p, f]) {
+      $(id).addEventListener('input', () => syncSlots(false));
+      $(id).addEventListener('change', () => { syncSlots(); updatePreview(); });
+    }
+  }
 }
 
 /* ---------- API for Publish ---------- */
@@ -562,7 +808,7 @@ export function lockFileActions(locked) {
 async function init() {
   const draft = readDraft();
   if (draft) {
-    state.events = sortEvents(draft.events);
+    state.events = sortEvents(draft.events.map(normalizeEvent));
     // A draft from before Publish existed has no base. Its start point is unknown, so the first Publish
     // stops as stale and the page explains how to go on (Export, Discard, Import, Publish).
     state.base = draft.base || { sha: null, text: '' };
@@ -578,7 +824,7 @@ async function init() {
   $('cancel-edit').addEventListener('click', clearForm);
   $('add-activity').addEventListener('click', () => addActivityRow().focus());
   $('f-link').addEventListener('input', updatePreview);
-  $('f-photo').addEventListener('change', updatePreview);
+  initSlots();
   $('f-date').addEventListener('input', notify);
   $('f-short').addEventListener('input', notify);
   $('export-events').addEventListener('click', exportEvents);

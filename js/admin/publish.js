@@ -5,13 +5,14 @@
 // -> blobs (one at a time) -> tree -> commit -> move ref (force: false).
 // The ref is the only write that changes the live site, and it is always the last call, so a failure at any
 // earlier step leaves GitHub as it was. The token is only ever sent by githubFetch (github-token.js).
+import { eventPhotos } from '../events-data.js';
 import { GITHUB } from './github-config.js';
 import { githubFetch, readToken, MESSAGES as TOKEN_MESSAGES, TOKEN_EVENT, TOKEN_KEY } from './github-token.js';
 import { PUBLISH_BUSY_EVENT } from './github-panel.js';
 import { gitBlobSha } from './git-blob.js';
 import {
   managerReady, draftText, eventCount, baseEvents, draftDiffersFromBase, setBase, onDraftChange,
-  lockFileActions, exportEvents, isDraftLoading, draftEventIds, revertPhoto,
+  lockFileActions, exportEvents, isDraftLoading, draftEventIds, revertPhoto, removeEventPhoto,
 } from './manager.js';
 import {
   pendingPairs, onPendingChange, clearPendingPairs, removePendingItem, isPipelineFile,
@@ -82,6 +83,7 @@ export const PUBLISH_MESSAGES = Object.freeze({
   linkUnchecked: "Could not list all files on GitHub, so the photo links can't be checked.",
   linkUncheckedNext: 'Nothing was changed.',
   more: (n) => ` (and ${n} more)`,
+  slotRemoved: (n, name) => `Photo D${n} removed from ${name} (not published yet).`,
   revertedBase: (name) => `Photo for ${name} set back to the published photo.`,
   revertedNone: (name) => `Photo for ${name} removed from the event (it has no published photo).`,
   // TASK-22: moment photos
@@ -203,7 +205,32 @@ async function api(token, path, { method = 'GET', body, refUpdate = false } = {}
 
 /* ---------- Pure rules (paths, removals) ---------- */
 
-/** Every `photo` / `photoFull` string of the events in an events.json text (raw, as written). */
+/**
+ * TASK-27: every photo path of one event as written: [{ field, value }] for `photo`, `photoFull` and each entry of
+ * `photos` (a value the mirror repeats is listed once). Strings only; anything else is skipped.
+ */
+function eventPathEntries(event) {
+  const out = [];
+  const seen = new Set();
+  const add = (field, value) => {
+    if (typeof value !== 'string' || !value || seen.has(value)) return;
+    seen.add(value);
+    out.push({ field, value });
+  };
+  if (!event || typeof event !== 'object') return out;
+  add('photo', event.photo);
+  add('photoFull', event.photoFull);
+  if (Array.isArray(event.photos)) {
+    event.photos.slice(0, 3).forEach((p, i) => {
+      if (!p || typeof p !== 'object') return;
+      add(`photos[${i}].photo`, p.photo);
+      add(`photos[${i}].photoFull`, p.photoFull);
+    });
+  }
+  return out;
+}
+
+/** Every photo path of the events in an events.json text (photo, photoFull and every `photos` entry; raw, as written). */
 function photoValues(text) {
   let events = [];
   try {
@@ -214,8 +241,7 @@ function photoValues(text) {
   }
   const values = [];
   for (const event of events) {
-    if (event && typeof event.photo === 'string' && event.photo) values.push(event.photo);
-    if (event && typeof event.photoFull === 'string' && event.photoFull) values.push(event.photoFull);
+    values.push(...eventPathEntries(event).map((x) => x.value));
   }
   return values;
 }
@@ -390,9 +416,7 @@ export function brokenPhotoLinks(text, treeEntries, truncated, newPaths) {
   const fresh = asSet(newPaths);
   const problems = [];
   for (const event of eventsOf(text)) {
-    for (const field of ['photo', 'photoFull']) {
-      const value = event[field];
-      if (typeof value !== 'string' || !value) continue;
+    for (const { field, value } of eventPathEntries(event)) {
       const kind = linkProblem(value, blobs, Boolean(truncated), fresh, MEDIA_PREFIX);
       if (!kind) continue;
       problems.push({
@@ -661,27 +685,37 @@ function showNote(text) {
 }
 
 /**
- * TASK-16 (2): after "Remove from publish" on a pair, the event goes back to its published photo (or has
- * none), so the draft never points at a file that will not be on GitHub. Only when the event still uses
- * exactly this pair's paths; a path changed meanwhile is left alone. Returns the note, or ''.
+ * TASK-16 (2) + TASK-27: after "Remove from publish" on a pair the draft must not point at a file that will not be
+ * on GitHub. If the event holds the pair's photo in a slot, that slot goes (the other slots, published or not, stay)
+ * and the note says "Photo D<n> removed from <event> (not published yet)." Exception (TASK-16 put-back): when the pair
+ * is the only photo of the event, the event gets its published photo(s) back (or none). If the event no longer holds
+ * the photo (changed meanwhile), nothing changes. Returns the note, or ''.
  */
 function revertPair(pair) {
   const event = eventsOf(draftText()).find((e) => e.id === pair.eventId);
-  if (!event || event.photo !== pair.photo) return '';
-  if (event.photoFull && event.photoFull !== pair.photoFull) return '';
-  const published = eventsOf(baseEvents().text).find((e) => e.id === pair.eventId);
-  // BUG-5: the attach dropped the "Sample" tag; put back the published one. BUG-6: keep a typed form path.
-  const options = {
-    sample: published && published.sample !== undefined ? published.sample : undefined,
-    formPaths: { photo: pair.photo, photoFull: pair.photoFull },
-  };
-  if (published && typeof published.photo === 'string' && published.photo) {
-    const full = typeof published.photoFull === 'string' ? published.photoFull : '';
-    revertPhoto(pair.eventId, published.photo, full, options);
-    return PUBLISH_MESSAGES.revertedBase(eventName(event));
+  if (!event) return '';
+  const slots = eventPhotos(event);
+  const k = slots.findIndex((x) => x.photo === pair.photo);
+  if (k === -1) return '';
+  if (slots.length === 1) {
+    if (slots[0].photoFull && slots[0].photoFull !== pair.photoFull) return '';
+    const published = eventsOf(baseEvents().text).find((e) => e.id === pair.eventId);
+    // BUG-5: the attach dropped the "Sample" tag; put back the published one. BUG-6: keep a typed form path.
+    const options = {
+      sample: published && published.sample !== undefined ? published.sample : undefined,
+      formPaths: { photo: pair.photo, photoFull: pair.photoFull },
+    };
+    const back = published ? eventPhotos(published) : [];
+    if (back.length) {
+      revertPhoto(pair.eventId, back[0].photo, back[0].photoFull || '', { ...options, photos: back.map((x) => (x.photoFull ? { photo: x.photo, photoFull: x.photoFull } : { photo: x.photo })) });
+      return PUBLISH_MESSAGES.revertedBase(eventName(event));
+    }
+    revertPhoto(pair.eventId, '', '', options);
+    return PUBLISH_MESSAGES.revertedNone(eventName(event));
   }
-  revertPhoto(pair.eventId, '', '', options);
-  return PUBLISH_MESSAGES.revertedNone(eventName(event));
+  const published = eventsOf(baseEvents().text).find((e) => e.id === pair.eventId);
+  const n = removeEventPhoto(pair.eventId, pair.photo, published ? { published: eventPhotos(published), sample: published.sample } : {});
+  return n ? PUBLISH_MESSAGES.slotRemoved(n, eventName(event)) : '';
 }
 
 /** "Remove from publish" on a pair: drop it (and any pair of the same file), then undo its attach. */

@@ -64,11 +64,14 @@ async function edit(page, id) {
 }
 
 /** Uploads a fixture through the TASK-7 pipeline and attaches the new card to event `id`. */
-async function attach(page, id, file = SMALL) {
+async function attach(page, id, file = SMALL, { replace = false } = {}) {
   const i = await page.locator('.wm-card').count();
   await page.setInputFiles('#wm-files', file);
   await expectResult(card(page, i)).toHaveAttribute('data-state', 'ready', { timeout: 30000 });
   await edit(page, id);
+  // TASK-27: a new photo fills the next empty slot. To replace the published photo (the old TASK-13 case),
+  // the published D1 is taken out with its X first; its 2 files then become unused.
+  if (replace) await page.getByRole('button', { name: 'Remove photo D1', exact: true }).press('Enter');
   await card(page, i).getByRole('button', { name: 'Attach to selected event' }).press('Enter');
   await expectResult(page.locator('#f-photo')).toHaveValue(new RegExp(`^media/events/${id}/`));
   return i;
@@ -191,7 +194,7 @@ test('replace: the dialog lists the 2 old files; "Remove and publish" makes one 
     events: [ev(X, OLD), ev(Y)],
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
-  await attach(page, X);
+  await attach(page, X, SMALL, { replace: true });
   const display = `media/events/${X}/flat-800x600.webp`;
   const master = `media/events/${X}/flat-800x600-full.webp`;
   // The pending list already shows which old files the draft no longer uses.
@@ -235,7 +238,7 @@ test('Cancel (button and Esc): no write at all, repo unchanged, pending pair kep
     events: [ev(X, OLD), ev(Y)],
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
-  await attach(page, X);
+  await attach(page, X, SMALL, { replace: true });
   const head = github.repo.head;
   const before = [...github.repo.filesAt().keys()];
 
@@ -381,7 +384,7 @@ test('500 on the second image blob after confirming: ref unmoved, old files kept
     events: [ev(X, OLD), ev(Y)],
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
-  await attach(page, X);
+  await attach(page, X, SMALL, { replace: true });
   const head = github.repo.head;
   onImageBlob(github, 2, { status: 500, body: { message: 'Server Error' } });
   await page.click('#publish-btn');
@@ -414,7 +417,7 @@ test('stale mid-upload: the branch moves during an image upload -> stale message
     events: [ev(X, OLD), ev(Y)],
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
-  await attach(page, X);
+  await attach(page, X, SMALL, { replace: true });
   onImageBlob(github, 2, (req, route) => {
     github.repo.pushOutside({ 'README.md': 'pushed from another device\n' });
     return github.route(route, req);

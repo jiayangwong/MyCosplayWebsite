@@ -98,7 +98,8 @@ async function attach(page, id) {
   await expectResult(card(page, i)).toHaveAttribute('data-state', 'ready', { timeout: 30000 });
   await edit(page, id);
   await card(page, i).getByRole('button', { name: 'Attach to selected event' }).press('Enter');
-  await expectResult(page.locator('#f-photo')).toHaveValue(`media/events/${id}/flat-800x600.webp`);
+  // TASK-27: the pair fills the next empty slot (D1 for an event without a photo, D2 after a published one).
+  await expect.poll(() => page.evaluate(() => ['f-photo', 'f-photo-2', 'f-photo-3'].map((x) => document.getElementById(x).value))).toContain(`media/events/${id}/flat-800x600.webp`);
 }
 
 /** Saves the open event after changing fields (Enter in the name field submits the form). */
@@ -189,12 +190,13 @@ test('IDEA-11: Remove from publish sets X back to its published photo; the next 
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
   await attach(page, X);
-  await expectResult(page.locator('#pub-pending')).toContainText(`- ${OLD.photo} (no event uses it)`);
+  // TASK-27: the new pair is D2; the published photo (D1) stays in use, so nothing is listed for removal.
+  await expectResult(page.locator('#pub-pending')).not.toContainText('(no event uses it)');
   await expect(page.locator('#pub-note')).toBeHidden();
 
   await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
-  await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
+  await expectResult(page.locator('#pub-note')).toHaveText('Photo D2 removed from CF 2026 (not published yet).');
   await expect(page.locator('#pub-note')).toHaveAttribute('role', 'status');
   expect(await draftEvent(page, X)).toMatchObject(OLD);
   await expect(page.locator('#pub-pending')).toHaveText('No pending changes.');
@@ -232,42 +234,46 @@ test('new event (not published): Remove from publish clears both fields and says
   expect(writes(github)).toEqual([]);
 });
 
-test('changed meanwhile: a typed path after the attach is kept, no note', async ({ page, github }) => {
+test('changed meanwhile: a typed path in the pair\'s slot after the attach is kept, no note', async ({ page, github }) => {
   await setup(page, github, {
     events: [ev(X, OLD), ev(Y)],
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
-  await attach(page, X);
+  await attach(page, X); // D2
   const typed = `media/events/${X}/typed.webp`;
-  await page.fill('#f-photo', typed);
+  await page.fill('#f-photo-2', typed);
   await saveForm(page);
-  expect((await draftEvent(page, X)).photo).toBe(typed);
+  const typedEvent = await draftEvent(page, X);
+  expect(typedEvent.photos[1].photo).toBe(typed);
   // The pair stays listed (its full-size file is still used).
   await expectResult(page.locator('#pub-pending .pend-remove')).toHaveCount(1);
   await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
   await expectResult(page.locator('#pub-pending .pend-pair')).toHaveCount(0);
   const x = await draftEvent(page, X);
-  expect(x.photo).toBe(typed);
-  expect(x.photoFull).toBe(`media/events/${X}/flat-800x600-full.webp`);
+  expect(x.photos[1].photo).toBe(typed); // the event no longer holds the pair's display path: draft unchanged
+  expect(x.photos[1].photoFull).toBe(`media/events/${X}/flat-800x600-full.webp`);
   await expect(page.locator('#pub-note')).toBeHidden();
-  await expect(page.locator('#f-photo')).toHaveValue(typed);
+  await expect(page.locator('#f-photo-2')).toHaveValue(typed);
 });
 
-test('form open: Remove from publish updates the open form\'s photo fields and preview', async ({ page, github }) => {
+test('form open: Remove from publish updates the open form\'s photo slots and previews', async ({ page, github }) => {
   await setup(page, github, {
     events: [ev(X, OLD), ev(Y)],
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
-  // The preview shows a placeholder for a file the site does not serve: serve every event photo as a PNG.
   const png = fs.readFileSync(SMALL);
   await page.route('**/media/events/**', (route) => route.fulfill({ contentType: 'image/png', body: png }));
-  await attach(page, X); // leaves X open in the form
-  await expect(page.locator('#embed-preview img')).toHaveAttribute('src', /flat-800x600\.webp$/);
+  await attach(page, X); // leaves X open in the form, the pair is D2
+  await expect(page.locator('#slot-th-2 img')).toBeVisible();
+  await expect(page.locator('#f-photo-2')).toHaveValue(`media/events/${X}/flat-800x600.webp`);
   await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
-  await expectResult(page.locator('#f-photo')).toHaveValue(OLD.photo);
+  await expectResult(page.locator('#f-photo-2')).toHaveValue('');
+  await expect(page.locator('#f-photo-full-2')).toHaveValue('');
+  await expect(page.locator('#f-photo')).toHaveValue(OLD.photo);
   await expect(page.locator('#f-photo-full')).toHaveValue(OLD.photoFull);
+  await expect(page.locator('#slot-th-2')).toHaveText('No photo');
   await expect(page.locator('#embed-preview img')).toHaveAttribute('src', /media\/events\/2026-03-14-cf\/old\.webp$/);
   await expect(page.locator('#wm-event-id')).toHaveText(X); // still editing X
 });
@@ -282,7 +288,7 @@ test('BUG-5: Remove from publish on a published SAMPLE event puts back the "Samp
   await expectResult(row(page, X)).not.toContainText('SAMPLE'); // attaching drops the tag
   await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
-  await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
+  await expectResult(page.locator('#pub-note')).toHaveText('Photo D2 removed from CF 2026 (not published yet).');
   expect(await draftEvent(page, X)).toEqual(ev(X, { ...OLD, sample: true }));
   await expect(row(page, X)).toContainText('SAMPLE');
   await expect(page.locator('#pub-pending')).toHaveText('No pending changes.');
@@ -303,22 +309,21 @@ test('BUG-5: a published event with no photo gets its "Sample" tag back when the
   await expect(page.locator('#publish-btn')).toHaveText('Nothing to publish');
 });
 
-test('BUG-6: an unsaved typed path in the open form is kept; the draft is still set back', async ({ page, github }) => {
+test('BUG-6: an unsaved typed path in the open form\'s D1 is kept; the pair\'s slot D2 is removed from the draft and the form', async ({ page, github }) => {
   await setup(page, github, {
     events: [ev(X, OLD), ev(Y)],
     files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') },
   });
-  await attach(page, X); // leaves X open in the form
-  const pairFull = `media/events/${X}/flat-800x600-full.webp`;
-  await expect(page.locator('#f-photo-full')).toHaveValue(pairFull);
+  await attach(page, X); // leaves X open in the form, the pair is D2
+  await expect(page.locator('#f-photo-full-2')).toHaveValue(`media/events/${X}/flat-800x600-full.webp`);
   const typed = `media/events/${X}/typed.webp`;
   await page.fill('#f-photo', typed); // not saved
   await openFold(page, 'pub');
   await page.locator('#pub-pending .pend-remove').press('Enter');
-  await expectResult(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
+  await expectResult(page.locator('#pub-note')).toHaveText('Photo D2 removed from CF 2026 (not published yet).');
   expect(await draftEvent(page, X)).toMatchObject(OLD);
   await expect(page.locator('#f-photo')).toHaveValue(typed);
-  await expect(page.locator('#f-photo-full')).toHaveValue(pairFull);
+  await expect(page.locator('#f-photo-2')).toHaveValue('');
   await expect(page.locator('#wm-event-id')).toHaveText(X); // still editing X
   expect(writes(github)).toEqual([]);
 });

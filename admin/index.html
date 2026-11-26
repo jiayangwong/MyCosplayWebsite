@@ -136,18 +136,66 @@
             <p class="panel-hint" id="link-help">Instagram, TikTok or YouTube links become an embedded player. Other links show the preview photo and a link.</p>
             <p class="field-error" id="err-link" hidden></p>
           </div>
-          <div class="field">
-            <label for="f-photo">Display photo</label>
-            <input type="text" id="f-photo" name="photo" placeholder="media/events/2025-12-13-cf/cover.webp" aria-describedby="photo-help err-photo">
-            <p class="panel-hint" id="photo-help">The 1200px watermarked copy. Used on Home, Events and the Gallery tiles.</p>
-            <p class="field-error" id="err-photo" hidden></p>
-          </div>
-          <div class="field">
-            <label for="f-photo-full">Full-size photo</label>
-            <input type="text" id="f-photo-full" name="photoFull" placeholder="media/events/2025-12-13-cf/cover-full.webp" aria-describedby="photo-full-help err-photoFull">
-            <p class="panel-hint" id="photo-full-help">Optional. The full-resolution watermarked master, opened in the Gallery viewer. Needs a Display photo.</p>
-            <p class="field-error" id="err-photoFull" hidden></p>
-          </div>
+          <fieldset class="field slots-fs">
+            <legend>Photos (up to 3)</legend>
+            <p class="panel-hint" id="photo-help">D1, D2, D3 are the days shown on the home hall. Display = the 1200px watermarked copy (Home, Events, Gallery tiles). Full-size = optional watermarked master for the Gallery viewer, needs a Display photo.</p>
+            <ol class="slots" id="slots">
+            <li class="slot is-empty" data-slot="1">
+              <span class="slot-d" aria-hidden="true">D1</span>
+              <span class="slot-th" id="slot-th-1">No photo</span>
+              <div class="slot-fields">
+                <label for="f-photo">Display photo</label>
+                <input type="text" id="f-photo" name="photo" placeholder="media/events/2025-12-13-cf/cover.webp" aria-describedby="photo-help err-photo">
+                <p class="field-error" id="err-photo" hidden></p>
+                <label for="f-photo-full">Full-size photo</label>
+                <input type="text" id="f-photo-full" name="photoFull" placeholder="media/events/2025-12-13-cf/cover-full.webp" aria-describedby="photo-full-help err-photoFull">
+                <p class="field-error" id="err-photoFull" hidden></p>
+              </div>
+              <span class="slot-b">
+                <button type="button" class="icon-btn slot-btn" data-act="up" aria-label="Move photo D1 up">&uarr;</button>
+                <button type="button" class="icon-btn slot-btn" data-act="down" aria-label="Move photo D1 down">&darr;</button>
+                <button type="button" class="icon-btn slot-btn is-danger" data-act="remove" aria-label="Remove photo D1">&times;</button>
+              </span>
+            </li>
+            <li class="slot is-empty" data-slot="2">
+              <span class="slot-d" aria-hidden="true">D2</span>
+              <span class="slot-th" id="slot-th-2">No photo</span>
+              <div class="slot-fields">
+                <label for="f-photo-2">Photo D2 display copy</label>
+                <input type="text" id="f-photo-2" name="photo2" placeholder="media/events/2025-12-13-cf/day-2.webp">
+                
+                <label for="f-photo-full-2">Photo D2 full-size master</label>
+                <input type="text" id="f-photo-full-2" name="photoFull2" placeholder="media/events/2025-12-13-cf/day-2-full.webp" aria-describedby="err-photoFull2">
+                <p class="field-error" id="err-photoFull2" hidden></p>
+              </div>
+              <span class="slot-b">
+                <button type="button" class="icon-btn slot-btn" data-act="up" aria-label="Move photo D2 up">&uarr;</button>
+                <button type="button" class="icon-btn slot-btn" data-act="down" aria-label="Move photo D2 down">&darr;</button>
+                <button type="button" class="icon-btn slot-btn is-danger" data-act="remove" aria-label="Remove photo D2">&times;</button>
+              </span>
+            </li>
+            <li class="slot is-empty" data-slot="3">
+              <span class="slot-d" aria-hidden="true">D3</span>
+              <span class="slot-th" id="slot-th-3">No photo</span>
+              <div class="slot-fields">
+                <label for="f-photo-3">Photo D3 display copy</label>
+                <input type="text" id="f-photo-3" name="photo3" placeholder="media/events/2025-12-13-cf/day-3.webp">
+                
+                <label for="f-photo-full-3">Photo D3 full-size master</label>
+                <input type="text" id="f-photo-full-3" name="photoFull3" placeholder="media/events/2025-12-13-cf/day-3-full.webp" aria-describedby="err-photoFull3">
+                <p class="field-error" id="err-photoFull3" hidden></p>
+              </div>
+              <span class="slot-b">
+                <button type="button" class="icon-btn slot-btn" data-act="up" aria-label="Move photo D3 up">&uarr;</button>
+                <button type="button" class="icon-btn slot-btn" data-act="down" aria-label="Move photo D3 down">&darr;</button>
+                <button type="button" class="icon-btn slot-btn is-danger" data-act="remove" aria-label="Remove photo D3">&times;</button>
+              </span>
+            </li>
+            </ol>
+            <p class="panel-hint" id="photo-full-help">Attach to selected event fills the next empty slot.</p>
+            <p class="field-error" id="err-photos" hidden></p>
+            <p class="panel-hint" id="slots-sum" role="status"></p>
+          </fieldset>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" id="save-event">Save event</button>
             <button type="button" class="btn btn-secondary" id="cancel-edit">Clear form</button>

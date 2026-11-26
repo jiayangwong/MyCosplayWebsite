@@ -81,6 +81,12 @@ function siteReferences(root) {
     if (!e) continue;
     add(`data/events.json (${e.id} photo)`, e.photo);
     add(`data/events.json (${e.id} photoFull)`, e.photoFull);
+    // TASK-27: every slot of `photos` (the mirror D1 repeats the top-level paths; duplicates are harmless).
+    (Array.isArray(e.photos) ? e.photos : []).forEach((p, i) => {
+      if (!p || typeof p !== 'object') return;
+      add(`data/events.json (${e.id} photos[${i}].photo)`, p.photo);
+      add(`data/events.json (${e.id} photos[${i}].photoFull)`, p.photoFull);
+    });
   }
   const reels = readJson(root, 'data/reels.json');
   for (const r of (reels && Array.isArray(reels.reels) ? reels.reels : [])) {
