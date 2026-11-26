@@ -594,3 +594,9 @@ Mobile:
 | 4 Petal storm | Low-Medium | Medium | Medium | Atmosphere, best as a hero |
 
 - Recommendation: IDEA-1 (wardrobe) as the main concept, since it maps most directly onto reels and fits the Lolita style. Borrow the petals from IDEA-4 as light ambient decoration (cheap), and consider IDEA-2 as a fun secondary feature ("Surprise me" gacha button on the reels page). IDEA-3 is the most distinctive but also the heaviest and most like SleepyStella's site, so park it unless the user wants a storytelling site.
+
+### IDEA-16 decision update 2026-11-26 (phone)
+The user approved the PC part ("pc web approved") and changed the phone part. User words: "phone web i need the meter or countdown timer is the D1, D2, D3 tab and it like fb or ig story auto flip. no need pause button. when user press the D1,D2,D3, animation stop at the selected polaroid, it wont able to play again except page load again."
+- Phone: the D1, D2, D3 tabs are the meter (story-style segments that fill in 1.5 s each) and the photo flips by itself; no separate meter bar, no pause button.
+- Pressing a tab stops the animation on that photo for good; it plays again only after the page is reloaded.
+- Assumed: plays D1, D2, D3 once and stops on D3 (no loop, like stories; total 4.5 s). To confirm with the user.

@@ -426,7 +426,7 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
 .pager .btn:disabled { opacity: .5; cursor: not-allowed; }
 .empty { margin: 0; padding: var(--space-4); border: 2px dashed var(--color-ink); border-radius: var(--radius-card); text-align: center; font-weight: 700; }
 
-/* ===== IDEA-16: hall photos (storyboard). Phone = D (tabs + auto-swap + meter), 768px and up = A (peek pile, spreads in view). Tokens only; #FFE066 is the existing storyboard-note yellow. ===== */
+/* ===== IDEA-16: hall photos (storyboard). Phone = D (story-bar tabs, auto-flip once), 768px and up = A (peek pile, spreads in view). Tokens only; #FFE066 is the existing storyboard-note yellow. ===== */
 .hall-item.pile-hall { width: 100%; max-width: 340px; }
 .pile { --H: calc(var(--w) + 72px); position: relative; width: 100%; margin-top: var(--space-4); }
 .pile-stage { position: relative; height: calc(var(--H) + 8px); }
@@ -437,27 +437,24 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
 .sb-help { margin: var(--space-3) 0 0; background: #FFE066; border: 1px dashed var(--color-ink); padding: 6px 10px; font-weight: 700; max-width: 62ch; }
 .pile-toggle, .pile-hint { display: none; }
 
-/* Phone (under 768px): one polaroid, tape tabs D1-D3, auto-swap with a meter */
+/* Phone (under 768px): one polaroid, tape tabs D1-D3, tabs are the story bars */
 @media (max-width: 767px) {
   .pl { transition: opacity .2s linear; z-index: 1; }
   .pl.on { z-index: 2; }
   .pl:not(.on) { opacity: 0; pointer-events: none; }
   .dtabs { display: flex; justify-content: center; gap: var(--space-2); margin: var(--space-2) 0 -14px; position: relative; z-index: 30; }
-  .dtab { min-width: 64px; min-height: var(--tap-min); border: var(--outline); border-radius: var(--radius-sm); background: var(--ph-lilac); color: var(--color-ink); font: 700 13px var(--font-mono); cursor: pointer; }
+  .dtab { position: relative; overflow: hidden; min-width: 64px; min-height: var(--tap-min); border: var(--outline); border-radius: var(--radius-sm); background: var(--ph-lilac); color: var(--color-ink); font: 700 13px var(--font-mono); cursor: pointer; }
   .dtab:nth-child(2) { transform: rotate(1.5deg); } .dtab:nth-child(3) { transform: rotate(-1deg); }
-  .dtab[aria-selected="true"] { background: var(--color-pink); box-shadow: var(--shadow-hover); }
-  .dtab:focus-visible, .pause:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+  .dtab .fill { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--color-purple-deep); color: var(--color-surface); clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0); pointer-events: none; }
+  .pile.stopped .dtab .fill { display: none; }
+  .pile.stopped .dtab[aria-selected="true"] { background: var(--color-pink); box-shadow: var(--shadow-hover); }
+  .dtab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .pile .tape { display: none; }
-  .swap-ctl { display: flex; align-items: center; gap: var(--space-2); width: var(--w); margin: var(--space-2) auto 0; }
-  .meter { flex: 1; height: 12px; border: var(--outline); border-radius: 6px; background: var(--color-surface); overflow: hidden; }
-  .meter i { display: block; height: 100%; width: 100%; background: var(--color-purple-deep); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
-  .pause { min-width: var(--tap-min); min-height: var(--tap-min); padding: 0 var(--space-3); border: var(--outline); border-radius: var(--radius-btn); background: var(--color-surface); color: var(--color-ink); font: 700 12px var(--font-mono); text-transform: uppercase; cursor: pointer; }
-  .pile[data-n="1"] .swap-ctl { display: none; }
 }
 
 /* 768px and up: neat peek pile, fans out when the hall is in view */
 @media (min-width: 768px) {
-  .dtabs, .swap-ctl { display: none; }
+  .dtabs { display: none; }
   .hall-item.pile-hall, .hall-item.mid.pile-hall, .hall-item.far.pile-hall { width: 100%; max-width: 720px; margin-left: auto; margin-right: auto; }
   .pile { --s: .72; --k: .78; --sh: calc(var(--s) * var(--H) + 28px + 48px); }
   .pile[data-n="2"] { --k: .5; }
@@ -490,7 +487,7 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .pl, .pile .pl, .pile.open .pl { transition: none !important; }
-  .meter, .pause { display: none !important; }
+  .dtab .fill { display: none !important; }
 }
 
 /* ===== IDEA-16 admin: photo chip + D1-D3 slots (tokens only) ===== */

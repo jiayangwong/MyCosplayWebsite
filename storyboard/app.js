@@ -76,7 +76,7 @@
 
 /* IDEA-16: hall photos. Storyboard-only behaviour.
    768px and up: peek pile that spreads when the hall is about 60% visible, back to a pile below about 25%.
-   Under 768px: one photo, Day tabs, auto-swap every 1.5 s with a meter while 60% visible. */
+   Under 768px: one photo; the D1 D2 D3 tabs are story-style bars (1.5 s each), play once, stop on D3; pressing a tab stops it until reload. */
 (function () {
   var STEP = 1500;
   var wide = matchMedia('(min-width: 768px)'), rm = matchMedia('(prefers-reduced-motion: reduce)');
@@ -90,12 +90,14 @@
     var pls = Array.prototype.slice.call(pile.querySelectorAll('.pl'));
     if (n < 2) { pls[0].classList.add('on'); return; }
     var tabs = Array.prototype.slice.call(pile.querySelectorAll('.dtab'));
-    var toggle = pile.querySelector('.pile-toggle'), pauseBtn = pile.querySelector('.pause'), fill = pile.querySelector('.meter i');
+    var toggle = pile.querySelector('.pile-toggle');
     var ratio = 0, inView = false, open = false, manual = false;           /* PC state */
-    var cur = 0, el = 0, last = 0, raf = 0, running = false, tabHold = false, userPause = false; /* phone state */
+    var cur = 0, el = 0, last = 0, raf = 0, running = false, started = false, stopped = false; /* phone state: stopped = user pressed a tab, for good */
 
     function anyFlipped() { return pls.some(function (pl) { return pl.querySelector('.polaroid').classList.contains('flipped'); }); }
-    function setFill(f) { fill.style.setProperty('--p', f); }
+    function setFill() {
+      tabs.forEach(function (t, k) { t.style.setProperty('--p', k < cur ? 1 : (k === cur ? Math.min(el / STEP, 1) : 0)); });
+    }
 
     /* PC pile */
     function setOpen(on) {
@@ -111,7 +113,7 @@
       pls.forEach(function (pl, k) { pl.classList.toggle('on', k === i); pl.inert = k !== i; if (k !== i) unflip(pl); });
       tabs.forEach(function (t, k) { t.setAttribute('aria-selected', k === i ? 'true' : 'false'); t.tabIndex = k === i ? 0 : -1; });
     }
-    function pick(i, focus) { show(i); el = 0; setFill(0); tabHold = true; evaluate(); if (focus) tabs[i].focus(); }
+    function pick(i, focus) { stopped = true; pile.classList.add('stopped'); show(i); evaluate(); if (focus) tabs[i].focus(); }
     tabs.forEach(function (t, i) {
       t.addEventListener('click', function () { pick(i); });
       t.addEventListener('keydown', function (e) {
@@ -121,21 +123,20 @@
         if (j >= 0) { e.preventDefault(); pick(j, true); }
       });
     });
-    pauseBtn.addEventListener('click', function () {
-      userPause = !userPause;
-      pauseBtn.textContent = userPause ? 'Play' : 'Pause';
-      pauseBtn.setAttribute('aria-label', userPause ? 'Play photo swap' : 'Pause photo swap');
-      evaluate();
-    });
     function tick(t) {
       if (!running) return;
       el += Math.min(t - last, 100); last = t;
-      if (el >= STEP) { el = 0; show((cur + 1) % n); }
-      setFill(el / STEP);
+      if (el >= STEP) {
+        if (cur >= n - 1) { el = STEP; setFill(); running = false; started = true; return; }
+        cur++; el = 0; show(cur);
+      }
+      setFill();
       raf = requestAnimationFrame(tick);
     }
     function evaluate() {
-      var go = !wide.matches && !rm.matches && inView && ratio >= 0.6 && !document.hidden && !anyFlipped() && !userPause && !tabHold;
+      var done = cur >= n - 1 && el >= STEP;
+      var go = !wide.matches && !rm.matches && !stopped && !done && inView && (started || ratio >= 0.6) && !document.hidden && !anyFlipped();
+      if (go) started = true;
       if (go && !running) { running = true; last = performance.now(); raf = requestAnimationFrame(tick); }
       else if (!go && running) { running = false; cancelAnimationFrame(raf); }
     }
@@ -149,7 +150,7 @@
       } else {
         pile.classList.remove('open'); manual = false;
         pls.forEach(function (pl, k) { pl.setAttribute('role', 'tabpanel'); pl.setAttribute('aria-labelledby', tabs[k].id); pl.classList.remove('lift'); });
-        show(cur); el = 0; setFill(0); evaluate();
+        pile.classList.toggle('stopped', stopped || rm.matches); show(cur); setFill(); evaluate();
       }
     }
     pile._mode = mode;
@@ -170,7 +171,6 @@
           if (!inView) { manual = false; if (open) setOpen(false); }
           else if (!manual) { if (!open && ratio >= 0.6) setOpen(true); else if (open && ratio <= 0.25) setOpen(false); }
         } else {
-          if (!inView) { tabHold = false; el = 0; setFill(0); }
           evaluate();
         }
       });
