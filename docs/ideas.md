@@ -469,6 +469,24 @@ Mobile:
 - References: user message 2026-11-25; related: IDEA-13 (collapsed GitHub/Publish panels, phone layout), IDEA-12 (Moments), IDEA-11
 - Priority (user's view): must-have (assumed, the user did not say)
 
+## IDEA-15: Hall polaroid: show the event's first activity under date and short name
+- Date: 2026-11-26
+- Status: ready-for-planning
+- Summary: On the front of each polaroid in the Halls, add the event's first activity under the existing date and short-name caption.
+- Details:
+  - User's words (verbatim): "in the polaroid of Halls, show the 1st activity of the event under the date and event shortform"
+  - Today (js/hall.js, about line 70): the polaroid front caption is `${formatDate(event.date)} · ${event.short}` (plus ' · SAMPLE' for sample events). The back already lists event.activities joined by ' · '. In data/events.json, `activities` is an array of strings (e.g. ["cosplay as Dorothy"]).
+  - Assumptions (nobody could be asked):
+    1. A new second line under the caption shows activities[0] only. Front only; the back is unchanged.
+    2. An event with empty or missing activities shows no line (no placeholder).
+    3. Long text wraps to at most 2 lines, then an ellipsis. The full text stays on the back and as title / aria-label.
+    4. Applies to every Hall, in every year, including events only (not moments). Hall ??? (bangai) is not changed.
+    5. Hall polaroids only: not the events timeline or the Events page.
+    6. Japanese rule: activities are English phrases, so no furigana / romaji needed. Ask the user if any activity contains Japanese.
+    7. Polaroid height must stay equal across a row, with or without the new line.
+- References: user message 2026-11-26; js/hall.js; data/events.json; related: IDEA-3, IDEA-7
+- Priority (user's view): nice-to-have (assumed, the user did not say)
+
 ## Comparison and recommendation (for the user to decide)
 - UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
 

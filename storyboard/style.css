@@ -147,6 +147,7 @@ a { color: var(--color-purple-deep); }
 .polaroid .back { position: absolute; inset: 0; transform: rotateY(180deg); background: var(--color-dark-card); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
 .polaroid .back .mono { color: var(--color-on-dark-muted); }
 .polaroid .cap { display: block; margin-top: 6px; text-align: left; }
+.polaroid .act { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; margin-top: var(--space-1, 4px); min-height: 2.8em; line-height: 1.4; text-align: left; font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
 .tape { position: absolute; top: -10px; left: 20%; width: 60%; height: 18px; background: var(--ph-pink); opacity: .85; transform: rotate(-3deg); border: 1px solid var(--color-ink); z-index: 2; }
 .polaroid.lilac .tape { background: var(--ph-lilac); }
 .polaroid .ph { border-radius: 4px; }

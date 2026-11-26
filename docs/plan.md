@@ -16,6 +16,7 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-24 by the planner for IDEA-13 (admin polish). New: section 8, TASK-23 (one task, four changes), planner assumptions B1-B8. Amends TASK-18 (fold behaviour and phone order). The rest of the plan is unchanged.
 - Revised: 2026-11-25 by the planner for IDEA-14 (every admin panel collapsible + Events list paging). New: section 9, TASK-24 (one task), planner assumptions C1-C12. **Waiting for user approval**; the rest of the plan is unchanged.
 - Revised: 2026-11-25 by the planner after the user's change "1 more, except for events, all panel default collapse when page just loaded". C2 now: on load ONLY the Events list is open; GitHub, Publish, Event form, Moments and the Media uploader (with Site photos / Moment photo) start collapsed, same on phone and PC, not remembered. Changed: C2, C4 note, TASK-24 criteria (a), the TASK-24 tests, the existing-test impact list (new `openFold` helper), question 27. TASK-24 is still **waiting for user approval**.
+- Revised: 2026-11-26 by the planner for IDEA-15 (Hall polaroid: first activity under date and short name). New: section 10, TASK-25 (one task), planner assumptions D1-D9. **Waiting for user approval**; the rest of the plan is unchanged.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
@@ -1099,3 +1100,69 @@ Build order for IDEA-14: TASK-24 alone, after user approval (it touches only `/a
 29. **Page size remembered (C8):** your 5/10 choice is saved in this browser and beats the phone/PC default. OK, or always start from the default?
 30. **Moments paging (C11):** no paging for the Moments list for now. Add it too (same 5/10 control, own setting)?
 31. **Page after add / move (C10):** the list jumps to the page of the event you just saved or moved. OK, or stay on the current page?
+
+---
+
+## 10. IDEA-15 addition: Hall polaroid - first activity under date and short name - 2026-11-26
+
+- Plan status: **waiting for user approval** (not approved yet; do not start the programmer on TASK-25 until the user approves).
+- Source: docs/ideas.md IDEA-15 (`ready-for-planning`). User's words (verbatim): "in the polaroid of Halls, show the 1st activity of the event under the date and event shortform".
+- One task, TASK-25. Branch from `site-v1` (for example `task/TASK-25-hall-polaroid-activity`), merged back into `site-v1`. Only Home (the hall) changes; no admin, data format or other page changes.
+- **Storyboard first:** the approved storyboard home Hall screen (`storyboard/index.html`, the `.hall-item` polaroids, front caption `span.mono.cap` such as `14 Mar 2026 · CF`) has no activity line. It needs a small update before the programmer starts: add the second line under `.cap` on the sample polaroids (one short activity, one long activity that shows the 2-line ellipsis, one event with no activity that keeps the empty reserved space), with tokens only. The storyboard-creator does this, and the user approves it in docs/approval.md, as with earlier storyboard changes.
+- Real files today:
+  - `js/hall.js` `buildStation()`: the front (`button.polaroid`) gets `span.polaroid-caption` with `${formatDate(event.date)} · ${event.short}${event.sample ? ' · SAMPLE' : ''}` (about line 70). The back (`div.polaroid-back`, about lines 72-77) shows `p.eyebrow` `<short> · <date>`, `p.polaroid-back-name`, and `p.polaroid-back-meta` = all activities joined with ` · ` (only when the list is not empty).
+  - `css/components.css`: `.polaroid` (padding `--space-3 --space-3 --space-8`), `.polaroid-caption` (block, `margin-top: --space-2`, `--font-mono`, `--fs-small`), `.polaroid-back` (`position: absolute; inset: 0`, so the front decides the card height).
+  - `css/home.css`: one station per hall row (`.hall` is a flex column); widths come from depth (`--polaroid-w`: near 320 / mid 250 / far 190 on desktop, 280 / 250 / 220 below 900px). `DEPTHS` in hall.js repeats near, far, mid, so events 1, 4, 7... share a depth.
+  - `js/bangai.js` builds the Hall ??? station (`.polaroid-shy`); it is not touched.
+
+### Planner assumptions (from IDEA-15; the user can veto any)
+- **D1 - What shows:** a new second line `span.polaroid-activity` under `.polaroid-caption`, inside the front button, with `activities[0]` only (trimmed). Front only; the back stays exactly as today (all activities joined by ` · `).
+- **D2 - No activity, no line:** when `activities` is missing, empty, or its first item is empty / only spaces, no `.polaroid-activity` element is rendered and no placeholder text shows. The planner does not fall back to `activities[1]`.
+- **D3 - Long text:** wraps to at most 2 lines, then an ellipsis (CSS `line-clamp: 2` with `-webkit-line-clamp`, `overflow-wrap: anywhere` so one very long word cannot overflow). The element always holds the full text (the clamp is visual only), so screen readers read it all as part of the button name, and it gets `title` = the full text for mouse users. The full list is still on the back.
+- **D4 - Equal heights:** the hall has one polaroid per row, sized by depth. "Equal height" here means: polaroids of the same depth have the same height whether they have no activity, a 1-line activity or a 2-line activity. The front always reserves 2 lines for the activity (a `min-height` of 2 line-heights on a wrapper, or on an empty spacer), on phone (1 column) and desktop. The back, which fills the front's box, gets the same height.
+- **D5 - Where:** every event polaroid in the Home hall, every year, real and sample events. Not Hall ??? (bangai), not the YOU ARE HERE strip, not the Events page or Gallery.
+- **D6 - SAMPLE stays on line 1:** sample events keep ` · SAMPLE` at the end of the date line; the activity line does not repeat it.
+- **D7 - Japanese rule:** activities are English phrases today, so no furigana / romaji / speaker on this line. If Puzz ever types Japanese into an activity, ask the user first (the site rule needs the full pronunciation block, which does not fit a 2-line caption).
+- **D8 - Look:** same font family and size as the caption (`--font-mono`, `--fs-small`), a muted token colour (for example `--color-text-2`), a small gap (`--space-1`) under line 1. Tokens only, no new colours or new tokens.
+- **D9 - Text safety:** the activity is set with `textContent` (never `innerHTML`), like the rest of hall.js.
+
+### TASK-25: Hall polaroid: first activity under date and short name
+- Linked idea(s): IDEA-15 (with IDEA-3, IDEA-7)
+- Plan: **waiting for user approval**
+- Depends on: TASK-3 (built); the storyboard home Hall screen update above (approved by the user) before building.
+- Acceptance criteria:
+  - On the front of each event polaroid in the Home hall, a second line `.polaroid-activity` sits directly under `.polaroid-caption` ("date · short") and shows `activities[0]` exactly (trimmed). Example: `{ "activities": ["cosplay as Dorothy", "Stage"] }` -> line 1 `6 Dec 2025 · CF`, line 2 `cosplay as Dorothy` (not "Stage").
+  - The back is unchanged: `.polaroid-back-meta` still shows all activities joined by ` · `, and is still absent when there are none.
+  - An event with `activities` missing, `[]`, or `["   "]` has no `.polaroid-activity` element and no placeholder text.
+  - Sample events keep line 1 as `<date> · <short> · SAMPLE`; line 2 does not contain "SAMPLE".
+  - Long activity text (for example 120 characters, and one 60-character word with no spaces) shows at most 2 lines, ends with an ellipsis, and never overflows the polaroid (its right edge stays inside the polaroid box). The element's text content is the full text, and its `title` is the full text. The front button's accessible name contains the full activity text.
+  - Polaroids of the same depth have equal heights (within 1px) whether they have no activity, a short one or a 2-line one, on desktop (1280) and on phone (Pixel 7, one column), with and without reduced motion. The back still fills the front's box when flipped, and "Watch reel" / "See event" and "Flip back" stay visible on the back.
+  - Hall ??? (`#hall-bangai`, `.polaroid-shy`) has no `.polaroid-activity` and looks as before. The YOU ARE HERE strip, Events page and Gallery do not change.
+  - Text is set with `textContent`; an activity such as `<b>x</b>` shows as literal text.
+  - Style-guide tokens only, no new colours and no new tokens; matches the updated storyboard.
+  - No horizontal scroll at 360px, 412px and 1280px. Flip, keyboard (Enter / Space) and hover tilt work as before.
+- Files (expected): `js/hall.js` (`buildStation()` only), `css/components.css` (new `.polaroid-activity` rule and the reserved 2-line space), `storyboard/index.html` (+ its CSS if needed, by the storyboard-creator, before the build), `tests/task-25.spec.js`.
+- **Automated tests (`tests/task-25.spec.js`, `desktop` 1280x800 and `phone` Pixel 7 projects; events mocked with `mockEvents` from `tests/helpers.js`):**
+  - Line 2 text: an event with two activities -> `.polaroid-activity` text is the first one only; it comes right after `.polaroid-caption` inside `.polaroid`; the back meta still has both, joined by ` · `.
+  - None: missing, `[]` and `["   "]` -> no `.polaroid-activity` in that station.
+  - Sample: `sample: true` -> caption ends with ` · SAMPLE`, activity line has no "SAMPLE".
+  - Long text: 120-character activity -> element height is at most 2 line-heights (+1px), `-webkit-line-clamp` computes to 2, `title` and `textContent` equal the full text, the element's box stays inside the polaroid's box; same for a 60-character single word.
+  - Equal heights: 7 mocked events so indexes 0, 3 and 6 share depth `near` (no activity / short / long) -> their `.polaroid` heights are equal within 1px; checked on desktop and phone, and again with `page.emulateMedia({ reducedMotion: 'reduce' })`.
+  - Flip still works on a station with a long activity: back visible, its action link and "Flip back" are inside the back's box.
+  - Hall ??? unchanged: `#hall-bangai .polaroid-activity` count 0.
+  - Escaping: activity `<b>x</b>` -> text is `<b>x</b>`, no `b` element inside `.polaroid-activity`.
+  - No horizontal scroll at 360px (phone) and 1280px (desktop).
+- **Existing tests likely to change (expectations only, not weakened):**
+  - Read by the planner, no change expected: `tests/task-3.spec.js` (checks `.polaroid-photo` aria-label, flip, depth width, eager loading; no caption text) and `tests/task-19.spec.js` (Hall ??? markup; "every other polaroid still flips").
+  - To check (the planner had no shell to search tests/; the programmer searches for `polaroid-caption`, `.polaroid` + `toHaveText` / `toContainText` / `innerText`, `getByRole('button'` with a polaroid name, `SAMPLE`, and `boundingBox` on `.polaroid`): `tests/task-8.spec.js` and `tests/task-9.spec.js` (public pages with the real `data/events.json`), `tests/qa-idea-12.spec.js`, and any `tests/qa-*.spec.js` that reads Home polaroids. A check that compares the whole `.polaroid` text, or the button's accessible name exactly, now also gets the activity line; a check on polaroid height now gets the reserved 2 lines.
+  - The full suite passes in both projects.
+- Status: todo
+- Review: pending
+- QA: pending
+
+Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user approval) -> TASK-25.
+
+### Questions for IDEA-15 (2026-11-26) - the planner's defaults, say if you disagree
+32. **First activity only, front only (D1, D2):** line 2 is `activities[0]`; nothing when there is none; the back keeps the full list. OK?
+33. **Reserved space (D4):** every polaroid reserves 2 lines, so polaroids without an activity get a small empty strip under the date. OK, or should those polaroids be shorter?
+34. **Japanese in activities (D7):** will any activity ever be in Japanese? If yes, this line needs a different design.
