@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="style.css"></head>
 <body>
-<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: HOME</span> <span>TASK-1, TASK-3, TASK-4, TASK-25 (Hall polaroid: 1st activity line; long and empty cases shown) &middot; IDEA-12 (Hall ??? 番外)</span> <a href="admin/index.html">Admin (storyboard link)</a></div>
+<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: HOME</span> <span>TASK-1, TASK-3, TASK-4, TASK-25 (1st activity line) &middot; IDEA-12 (Hall ??? 番外) &middot; <b>IDEA-16 Hall pile variants A-G (not final)</b></span> <a href="admin/index.html">Admin (storyboard link)</a></div>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap hdr">
 <a class="logo" href="index.html">PUZZ KEZZ</a>
@@ -28,45 +28,130 @@
 <span class="barcode" aria-hidden="true"></span></article></div>
 <div class="intro-text"><p class="mono">WALK THE HALL</p><h2>Scroll forward. Newest cons first.</h2><p>[Short intro line goes here]. Tap a polaroid to flip it and watch the reel.</p></div></div></section>
 <section class="hall" aria-label="Convention hall"><div class="wrap">
-<p class="note mono">[Built from data/events.json. Depth is simplified here: near = big, far = small. All events are Sample.]</p>
+<p class="note mono">[Built from data/events.json. Depth is simplified here: near = big, far = small. All events are Sample. IDEA-16: Halls A-G each try a different way to show the 3 days of one event (D1-D3). Use Replay animation to re-watch.]</p>
 <div class="year-sign" id="y2026"><span class="mono">YEAR</span><b>2026</b></div>
-<div class="hall-item near" id="ev1">
+<div class="hall-item near pile-hall" id="ev1">
 <div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL A</span><b>COMIC FIESTA</b></div></div>
-<button class="polaroid pink" type="button" aria-pressed="false" aria-label="Comic Fiesta 2026 - tap to flip"><span class="inner">
-<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - CF]<br>Sample</span></span><span class="mono cap">14 Mar 2026 &middot; CF &middot; SAMPLE</span><span class="act" title="cosplay as Dorothy">cosplay as Dorothy</span></span>
-<span class="face back"><b>COMIC FIESTA</b><span class="mono">14 Mar 2026</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
-<div class="hall-item mid" id="ev2">
+<div class="pile" data-v="A" data-name="Comic Fiesta 2026">
+<div class="pile-stage">
+<button class="pile-toggle" type="button" aria-expanded="false" aria-label="Comic Fiesta 2026: 3 photos, Day 1 to Day 3. Press to spread the pile"><span class="pile-hint mono">3 photos &middot; D1-D3 &middot; tap</span></button>
+<div class="pl" data-d="1"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Comic Fiesta 2026, Day 1 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D1</span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 1]<br>Sample</span></span><span class="mono cap">14 Mar 2026 &middot; CF &middot; SAMPLE</span><span class="act" title="cosplay as Dorothy">cosplay as Dorothy</span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">14 Mar 2026 &middot; Day 1</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="2"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Comic Fiesta 2026, Day 2 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D2</span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 2]<br>Sample</span></span><span class="mono cap">15 Mar 2026 &middot; CF &middot; SAMPLE</span><span class="act" title="Stage walk with the crew">Stage walk with the crew</span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">15 Mar 2026 &middot; Day 2</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="3"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Comic Fiesta 2026, Day 3 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D3</span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 3]<br>Sample</span></span><span class="mono cap">16 Mar 2026 &middot; CF &middot; SAMPLE</span><span class="act" title="Photo spot at the lobby">Photo spot at the lobby</span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">16 Mar 2026 &middot; Day 3</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+</div>
+<div class="pile-ctl"><p class="mono sb-var" role="note">VARIANT A: neat peek pile &middot; storyboard note</p><button class="btn btn-secondary" type="button" data-replay>Replay animation</button><button class="btn btn-secondary" type="button" data-collapse>Collapse</button></div>
+</div></div>
+<div class="hall-item mid pile-hall" id="ev2">
 <div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL B</span><b>AMG [full name placeholder]</b></div></div>
-<button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2026 - tap to flip"><span class="inner">
-<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - AMG]<br>Sample</span></span><span class="mono cap">2 Feb 2026 &middot; AMG &middot; SAMPLE</span><span class="act" title="Casual big sis look">Casual big sis look</span></span>
-<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">2 Feb 2026</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="pile" data-v="B" data-name="Amg [Full Name Placeholder] 2026">
+<div class="pile-stage">
+<button class="pile-toggle" type="button" aria-expanded="false" aria-label="Amg [Full Name Placeholder] 2026: 3 photos, Day 1 to Day 3. Press to spread the pile"><span class="pile-hint mono">3 photos &middot; D1-D3 &middot; tap</span></button>
+<div class="pl" data-d="1"><button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2026, Day 1 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D1</span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - AMG Day 1]<br>Sample</span></span><span class="mono cap">2 Feb 2026 &middot; AMG &middot; SAMPLE</span><span class="act" title="Casual big sis look">Casual big sis look</span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">2 Feb 2026 &middot; Day 1</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="pl" data-d="2"><button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2026, Day 2 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D2</span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - AMG Day 2]<br>Sample</span></span><span class="mono cap">3 Feb 2026 &middot; AMG &middot; SAMPLE</span><span class="act" title="Brunch cafe look">Brunch cafe look</span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">3 Feb 2026 &middot; Day 2</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="pl" data-d="3"><button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2026, Day 3 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D3</span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - AMG Day 3]<br>Sample</span></span><span class="mono cap">4 Feb 2026 &middot; AMG &middot; SAMPLE</span><span class="act" title="Closing night look">Closing night look</span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">4 Feb 2026 &middot; Day 3</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+</div>
+<div class="pile-ctl"><p class="mono sb-var" role="note">VARIANT B: messy taped pile &middot; storyboard note</p><button class="btn btn-secondary" type="button" data-replay>Replay animation</button><button class="btn btn-secondary" type="button" data-collapse>Collapse</button></div>
+</div></div>
 <div class="year-sign" id="y2025"><span class="mono">YEAR</span><b>2025</b></div>
-<div class="hall-item far" id="ev3">
+<div class="hall-item far pile-hall" id="ev3">
 <div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL C</span><b>COMIC FIESTA</b></div></div>
-<button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2025 - tap to flip"><span class="inner">
-<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - CF]<br>Sample</span></span><span class="mono cap">6 Dec 2025 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
-<span class="face back"><b>COMIC FIESTA</b><span class="mono">6 Dec 2025</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
-<div class="hall-item near" id="ev4">
+<div class="pile" data-v="C" data-name="Comic Fiesta 2025">
+<div class="pile-stage">
+<span class="strip-bg" aria-hidden="true"></span>
+<button class="pile-toggle" type="button" aria-expanded="false" aria-label="Comic Fiesta 2025: 3 photos, Day 1 to Day 3. Press to spread the pile"><span class="pile-hint mono">3 photos &middot; D1-D3 &middot; tap</span></button>
+<div class="pl" data-d="1"><button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2025, Day 1 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D1</span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 1]<br>Sample</span></span><span class="mono cap">6 Dec 2025 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">6 Dec 2025 &middot; Day 1</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="2"><button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2025, Day 2 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D2</span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 2]<br>Sample</span></span><span class="mono cap">7 Dec 2025 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">7 Dec 2025 &middot; Day 2</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="3"><button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2025, Day 3 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D3</span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 3]<br>Sample</span></span><span class="mono cap">8 Dec 2025 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">8 Dec 2025 &middot; Day 3</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+</div>
+<div class="pile-ctl"><p class="mono sb-var" role="note">VARIANT C: photo-booth strip &middot; storyboard note</p><button class="btn btn-secondary" type="button" data-replay>Replay animation</button><button class="btn btn-secondary" type="button" data-collapse>Collapse</button></div>
+</div></div>
+<div class="hall-item near pile-hall" id="ev4">
 <div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL D</span><b>OMATSURI</b></div></div>
-<button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2025 - tap to flip"><span class="inner">
-<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - OMT]<br>Sample</span></span><span class="mono cap">9 Aug 2025 &middot; OMT &middot; SAMPLE</span><span class="act" title="Cosplay as Dorothy from NIKKE, then a long casual big sis look for the whole afternoon with photo shoots and a stage walk">Cosplay as Dorothy from NIKKE, then a long casual big sis look for the whole afternoon with photo shoots and a stage walk</span></span>
-<span class="face back"><b>OMATSURI</b><span class="mono">9 Aug 2025</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
-<div class="hall-item mid" id="ev5">
+<div class="pile" data-v="D" data-name="Omatsuri 2025">
+<div class="dtabs" role="group" aria-label="Omatsuri 2025: choose the day"><button class="dtab" type="button" data-tab="0" aria-pressed="true">D1</button><button class="dtab" type="button" data-tab="1" aria-pressed="false">D2</button><button class="dtab" type="button" data-tab="2" aria-pressed="false">D3</button></div>
+<div class="pile-stage">
+<div class="pl" data-d="1"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2025, Day 1 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D1</span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - OMT Day 1]<br>Sample</span></span><span class="mono cap">9 Aug 2025 &middot; OMT &middot; SAMPLE</span><span class="act" title="Cosplay as Dorothy from NIKKE, then a long casual big sis look for the whole afternoon with photo shoots and a stage walk">Cosplay as Dorothy from NIKKE, then a long casual big sis look for the whole afternoon with photo shoots and a stage walk</span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">9 Aug 2025 &middot; Day 1</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="2"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2025, Day 2 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D2</span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - OMT Day 2]<br>Sample</span></span><span class="mono cap">10 Aug 2025 &middot; OMT &middot; SAMPLE</span><span class="act" title="Yukata look">Yukata look</span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">10 Aug 2025 &middot; Day 2</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="3"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2025, Day 3 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D3</span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - OMT Day 3]<br>Sample</span></span><span class="mono cap">11 Aug 2025 &middot; OMT &middot; SAMPLE</span><span class="act" title="Night parade look">Night parade look</span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">11 Aug 2025 &middot; Day 3</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+</div>
+<div class="pile-ctl"><p class="mono sb-var" role="note">VARIANT D: day tabs on tape &middot; storyboard note</p><button class="btn btn-secondary" type="button" data-replay>Replay animation</button></div>
+</div></div>
+<div class="hall-item mid pile-hall" id="ev5">
 <div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL E</span><b>AMG [full name placeholder]</b></div></div>
-<button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2025 - tap to flip"><span class="inner">
-<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - AMG]<br>Sample</span></span><span class="mono cap">3 May 2025 &middot; AMG &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
-<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">3 May 2025</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="pile" data-v="E" data-name="Amg [Full Name Placeholder] 2025">
+<div class="pile-stage">
+<button class="pile-toggle" type="button" aria-expanded="false" aria-label="Amg [Full Name Placeholder] 2025: 3 photos, Day 1 to Day 3. Press to spread the pile"><span class="pile-hint mono">3 photos &middot; D1-D3 &middot; tap</span></button>
+<div class="pl" data-d="1"><button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2025, Day 1 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D1</span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - AMG Day 1]<br>Sample</span></span><span class="mono cap">3 May 2025 &middot; AMG &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">3 May 2025 &middot; Day 1</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="pl" data-d="2"><button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2025, Day 2 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D2</span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - AMG Day 2]<br>Sample</span></span><span class="mono cap">4 May 2025 &middot; AMG &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">4 May 2025 &middot; Day 2</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+<div class="pl" data-d="3"><button class="polaroid lilac" type="button" aria-pressed="false" aria-label="Amg [Full Name Placeholder] 2025, Day 3 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D3</span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - AMG Day 3]<br>Sample</span></span><span class="mono cap">5 May 2025 &middot; AMG &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>AMG [full name placeholder]</b><span class="mono">5 May 2025 &middot; Day 3</span><span class="mono">No link: goes to Events</span><a class="btn btn-accent" href="events.html">See event</a></span></span></button></div>
+</div>
+<div class="pile-ctl"><p class="mono sb-var" role="note">VARIANT E: hand of cards fan &middot; storyboard note</p><button class="btn btn-secondary" type="button" data-replay>Replay animation</button><button class="btn btn-secondary" type="button" data-collapse>Collapse</button></div>
+</div></div>
 <div class="year-sign" id="y2024"><span class="mono">YEAR</span><b>2024</b></div>
-<div class="hall-item far" id="ev6">
+<div class="hall-item far pile-hall" id="ev6">
 <div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL F</span><b>COMIC FIESTA</b></div></div>
-<button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2024 - tap to flip"><span class="inner">
-<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - CF]<br>Sample</span></span><span class="mono cap">7 Dec 2024 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
-<span class="face back"><b>COMIC FIESTA</b><span class="mono">7 Dec 2024</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
-<div class="hall-item near" id="ev7">
+<div class="pile" data-v="F" data-name="Comic Fiesta 2024">
+<div class="pile-stage">
+<span class="cord" aria-hidden="true"></span><span class="clip" aria-hidden="true"></span><span class="wline" aria-hidden="true"></span>
+<button class="pile-toggle" type="button" aria-expanded="false" aria-label="Comic Fiesta 2024: 3 photos, Day 1 to Day 3. Press to spread the pile"><span class="pile-hint mono">3 photos &middot; D1-D3 &middot; tap</span></button>
+<div class="pl" data-d="1"><button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2024, Day 1 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D1</span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 1]<br>Sample</span></span><span class="mono cap">7 Dec 2024 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">7 Dec 2024 &middot; Day 1</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="2"><button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2024, Day 2 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D2</span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 2]<br>Sample</span></span><span class="mono cap">8 Dec 2024 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">8 Dec 2024 &middot; Day 2</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="3"><button class="polaroid sky" type="button" aria-pressed="false" aria-label="Comic Fiesta 2024, Day 3 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D3</span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - CF Day 3]<br>Sample</span></span><span class="mono cap">9 Dec 2024 &middot; CF &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>COMIC FIESTA</b><span class="mono">9 Dec 2024 &middot; Day 3</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+</div>
+<div class="pile-ctl"><p class="mono sb-var" role="note">VARIANT F: clipped on a string &middot; storyboard note</p><button class="btn btn-secondary" type="button" data-replay>Replay animation</button><button class="btn btn-secondary" type="button" data-collapse>Collapse</button></div>
+</div></div>
+<div class="hall-item near pile-hall" id="ev7">
 <div class="sign"><span class="strings" aria-hidden="true"></span><div class="plate"><span class="mono hall-l">HALL G</span><b>OMATSURI</b></div></div>
-<button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2024 - tap to flip"><span class="inner">
-<span class="face front"><span class="tape" aria-hidden="true"></span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - OMT]<br>Sample</span></span><span class="mono cap">20 Jul 2024 &middot; OMT &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
-<span class="face back"><b>OMATSURI</b><span class="mono">20 Jul 2024</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pile" data-v="G" data-name="Omatsuri 2024">
+<div class="pile-stage">
+<div class="pl" data-d="1"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2024, Day 1 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D1</span><span class="ph ph-sq pink" data-wm="1200x1200"><span>[Event photo 1:1 - OMT Day 1]<br>Sample</span></span><span class="mono cap">20 Jul 2024 &middot; OMT &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">20 Jul 2024 &middot; Day 1</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="2"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2024, Day 2 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D2</span><span class="ph ph-sq lilac" data-wm="1200x1200"><span>[Event photo 1:1 - OMT Day 2]<br>Sample</span></span><span class="mono cap">21 Jul 2024 &middot; OMT &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">21 Jul 2024 &middot; Day 2</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+<div class="pl" data-d="3"><button class="polaroid pink" type="button" aria-pressed="false" aria-label="Omatsuri 2024, Day 3 - tap to flip"><span class="inner">
+<span class="face front"><span class="tape" aria-hidden="true"></span><span class="dlab mono" aria-hidden="true">D3</span><span class="ph ph-sq sky" data-wm="1200x1200"><span>[Event photo 1:1 - OMT Day 3]<br>Sample</span></span><span class="mono cap">22 Jul 2024 &middot; OMT &middot; SAMPLE</span><span class="act" aria-hidden="true"></span></span>
+<span class="face back"><b>OMATSURI</b><span class="mono">22 Jul 2024 &middot; Day 3</span><span class="mono">Opens social link (new tab)</span><a class="btn btn-accent" href="#" onclick="return false">Watch reel</a></span></span></button></div>
+</div>
+<div class="pile-ctl"><p class="mono sb-var" role="note">VARIANT G: swipe stack (tap or swipe the top photo: it goes to the back) &middot; storyboard note</p><span class="mono pile-count" aria-live="polite">1/3 &middot; D1</span><button class="btn btn-secondary" type="button" data-flip>Flip top photo</button><button class="btn btn-secondary" type="button" data-replay>Replay animation</button></div>
+</div></div>
 
 <div class="year-sign" id="ybangai"><span class="mono">YEAR</span><b>???</b></div>
 <div class="hall-item far bangai" id="hall-bangai">

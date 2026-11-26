@@ -73,3 +73,95 @@
     });
   }
 })();
+
+/* IDEA-16: Hall pile variants A-G. Storyboard-only behaviour. */
+(function () {
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function unflip(pl) {
+    pl.classList.remove('lift');
+    var po = pl.querySelector('.polaroid'); po.classList.remove('flipped'); po.setAttribute('aria-pressed', 'false');
+  }
+  document.querySelectorAll('.pile').forEach(function (pile) {
+    var v = pile.dataset.v, stage = pile.querySelector('.pile-stage');
+    var pls = Array.prototype.slice.call(pile.querySelectorAll('.pl'));
+    var timer = null;
+    var replay = pile.querySelector('[data-replay]'), collapse = pile.querySelector('[data-collapse]'), toggle = pile.querySelector('.pile-toggle');
+
+    if (v === 'D') {
+      var tabs = pile.querySelectorAll('.dtab'), cur = 0;
+      var show = function (n) {
+        cur = n;
+        pls.forEach(function (pl, i) { pl.classList.toggle('on', i === n); pl.inert = i !== n; if (i !== n) unflip(pl); });
+        tabs.forEach(function (t, i) { t.setAttribute('aria-pressed', i === n ? 'true' : 'false'); });
+      };
+      tabs.forEach(function (t, i) { t.addEventListener('click', function () { show(i); }); });
+      replay.addEventListener('click', function () {
+        clearTimeout(timer); show(0);
+        var n = 0; (function step() { timer = setTimeout(function () { n++; if (n < 3) { show(n); step(); } else { show(0); } }, reduce ? 300 : 1000); })();
+      });
+      show(0); return;
+    }
+
+    if (v === 'G') {
+      var order = [0, 1, 2], busy = false, moved = false, sx = null, force = false;
+      var count = pile.querySelector('.pile-count');
+      var apply = function () {
+        pls.forEach(function (pl, i) { var pos = order.indexOf(i); pl.dataset.pos = pos; pl.inert = pos !== 0; });
+        count.textContent = (order[0] + 1) + '/3 · D' + (order[0] + 1);
+      };
+      var next = function () {
+        if (busy) return; busy = true;
+        var top = pls[order[0]]; unflip(top);
+        top.classList.add('fly');
+        setTimeout(function () {
+          top.classList.add('snap');
+          order.push(order.shift()); apply(); top.classList.remove('fly');
+          void top.offsetWidth; top.classList.remove('snap'); busy = false;
+        }, reduce ? 0 : 280);
+      };
+      stage.addEventListener('click', function (e) {
+        var top = pls[order[0]].querySelector('.polaroid');
+        if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); return; }
+        if (force || e.target.closest('.back a')) return;
+        if (!top.classList.contains('flipped') && e.target.closest('.polaroid')) { e.stopPropagation(); next(); }
+      }, true);
+      stage.addEventListener('pointerdown', function (e) { sx = e.clientX; moved = false; });
+      stage.addEventListener('pointerup', function (e) {
+        if (sx !== null && Math.abs(e.clientX - sx) > 40 && !pls[order[0]].querySelector('.polaroid').classList.contains('flipped')) { moved = true; next(); setTimeout(function () { moved = false; }, 50); }
+        sx = null;
+      });
+      pile.querySelector('[data-flip]').addEventListener('click', function () { force = true; pls[order[0]].querySelector('.polaroid').click(); force = false; });
+      replay.addEventListener('click', function () {
+        clearTimeout(timer); order = [0, 1, 2]; apply(); pls.forEach(unflip);
+        timer = setTimeout(next, reduce ? 0 : 500);
+      });
+      apply(); return;
+    }
+
+    /* A, B, C, E, F: pile that spreads when the hall is reached */
+    var played = false;
+    function setOpen(on) {
+      pile.classList.toggle('open', on);
+      if (toggle) toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+      pls.forEach(function (pl) { pl.inert = !on; if (!on) unflip(pl); });
+    }
+    if (toggle) toggle.addEventListener('click', function () { played = true; setOpen(!pile.classList.contains('open')); });
+    collapse.addEventListener('click', function () { played = true; clearTimeout(timer); setOpen(false); });
+    replay.addEventListener('click', function () {
+      played = true; clearTimeout(timer); setOpen(false);
+      timer = setTimeout(function () { setOpen(true); }, reduce ? 0 : 900);
+    });
+    stage.addEventListener('click', function (e) {
+      var po = e.target.closest('.polaroid'); if (!po) return;
+      var pl = po.closest('.pl'), on = po.classList.contains('flipped');
+      pls.forEach(function (o) { if (o !== pl) unflip(o); });
+      pl.classList.toggle('lift', on);
+    });
+    setOpen(false);
+    if (reduce || !('IntersectionObserver' in window)) { played = true; setOpen(true); return; }
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting && !played) { played = true; setOpen(true); io.disconnect(); } });
+    }, { threshold: 0.6 });
+    io.observe(stage);
+  });
+})();
