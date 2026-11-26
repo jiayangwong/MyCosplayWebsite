@@ -1160,7 +1160,7 @@ Build order for IDEA-14: TASK-24 alone, after user approval (it touches only `/a
   - To check (the planner had no shell to search tests/; the programmer searches for `polaroid-caption`, `.polaroid` + `toHaveText` / `toContainText` / `innerText`, `getByRole('button'` with a polaroid name, `SAMPLE`, and `boundingBox` on `.polaroid`): `tests/task-8.spec.js` and `tests/task-9.spec.js` (public pages with the real `data/events.json`), `tests/qa-idea-12.spec.js`, and any `tests/qa-*.spec.js` that reads Home polaroids. A check that compares the whole `.polaroid` text, or the button's accessible name exactly, now also gets the activity line; a check on polaroid height now gets the reserved 2 lines.
   - The full suite passes in both projects.
 - Status: built 2026-11-26, waiting for review (branch task/TASK-25-activity-line)
-- Review: pending
+- Review: approved 2026-11-26
 - QA: pending
 
 Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user approval) -> TASK-25.
@@ -1227,7 +1227,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - `loadEvents` with the fixture routed in: invalid events dropped, valid multi-photo events present with the mirror set.
 - Existing specs likely to change: none expected. Run `task-2`, `task-10` (validateEvent cases) and the full suite.
 - Status: built 2026-11-26, waiting for review (branch task/TASK-26-photos-data, stacked on task/TASK-25-activity-line)
-- Review: pending
+- Review: changes requested
 - QA: pending
 
 ### TASK-27: Admin - attach up to 3 photos per event, order, remove, publish
@@ -1261,7 +1261,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - Repo guard self-test: a missing and an unmarked `photos` path are both reported.
 - Existing specs likely to change (expectations only; the programmer confirms by searching tests/ for `photoFull`, `f-photo`, `Attach to selected event`, `addPendingPair`, `pend-remove`, `brokenPhotoLinks`, `photo"`): `task-7` (attach fills `#f-photo` - still true for D1), `task-10`, `task-13` (a second attach to the same event used to replace the pending pair; now it fills D2), `task-16` (revert notes), `task-23` (X on a pending card), `task-24` (attach opens the form), `task-15` / `task-17` (guard). The full suite passes.
 - Status: built 2026-11-26, waiting for review (branch task/TASK-27-admin-photo-slots, stacked on task/TASK-26-photos-data). Note: event rows show the chip for every event (No photos / 1 photo / 2 photos / 3 photos) as in the approved storyboard; the plan text said 2 / 3 only.
-- Review: pending
+- Review: approved 2026-11-26
 - QA: pending
 
 ### TASK-28: Hall PC (768px and wider) - neat peek pile that spreads on scroll
@@ -1296,7 +1296,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 - Existing specs likely to change (the programmer confirms by searching tests/ for `polaroid`, `.flip`, `polaroid-caption`, `aria-expanded`, `loading`, `hall-`): `task-3` (count of `.polaroid` per station, eager count) - only if fixtures add multi-photo events; `task-19` ("every other polaroid flips": the pile toggle is not a polaroid); `task-25` (activity line now on every polaroid of a pile); `task-9` (a11y: button names). The full suite passes.
 - Plan: **approved by the user 2026-11-26** ("pc web approved", confirmed by "all approved"; the PC half of the home storyboard is approved unchanged)
 - Status: built 2026-11-26, waiting for review (branch task/TASK-28-hall-pc-pile, stacked on task/TASK-26-photos-data)
-- Review: pending
+- Review: approved 2026-11-26
 - QA: pending
 
 ### TASK-29: Hall phone (under 768px) - one polaroid, story tabs D1 D2 D3 that fill and auto-flip for two rounds
@@ -1337,7 +1337,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 - Existing specs likely to change: as TASK-28 (`task-3`, `task-19`, `task-25`, `task-9`) on the phone project. The full suite passes.
 - Risks: (1) the IntersectionObserver plus `page.clock` can race in tests -> wait for the observer callback (for example a `data-story-state` attribute) before `runFor`; (2) the CSS fill must be driven by the controller's elapsed time (not a free-running CSS animation), so pause / resume and the clock stay in sync; (3) "stopped" and "done" must be kept in memory only (not localStorage), so a reload restarts it as the user asked; (4) the round-2 reset must empty all fills in the same frame that D1 is shown (no flash of full tabs, no CSS transition back to 0); (5) **accessibility trade-off (accepted by the user, 2026-11-26):** the run is 9 s, which is longer than the 5 s WCAG 2.2.2 exception, and there is no pause button by the user's choice. What keeps it acceptable: pressing any tab stops it for good (that is the stop mechanism, reachable by tap and keyboard), the run is finite (two rounds, 9 s, once per page load), it pauses off screen / when flipped / when the page is hidden, there are no `aria-live` announcements, and with reduced motion there is no auto-flip at all. Remaining weak point: the stop-by-tab is not labelled as a stop control, so a visitor may not know it exists; the reviewer / QA should not flag the missing pause button as a bug.
 - Status: built 2026-11-26, waiting for review (branch task/TASK-29-hall-phone-tabs, stacked on task/TASK-28-hall-pc-pile)
-- Review: pending
+- Review: changes requested
 - QA: pending
 
 ### Build order and release for IDEA-15 + IDEA-16 (user decision 2026-11-26, replaces the older list below)
