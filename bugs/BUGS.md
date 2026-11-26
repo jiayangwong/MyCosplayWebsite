@@ -130,8 +130,78 @@
 - Steps: publish a portrait from /admin (data/site.json now has `"portrait": "media/site/portrait.webp"`), run the full suite.
 - Expected: tests mock their own site data or follow the real one.
 - Actual: 18 failures (9 tests x desktop + phone): task-14 lines 133, 151, 245, 432; task-16 lines 484, 505, 515, 553; task-8 line 34 (About `.portrait` is a photo now, no "Portrait" aria-label). They assumed `portrait: null` in the real data/site.json.
-- Status: fixed (awaiting QA re-test; the fix reaches main with TASK-25..29)
+- Status: verified (QA 2026-11-26)
 - Cause: task-8/14/16 read the real data/site.json and assumed `portrait: null`; once a portrait was published, the About page shows a photo and the admin draft starts from a set portrait.
 - Fix (tests only, already on the TASK-25..29 branches, commits a1e087a and 7f6ad13, so no new edits were needed): new tests/fixtures/site-null.json (`portrait: null`); tests/task-14.spec.js and tests/task-16.spec.js serve that fixture and seed the fake repo with it, and the "portrait null" check reads the fixture, not the real file; tests/task-8.spec.js:34 mocks data/site.json with `portrait: null`. Real data/site.json and data/events.json untouched.
 - How verified (bugfixer 2026-11-26 19:30 run, system Chrome 153 at /usr/bin/google-chrome through an uncommitted config): on origin/site-v1, task-8/14/16 give exactly the 18 failures above. On bugfix/BUG-11 (TASK-29 + TASK-27) every task-8/14/16 test passes on desktop and phone, both in the full suite and on its own. Full suite: 709 passed, 40 skipped, 31 failed, none in task-8/14/16. 24 of the failures come from this sandbox's Google Fonts console error (same as noted in the earlier QA runs); 7 are load flakes in task-12/13 that pass when run again.
+- QA re-test 2026-11-26 (fix/review-qa-v1.2.0, same fix as the released v1.2.0): full suite, desktop + phone, every task-8 / task-14 / task-16 test passed (76 passed, 0 failed, 0 skipped) while the real data/site.json still has `portrait: "media/site/portrait.webp"`.
 
+## BUG-12: Hall PC spread pile: D1 covers part of D2's photo and hides the D2 / D3 day labels
+- Found by: QA
+- Task: TASK-28
+- Severity: minor
+- Steps to reproduce: 1. Open Home at 1100px or wider (checked 1100, 1280, 1440, 1920) with an event that has 3 photos at the widest polaroid size (hall depth "near"). 2. Scroll until the pile spreads.
+- Expected: the spread photos sit side by side "not overlapping their photo area" (TASK-28 spread state), and each polaroid's day label can be read.
+- Actual: D1 covers about 19% of D2's photo (D1's frame reaches about 75px past the left edge of D2's photo, measured on bounding boxes) and the D2 label; D2 covers about 7% of D3's photo and the D3 label. The other depths: about 17-19% / 5-6%. At 900-1099px D2 is about 9-11% covered; at 768-899px the photos are not covered.
+- Status: open
+- Notes: Same numbers in the approved storyboard (storyboard/index.html at 1280: D2 19.3%, D3 6.8% covered), so the build matches the storyboard but not the plan criterion. The review noted about 20px; it is more once the rotation is counted. The user / planner may prefer to keep the storyboard look and change the criterion. tests/task-28.spec.js allows 80px of overlap. On live v1.2.0 too.
+
+## BUG-13: Hall PC with reduced motion: a pile stacked by hand spreads again after scrolling away
+- Found by: QA
+- Task: TASK-28
+- Severity: minor
+- Steps to reproduce: 1. Turn on reduced motion. 2. Open Home at 1280 with a multi-photo event, go to its hall. 3. Focus the pile button and press Enter (it stacks, aria-expanded="false"). 4. Scroll to the top of the page.
+- Expected: no scroll automation under reduced motion (TASK-28): the pile stays as the visitor left it.
+- Actual: as soon as the station leaves the viewport it spreads again (aria-expanded back to "true").
+- Status: open
+- Notes: js/hall-pile.js: the observer resets `manual`, then applyWide() calls setOpen(true) when reduced motion is on. On live v1.2.0 too.
+
+## BUG-14: Admin: the slot Remove (X) stays enabled during a publish, so a photo the user removes is still published
+- Found by: QA
+- Task: TASK-27
+- Severity: minor
+- Steps to reproduce: 1. In /admin/ attach a photo to a saved event. 2. Press "Publish to GitHub". 3. While the progress bar runs, press the X of that slot in the Event form and confirm.
+- Expected: like the uploader card X and "Remove from publish" (both disabled while a publish runs, TASK-23), the slot X is disabled, so nothing can claim to take a photo out of a running publish.
+- Actual: the slot X is enabled; the dialog says the photo "will be taken out of the publish" and the draft drops it, but the running publish still commits the photo and events.json with it, so it goes live. Afterwards the Publish panel shows events.json changed and the 2 files to be removed (a second publish removes them from the site; they stay in git history).
+- Status: open
+- Notes: Reproduced with the fake GitHub (ref read held open). Move up / down are in the same form and are worth checking in the same fix. On live v1.2.0 too.
+
+## BUG-15: Admin: an invalid D2 / D3 photo path moves focus to D1 and does not mark the wrong field
+- Found by: QA
+- Task: TASK-27
+- Severity: minor
+- Steps to reproduce: 1. Edit an event with one photo. 2. Type `/abs.webp` into "Photo D2 display copy". 3. Press Save.
+- Expected: focus goes to the D2 input, which has aria-invalid="true" and is linked to the error text (as the other form fields do).
+- Actual: nothing is saved and the message "Photo 2 display photo must be a relative path (no leading /)." shows, but focus jumps to #f-photo (D1), D1 has aria-invalid="false" and D2 has no aria-invalid.
+- Status: open
+- Notes: js/admin/manager.js showErrors() maps the `photos` field to #f-photo. On live v1.2.0 too.
+
+## BUG-16: Admin: a full-size path typed in D1 with an empty D1 display path is dropped without a message
+- Found by: QA
+- Task: TASK-27
+- Severity: minor
+- Steps to reproduce: 1. Edit an event with one photo. 2. Clear D1 "Display photo", type a path into D1 "Full-size photo", type a display path into D2. 3. Press Save.
+- Expected: an error that the D1 full-size path needs a display photo (as for D2 / D3, and as for D1 alone), or at least the typed path is not lost silently.
+- Actual: "Saved ... to the draft."; D2 moves up to D1 and the typed full-size path is discarded.
+- Status: open
+- Notes: js/admin/manager.js readForm() / slotErrors(). Only reachable by typing paths. On live v1.2.0 too.
+
+## BUG-17: Public pages scroll sideways by up to 21px between 900px and 920px (header Instagram button)
+- Found by: QA
+- Task: TASK-1
+- Severity: minor
+- Steps to reproduce: 1. Open any public page at a 900px wide viewport. 2. Compare document.documentElement.scrollWidth with clientWidth.
+- Expected: no horizontal scroll.
+- Actual: scrollWidth is 921 on index, gallery, reels, events, about and contact at 900px (1px over at 920, none at 899 or 940). The header's Instagram button (`.header-insta`) ends at x=921.
+- Status: open
+- Notes: Older than IDEA-16 (not caused by TASK-25 to 29; same with 1-photo halls). Measured with Google Fonts unavailable in this sandbox (fallback fonts); re-check with the real fonts. The header is the same on live v1.2.0.
+
+## BUG-18: Admin: right after Attach the link / photo preview says "Preview photo (none yet)" and logs a 404
+- Found by: QA
+- Task: TASK-7
+- Severity: minor
+- Steps to reproduce: 1. In /admin/ edit a saved event without a social link, upload a photo and press "Attach to selected event". 2. Look at the preview in the Event form and the console.
+- Expected: the preview shows the attached (pending) photo, with no console error.
+- Actual: it requests media/events/<id>/<name>.webp, which is not published yet (404 in the console), and shows the "Preview photo (none yet)" placeholder. The D1 slot thumbnail next to it does show the pending photo.
+- Status: open
+- Notes: updatePreview() in js/admin/manager.js is older than IDEA-16. On live v1.2.0 too.
