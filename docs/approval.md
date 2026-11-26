@@ -38,3 +38,6 @@ The user told the planner team to start TASK-19 and TASK-20, then continue with 
 
 ## Addendum 2026-11-25: IDEA-14 / TASK-24 admin collapsible panels + event paging
 STORYBOARD APPROVED (admin screen: all panels collapsible, only Events open on load, events list 5/10 per page). The user said "Approved all" in chat on 2026-11-25, covering the TASK-24 plan and the admin storyboard. Deploy is NOT approved yet; the release-manager must ask.
+
+## Addendum 2026-11-26: IDEA-15 / TASK-25 Hall polaroid first activity
+STORYBOARD APPROVED (home Hall screen: second caption line with the event's first activity, max 2 lines with ellipsis, 2 lines reserved). The user said "2 lines fine, storyboard approved" in chat on 2026-11-26 after seeing the storyboard and the assumptions D1-D9. Treated as approval to build TASK-25. Deploy is NOT approved yet; the release-manager must ask.
