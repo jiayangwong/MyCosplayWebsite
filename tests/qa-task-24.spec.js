@@ -21,7 +21,7 @@ for (const w of [360, 412, 1280]) {
   test.describe(`width ${w}`, () => {
     test.use({ viewport: { width: w, height: 800 } });
 
-    test('real data (22 events): defaults, 44px targets, no scroll, no console errors', async ({ page }) => {
+    test('real data: defaults, 44px targets, no scroll, no console errors', async ({ page }) => {
       const errs = watch(page);
       await page.goto('admin/index.html');
       await ready(page);
@@ -34,8 +34,9 @@ for (const w of [360, 412, 1280]) {
       }
       const phone = w < 768;
       await expect(page.locator('#event-page-size')).toHaveValue(phone ? '5' : '10');
-      await expect(page.locator('#event-count')).toHaveText('22 events');
-      await expect(page.locator('#event-page')).toHaveText(`Page 1 of ${phone ? 5 : 3}`);
+      const n = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'data', 'events.json'), 'utf8')).events.length;
+      await expect(page.locator('#event-count')).toHaveText(`${n} events`);
+      await expect(page.locator('#event-page')).toHaveText(`Page 1 of ${Math.ceil(n / (phone ? 5 : 10))}`);
       await expect(page.locator('#event-list .event-row')).toHaveCount(phone ? 5 : 10);
       await noHorizontalScroll(page);
       for (const id of PANELS) await openFold(page, id);

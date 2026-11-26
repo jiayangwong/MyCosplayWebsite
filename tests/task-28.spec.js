@@ -186,7 +186,8 @@ test('keyboard and manual toggle: Enter / Space, held until the station leaves t
   await expect(t).toHaveAttribute('aria-expanded', 'false');
   await scrollToRatio(page, id, 0.45);
   await expect(t).toHaveAttribute('aria-expanded', 'false');
-  await t.click();
+  // dispatch instead of click(): Playwright's scroll-into-view can push the pile past 60% and spread it under the pointer
+  await t.dispatchEvent('click');
   await expect(t).toHaveAttribute('aria-expanded', 'true');
 });
 
