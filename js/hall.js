@@ -68,6 +68,16 @@ function buildStation(event, index) {
   front.append(make('span', `polaroid-tape${index % 2 ? ' is-lilac' : ''}`));
   front.append(polaroidPicture(event, index));
   front.append(make('span', 'polaroid-caption', `${formatDate(event.date)} · ${event.short}${event.sample ? ' · SAMPLE' : ''}`));
+  const firstActivity = Array.isArray(event.activities) && typeof event.activities[0] === 'string' ? event.activities[0].trim() : '';
+  if (firstActivity) {
+    const act = make('span', 'polaroid-activity', firstActivity);
+    act.title = firstActivity;
+    front.append(act);
+  } else {
+    const space = make('span', 'polaroid-activity-space');
+    space.setAttribute('aria-hidden', 'true');
+    front.append(space);
+  }
 
   const back = make('div', 'polaroid-back');
   back.id = backId;

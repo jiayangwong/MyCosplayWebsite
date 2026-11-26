@@ -137,6 +137,8 @@
 .polaroid-ph-short { font-weight: 900; font-size: clamp(2rem, 1.5rem + 2vw, 3rem); letter-spacing: 2px; }
 .polaroid-ph-note { font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
 .polaroid-caption { display: block; margin-top: var(--space-2); font-family: var(--font-mono); font-size: var(--fs-small); }
+.polaroid-activity, .polaroid-activity-space { display: block; margin-top: var(--space-1); min-height: 2.8em; line-height: 1.4; font-family: var(--font-mono); font-size: var(--fs-small); }
+.polaroid-activity { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; text-align: left; font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
 
 .polaroid-back {
   position: absolute;

@@ -32,6 +32,7 @@ test('gallery tiles open a larger view that closes with Escape', async ({ page }
 });
 
 test('about and contact pages', async ({ page }) => {
+  await page.route('**/data/site.json', (route) => route.fulfill({ contentType: 'application/json', body: '{ "version": 1, "portrait": null }' }));
   await page.goto('about.html');
   await expect(page.locator('h1')).toHaveText('About');
   await expect(page.locator('.portrait')).toHaveAttribute('aria-label', /Portrait/);
