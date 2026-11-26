@@ -3,6 +3,13 @@
 ## Unreleased
 - 2026-11-26 TASK-26: review fix: the spec no longer asserts that the real data/events.json has no `photos` key; it checks that every real event passes `validateEvent` and `loadEvents` keeps them all. Waiting for re-review (tests/task-26.spec.js)
 - 2026-11-26 TASK-29: review fix: the phone tab row takes 8px back from the gap above it (negative top margin), so a 2-3 photo station is exactly 44px taller than a 1-photo one; the 8px gap above the polaroid stays and nothing overlaps; test bound back to 44px (+1px). Waiting for re-review (css/home.css, tests/task-29.spec.js)
+- 2026-11-26 BUG-13: Home hall with reduced motion: a pile stacked by hand stays stacked after scrolling away (js/hall-pile.js). Awaiting QA.
+- 2026-11-26 BUG-14: Admin: the photo slot Move up / Move down / Remove buttons are disabled while a publish runs (js/admin/manager.js). Awaiting QA.
+- 2026-11-26 BUG-15: Admin: an invalid D2 / D3 photo path puts the focus on that field and marks it, not D1 (js/admin/manager.js, admin/index.html). Awaiting QA.
+- 2026-11-26 BUG-16: Admin: a D1 full-size path with no D1 display path (when D2 / D3 have photos) now shows an error instead of being dropped (js/admin/manager.js). Awaiting QA.
+- 2026-11-26 BUG-17: Public pages no longer scroll sideways at 900-950px: header tabs use less side padding from 900px to 1099px (css/base.css). Awaiting QA.
+- 2026-11-26 BUG-18: Admin: right after Attach the Event form preview shows the pending photo (no 404) (js/admin/manager.js). Awaiting QA.
+- Regression tests for BUG-13 to BUG-18: tests/qa-bug-13-18.spec.js.
 
 ## v1.0.0 - released 2026-11-19
 First public version. Release notes are in docs/release.md. Entries below were made while building it.

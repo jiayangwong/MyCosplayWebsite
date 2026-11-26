@@ -217,6 +217,11 @@ a:hover { color: var(--color-ink); }
   .menu-button { display: none; }
 }
 
+/* BUG-17: from 900px to 1099px the six tabs + Instagram button did not fit (the page scrolled sideways). */
+@media (min-width: 900px) and (max-width: 1099px) {
+  .tab { padding-inline: var(--space-2); }
+}
+
 /* ---------- Phone menu (full-screen dialog) ---------- */
 .site-menu {
   width: 100vw;

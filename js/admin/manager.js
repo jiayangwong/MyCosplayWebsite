@@ -30,6 +30,7 @@ const slotListeners = new Set();
 const draftListeners = new Set();
 const REPO_READ_TIMEOUT_MS = 30000;
 let draftLoading = false;
+let publishBusy = false; // BUG-14: set from publish.js's 'publish-busy-change' event
 const BANNER_DRAFT = 'Source: your browser draft (not published yet). Press Publish to GitHub to put it live.';
 let resolveReady;
 /** Resolves once the events and the base are loaded. */
@@ -251,13 +252,39 @@ function readForm() {
   return event;
 }
 
-/** Errors for a Full-size path typed in D2 / D3 without a Display photo (D1 is checked by validateEvent). */
+/** Errors for a Full-size path typed in a slot without a Display photo. D1 alone is checked by validateEvent;
+ *  D1 next to a filled D2 / D3 is checked here, or its full-size path would be dropped silently (BUG-16). */
 function slotErrors() {
+  const raw = formSlots();
+  const others = raw.some((x) => x.photo);
   const out = [];
-  formSlots().forEach((x, i) => {
+  raw.forEach((x, i) => {
     if (i > 0 && x.photoFull && !x.photo) out.push({ field: `photoFull${i + 1}`, message: `Full-size photo D${i + 1} needs a Display photo D${i + 1} too.` });
+    if (i === 0 && others && x.photoFull && !x.photo) out.push({ field: 'photoFull', message: 'Full-size photo D1 needs a Display photo D1 too.' });
   });
   return out;
+}
+
+/** BUG-15: validateEvent names photos by their place in the compacted list ("Photo 2 ..."), and puts D1 errors on
+ *  `photo` / `photoFull`. Point each error at the form slot that holds the path: display paths of D2 / D3 keep the
+ *  `photos` message box and get `input` (the field to focus and mark); full-size paths use that slot's own box. */
+function slotFieldErrors(errors) {
+  const idx = formSlots().map((x, i) => (x.photo ? i : -1)).filter((i) => i >= 0);
+  const target = (k, full) => {
+    if (k === undefined) return null;
+    if (full) return { field: k === 0 ? 'photoFull' : `photoFull${k + 1}` };
+    return k === 0 ? { field: 'photo' } : { field: 'photos', input: SLOT_IDS[k][0] };
+  };
+  return errors.map((e) => {
+    let to = null;
+    if (e.field === 'photos') {
+      const m = /^Photo (\d) (display photo|full-size photo|uses the same|needs a Display)/.exec(e.message);
+      if (m) to = target(idx[Number(m[1]) - 1], m[2] === 'full-size photo');
+    } else if ((e.field === 'photo' || e.field === 'photoFull') && idx.length && idx[0] > 0) {
+      to = target(idx[0], e.field === 'photoFull');
+    }
+    return to ? { ...e, ...to } : e;
+  });
 }
 
 const fieldInput = (f) => $(PHOTO_FIELD_INPUT[f] || inputId(f));
@@ -273,8 +300,9 @@ function showErrors(errors) {
     }
     if (input && f !== 'photos') input.setAttribute('aria-invalid', err ? 'true' : 'false');
   }
+  for (const [id] of SLOT_IDS.slice(1)) $(id).setAttribute('aria-invalid', errors.some((e) => e.input === id) ? 'true' : 'false');
   if (errors.length) {
-    const first = fieldInput(errors[0].field);
+    const first = errors[0].input ? $(errors[0].input) : fieldInput(errors[0].field);
     if (first) first.focus();
   }
 }
@@ -317,7 +345,7 @@ function startEdit(id) {
 function onSubmit(e) {
   e.preventDefault();
   const data = readForm();
-  const errors = [...validateEvent(data), ...slotErrors()];
+  const errors = [...slotFieldErrors(validateEvent(data)), ...slotErrors()];
   showErrors(errors);
   if (errors.length) {
     $('save-status').textContent = 'Not saved: please fix the fields marked with !';
@@ -345,13 +373,16 @@ function updatePreview() {
   const link = $('f-link').value.trim();
   const photo = $('f-photo').value.trim();
   box.replaceChildren();
+  // BUG-18: an attached photo that is not published yet is shown from its pending copy (as the slot thumbnail is).
+  const pair = photo ? pendingPairs().find((p) => p.photo === photo) : null;
+  const blobUrl = pair && pair.item && pair.item.urls && pair.item.urls.display;
   if (!link && !photo) {
     box.append(make('p', 'panel-hint', 'Add a social link or a photo path to see the preview.'));
     return;
   }
   box.append(renderMedia({
     link,
-    photo: photo ? new URL(`../../${photo}`, import.meta.url).href : '',
+    photo: blobUrl || (photo ? new URL(`../../${photo}`, import.meta.url).href : ''),
     alt: 'Preview photo',
     placeholder: 'Preview photo (none yet)',
     title: $('f-name').value || 'Event',
@@ -696,9 +727,10 @@ function syncSlots(thumbs = true) {
     row.classList.toggle('is-empty', !has);
     if (thumbs) slotThumb(row, raw[i].photo);
     const [up, down, rm] = row.querySelectorAll('.slot-btn');
-    up.disabled = !has || i === 0;
-    down.disabled = !has || i === rows.length - 1 || !raw[i + 1].photo;
-    rm.disabled = !has && !raw[i].photoFull;
+    // BUG-14: like the uploader X and "Remove from publish", the slot buttons are locked while a publish runs.
+    up.disabled = publishBusy || !has || i === 0;
+    down.disabled = publishBusy || !has || i === rows.length - 1 || !raw[i + 1].photo;
+    rm.disabled = publishBusy || (!has && !raw[i].photoFull);
   });
   $('slots-sum').textContent = count === 0 ? 'No photos on this event.' : `${count} ${count === 1 ? 'photo' : 'photos'} on this form.`;
   slotListeners.forEach((fn) => fn());
@@ -713,6 +745,7 @@ function focusSlotButton(i, act) {
 function moveSlot(i, delta) {
   const raw = formSlots();
   const j = i + delta;
+  if (publishBusy) return;
   if (j < 0 || j >= raw.length || !raw[i].photo || !raw[j].photo) return;
   [raw[i], raw[j]] = [raw[j], raw[i]];
   setFormSlots(raw);
@@ -723,7 +756,7 @@ function moveSlot(i, delta) {
 
 let removing = false;
 async function removeSlot(i) {
-  if (removing) return;
+  if (removing || publishBusy) return;
   const raw = formSlots();
   const slot = raw[i];
   if (!slot.photo && !slot.photoFull) return;
@@ -734,7 +767,7 @@ async function removeSlot(i) {
     const who = event ? `${event.short} ${String(event.date).slice(0, 4)}` : 'an event';
     const ok = await askRemove(`Remove photo D${i + 1} (${pair.item && pair.item.file ? pair.item.file.name : slot.photo})? It is attached to ${who} and will be taken out of the publish.`);
     removing = false;
-    if (!ok) { $('slots').children[i].querySelector('[data-act="remove"]').focus(); return; }
+    if (!ok || publishBusy) { $('slots').children[i].querySelector('[data-act="remove"]').focus(); return; }
     removePendingItem(pair.item);
   }
   const now = formSlots();
@@ -825,6 +858,7 @@ async function init() {
   $('add-activity').addEventListener('click', () => addActivityRow().focus());
   $('f-link').addEventListener('input', updatePreview);
   initSlots();
+  window.addEventListener('publish-busy-change', (e) => { publishBusy = Boolean(e.detail && e.detail.busy); syncSlots(false); });
   $('f-date').addEventListener('input', notify);
   $('f-short').addEventListener('input', notify);
   $('export-events').addEventListener('click', exportEvents);

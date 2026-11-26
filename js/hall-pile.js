@@ -217,7 +217,9 @@ export function wirePile(pile) {
         inView = entry.isIntersecting && ratio > 0;
         openAt = openThreshold(entry.boundingClientRect.height, window.innerHeight);
         if (!wide.matches) { evaluate(); continue; }
-        if (!inView) manual = false; // the manual toggle ends when the station leaves the viewport
+        // The manual toggle ends when the station leaves the viewport; with reduced motion there is no
+        // scroll automation, so it holds (BUG-13).
+        if (!inView && !reduce.matches) manual = false;
         applyWide();
       }
     }, { threshold: thresholds(openAt) });

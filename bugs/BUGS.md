@@ -145,6 +145,7 @@
 - Actual: D1 covers about 19% of D2's photo (D1's frame reaches about 75px past the left edge of D2's photo, measured on bounding boxes) and the D2 label; D2 covers about 7% of D3's photo and the D3 label. The other depths: about 17-19% / 5-6%. At 900-1099px D2 is about 9-11% covered; at 768-899px the photos are not covered.
 - Status: open
 - Notes: Same numbers in the approved storyboard (storyboard/index.html at 1280: D2 19.3%, D3 6.8% covered), so the build matches the storyboard but not the plan criterion. The review noted about 20px; it is more once the rotation is counted. The user / planner may prefer to keep the storyboard look and change the criterion. tests/task-28.spec.js allows 80px of overlap. On live v1.2.0 too.
+- Bugfixer 2026-11-26: not fixed, waiting for user decision (keep the approved storyboard layout and change the TASK-28 criterion, or change the layout; changing the layout would be a storyboard / plan change, so it goes to the user / planner).
 
 ## BUG-13: Hall PC with reduced motion: a pile stacked by hand spreads again after scrolling away
 - Found by: QA
@@ -153,8 +154,10 @@
 - Steps to reproduce: 1. Turn on reduced motion. 2. Open Home at 1280 with a multi-photo event, go to its hall. 3. Focus the pile button and press Enter (it stacks, aria-expanded="false"). 4. Scroll to the top of the page.
 - Expected: no scroll automation under reduced motion (TASK-28): the pile stays as the visitor left it.
 - Actual: as soon as the station leaves the viewport it spreads again (aria-expanded back to "true").
-- Status: open
+- Status: fixed (awaiting QA)
 - Notes: js/hall-pile.js: the observer resets `manual`, then applyWide() calls setOpen(true) when reduced motion is on. On live v1.2.0 too.
+- Cause: js/hall-pile.js: the observer reset `manual` whenever the station left the viewport, and applyWide() then spread the pile again (reduced motion = always spread unless manual).
+- Fix (bugfixer 2026-11-26, branch fix/review-qa-v1.2.0): with reduced motion `manual` is no longer reset when the station leaves the viewport, so a hand-stacked pile stays stacked; without reduced motion nothing changes (js/hall-pile.js). Regression test: tests/qa-bug-13-18.spec.js (BUG-13, desktop).
 
 ## BUG-14: Admin: the slot Remove (X) stays enabled during a publish, so a photo the user removes is still published
 - Found by: QA
@@ -163,8 +166,10 @@
 - Steps to reproduce: 1. In /admin/ attach a photo to a saved event. 2. Press "Publish to GitHub". 3. While the progress bar runs, press the X of that slot in the Event form and confirm.
 - Expected: like the uploader card X and "Remove from publish" (both disabled while a publish runs, TASK-23), the slot X is disabled, so nothing can claim to take a photo out of a running publish.
 - Actual: the slot X is enabled; the dialog says the photo "will be taken out of the publish" and the draft drops it, but the running publish still commits the photo and events.json with it, so it goes live. Afterwards the Publish panel shows events.json changed and the 2 files to be removed (a second publish removes them from the site; they stay in git history).
-- Status: open
+- Status: fixed (awaiting QA)
 - Notes: Reproduced with the fake GitHub (ref read held open). Move up / down are in the same form and are worth checking in the same fix. On live v1.2.0 too.
+- Cause: js/admin/manager.js syncSlots() never looked at the publish state, so the slot Move up / Move down / Remove buttons stayed enabled during a publish.
+- Fix (bugfixer 2026-11-26, branch fix/review-qa-v1.2.0): manager.js listens to 'publish-busy-change' (like the uploader X) and disables the slot up / down / X buttons while a publish runs; moveSlot() / removeSlot() also return when a publish is running (also after the confirm dialog). Files: js/admin/manager.js. Regression test: tests/qa-bug-13-18.spec.js (BUG-14, desktop + phone).
 
 ## BUG-15: Admin: an invalid D2 / D3 photo path moves focus to D1 and does not mark the wrong field
 - Found by: QA
@@ -173,8 +178,10 @@
 - Steps to reproduce: 1. Edit an event with one photo. 2. Type `/abs.webp` into "Photo D2 display copy". 3. Press Save.
 - Expected: focus goes to the D2 input, which has aria-invalid="true" and is linked to the error text (as the other form fields do).
 - Actual: nothing is saved and the message "Photo 2 display photo must be a relative path (no leading /)." shows, but focus jumps to #f-photo (D1), D1 has aria-invalid="false" and D2 has no aria-invalid.
-- Status: open
+- Status: fixed (awaiting QA)
 - Notes: js/admin/manager.js showErrors() maps the `photos` field to #f-photo. On live v1.2.0 too.
+- Cause: validateEvent() reports D2 / D3 errors on the `photos` field (numbered by place in the compacted list), and showErrors() mapped `photos` to #f-photo.
+- Fix (bugfixer 2026-11-26, branch fix/review-qa-v1.2.0): new slotFieldErrors() in js/admin/manager.js points each photo error at the slot that holds the path: D2 / D3 display paths focus and mark that input (message stays in #err-photos, now linked by aria-describedby on #f-photo-2 / #f-photo-3 in admin/index.html); full-size paths use that slot's own error box; also right when D1 is empty and D2 moves up to D1 in the data. Regression test: tests/qa-bug-13-18.spec.js (BUG-15, desktop + phone).
 
 ## BUG-16: Admin: a full-size path typed in D1 with an empty D1 display path is dropped without a message
 - Found by: QA
@@ -183,8 +190,10 @@
 - Steps to reproduce: 1. Edit an event with one photo. 2. Clear D1 "Display photo", type a path into D1 "Full-size photo", type a display path into D2. 3. Press Save.
 - Expected: an error that the D1 full-size path needs a display photo (as for D2 / D3, and as for D1 alone), or at least the typed path is not lost silently.
 - Actual: "Saved ... to the draft."; D2 moves up to D1 and the typed full-size path is discarded.
-- Status: open
+- Status: fixed (awaiting QA)
 - Notes: js/admin/manager.js readForm() / slotErrors(). Only reachable by typing paths. On live v1.2.0 too.
+- Cause: readForm() only kept a D1 full-size path when no slot had a display photo, and slotErrors() skipped D1, so the path was dropped without an error.
+- Fix (bugfixer 2026-11-26, branch fix/review-qa-v1.2.0): slotErrors() in js/admin/manager.js now also reports 'Full-size photo D1 needs a Display photo D1 too.' on #f-photo-full when D1 has only a full-size path and another slot has a photo (nothing is saved, the typed path stays). D1 alone keeps the old validateEvent message. Regression test: tests/qa-bug-13-18.spec.js (BUG-16, desktop + phone).
 
 ## BUG-17: Public pages scroll sideways by up to 21px between 900px and 920px (header Instagram button)
 - Found by: QA
@@ -193,8 +202,10 @@
 - Steps to reproduce: 1. Open any public page at a 900px wide viewport. 2. Compare document.documentElement.scrollWidth with clientWidth.
 - Expected: no horizontal scroll.
 - Actual: scrollWidth is 921 on index, gallery, reels, events, about and contact at 900px (1px over at 920, none at 899 or 940). The header's Instagram button (`.header-insta`) ends at x=921.
-- Status: open
+- Status: fixed (awaiting QA)
 - Notes: Older than IDEA-16 (not caused by TASK-25 to 29; same with 1-photo halls). Measured with Google Fonts unavailable in this sandbox (fallback fonts); re-check with the real fonts. The header is the same on live v1.2.0.
+- Cause: from 900px (tabs + Instagram button shown) to about 950px the wordmark, six tabs (16px side padding each) and the Instagram button are wider than the header row, so the button ran past the right edge.
+- Fix (bugfixer 2026-11-26, branch fix/review-qa-v1.2.0): css/base.css: between 900px and 1099px the header tabs use 8px side padding (--space-2) instead of 16px; 1100px and wider are unchanged. With fallback fonts there is now about 40px spare at 900px. Re-check with the real Google Fonts on the live site. Regression test: tests/qa-bug-13-18.spec.js (BUG-17, desktop: all 6 public pages at 900-1100px).
 
 ## BUG-18: Admin: right after Attach the link / photo preview says "Preview photo (none yet)" and logs a 404
 - Found by: QA
@@ -203,5 +214,7 @@
 - Steps to reproduce: 1. In /admin/ edit a saved event without a social link, upload a photo and press "Attach to selected event". 2. Look at the preview in the Event form and the console.
 - Expected: the preview shows the attached (pending) photo, with no console error.
 - Actual: it requests media/events/<id>/<name>.webp, which is not published yet (404 in the console), and shows the "Preview photo (none yet)" placeholder. The D1 slot thumbnail next to it does show the pending photo.
-- Status: open
+- Status: fixed (awaiting QA)
 - Notes: updatePreview() in js/admin/manager.js is older than IDEA-16. On live v1.2.0 too.
+- Cause: updatePreview() always built the photo URL from the repo path, which does not exist until the pending photo is published.
+- Fix (bugfixer 2026-11-26, branch fix/review-qa-v1.2.0): updatePreview() in js/admin/manager.js uses the pending pair's display blob URL when the D1 path belongs to a pending photo (as the slot thumbnail does), else the repo path as before. Regression test: tests/qa-bug-13-18.spec.js (BUG-18, desktop + phone).
