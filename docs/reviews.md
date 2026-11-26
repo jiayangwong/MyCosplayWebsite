@@ -509,3 +509,14 @@ Diff `TASK-28..TASK-29` (2323ebb). Read only. `storyFrame(elapsed, n)` is a clea
 - [must-fix] css/home.css:243 + tests/task-29.spec.js:320 - the tab row is 44px plus `margin: 0 0 var(--space-2)`, so a 3-photo station is about 52px taller than a 1-photo station of the same depth. The criterion (and the planned test) is "grows by at most 44px"; the test was widened to `44 + 8 + 2`. Fix: take the 8px back (for example a negative bottom margin as in the storyboard's `.dtabs`, or remove the gap) and put the test bound back to 44 (+1px rounding). If the gap must stay, the planner / user has to change the criterion first; the test should not be loosened on its own.
 - [nice-to-have] css/tokens.css:68 - `--dur-story` is not read anywhere (JS uses `STEP`). Either read it in JS (`getComputedStyle`) or drop the token and keep the comment on `STEP`.
 - [nice-to-have] js/hall-pile.js - `data-story-ms` / `data-story-round` are test hooks on the live page; fine, but say so in a short comment next to `data-story-state`.
+
+## Review TASK-26 - 2026-11-26 (round 2)
+Result: APPROVED
+Fix commit 5201028 (fix/review-qa-v1.2.0). Read only, earlier approved points not re-checked.
+- Round-1 must-fix (tests/task-26.spec.js:124, test pinned the real data/events.json to "no `photos` key"): fixed. The assertion is gone. A new test checks that every real event passes `validateEvent` and that `loadEvents` keeps all real ids, so publishing 2-3 photo events from /admin keeps it green. The failure test (`loadEvents` -> [] on 500) still exists as its own test. Only the spec, plan status and changelog changed; no product code.
+- Ran only tests/task-26.spec.js + tests/task-29.spec.js (both projects): 31 passed, 17 skipped (project-only tests), 0 failed. Note: this worktree's Playwright 1.56.1 expects chromium_headless_shell-1194 but /opt/pw-browsers has build 1243, so a plain `npx playwright test` fails at browser launch. The run used a scratchpad config with `executablePath` on the installed build and a private port; no repo file changed.
+
+## Review TASK-29 - 2026-11-26 (round 2)
+Result: APPROVED
+Fix commit b3e11b2 (fix/review-qa-v1.2.0). Read only, earlier approved points not re-checked.
+- Round-1 must-fix (css/home.css:243 + tests/task-29.spec.js:320, station grew 52px, test loosened): fixed. `.dtabs` margin is now `calc(var(--space-2) * -1) 0 var(--space-2)`. The -8px top takes back the bottom gap, so the box adds exactly the 44px tab row. The -8px falls inside the 40px `.station-inner` gap under the sign (32px left), so nothing overlaps, and the 8px gap between the tabs and the polaroid stays. Tabs keep `height: var(--tap-min)`. Uses tokens only. The test bound is back to `44 + 1` with the `>= 44` lower bound kept, and it passes on the phone project.
