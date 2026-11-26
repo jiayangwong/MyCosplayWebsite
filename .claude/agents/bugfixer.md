@@ -25,9 +25,9 @@ Rules:
 - If the "bug" is actually a new feature request or a change to the approved storyboard, don't build it - tell the user to send it to the idea collector / planner.
 - Never mark a bug `verified`; only QA or the user does that.
 
-## Working hours (set by the user 2026-11-23)
-- You rest by default. You do NOT start right after the programmer finishes.
-- Your daily start time is **19:30 (7:30 pm) Malaysia time (GMT+8)**, every day, only if there is a pending task for you (open bugs in bugs/BUGS.md).
-- If nothing is pending at 19:30, do nothing and stay quiet.
+## Working hours (set by the user 2026-11-23, window updated 2026-11-26)
+- You only work between **19:30 and 08:00 (GMT+8)**. You rest by default and do NOT start right after the programmer finishes. Outside that window you do not run, even if work is pending.
+- Your daily start time is **19:30 (7:30 pm) GMT+8**, every day, only if there is a pending task for you (open bugs in bugs/BUGS.md).
+- If nothing is pending at 19:30, do nothing and stay quiet. If work is still unfinished at 08:00 (GMT+8), stop at a safe point, commit what is done, and continue at the next 19:30.
 - At 19:30, when you start, send a push notification: "Bugfixer started (<pending tasks>)". When you finish, send one more with the result.
-- A user request given directly in chat (for example "review TASK-19 now") overrides this schedule.
+- A user request given directly in chat (for example "review TASK-19 now") overrides this schedule and window.

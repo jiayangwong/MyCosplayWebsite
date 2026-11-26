@@ -469,6 +469,120 @@ Mobile:
 - References: user message 2026-11-25; related: IDEA-13 (collapsed GitHub/Publish panels, phone layout), IDEA-12 (Moments), IDEA-11
 - Priority (user's view): must-have (assumed, the user did not say)
 
+## IDEA-15: Hall polaroid: show the event's first activity under date and short name
+- Date: 2026-11-26
+- Status: ready-for-planning
+- Summary: On the front of each polaroid in the Halls, add the event's first activity under the existing date and short-name caption.
+- Details:
+  - User's words (verbatim): "in the polaroid of Halls, show the 1st activity of the event under the date and event shortform"
+  - Today (js/hall.js, about line 70): the polaroid front caption is `${formatDate(event.date)} · ${event.short}` (plus ' · SAMPLE' for sample events). The back already lists event.activities joined by ' · '. In data/events.json, `activities` is an array of strings (e.g. ["cosplay as Dorothy"]).
+  - Assumptions (nobody could be asked):
+    1. A new second line under the caption shows activities[0] only. Front only; the back is unchanged.
+    2. An event with empty or missing activities shows no line (no placeholder).
+    3. Long text wraps to at most 2 lines, then an ellipsis. The full text stays on the back and as title / aria-label.
+    4. Applies to every Hall, in every year, including events only (not moments). Hall ??? (bangai) is not changed.
+    5. Hall polaroids only: not the events timeline or the Events page.
+    6. Japanese rule: activities are English phrases, so no furigana / romaji needed. Ask the user if any activity contains Japanese.
+    7. Polaroid height must stay equal across a row, with or without the new line.
+- References: user message 2026-11-26; js/hall.js; data/events.json; related: IDEA-3, IDEA-7
+- Priority (user's view): nice-to-have (assumed, the user did not say)
+
+## IDEA-16: Hall: multi-photo events shown as a photo pile that spreads when the hall is reached
+- Date: 2026-11-26
+- Status: direction chosen by the user 2026-11-26, ready-for-planning (see "Decision" below)
+- Summary: One event can last up to 3 days, so it can have up to 3 photos with different looks. The Hall needs a way to show them without hiding photos or eating phone height. The user's concept is a pile that shows a sliver of the other photos while scrolling, then spreads out like loose polaroids when the hall is reached.
+- Details:
+  - User's words (verbatim): "1 event maximum have 3 days, so might 3 different look. so im thinking how should the Halls show the photos. my idea is making a pile of photos. attachment1 will only showing the 1st or last photo, not that good. attachment2 able to show more but take many space especially using phone web. what if combine this 2 idea, when scrolling and havent reach the Hall, it show a pile but able to see tiny part of other photo. when reach the hall, use animation to separate the polaroid like attachment2. update homepage concept artifact, make this idea into hall A and B storyboard artifact with different style of stacking photo into a pile and separate animation. give me few of suggestion other than mine that fit to current UI design. the rest of the hall u may try for other suggestion."
+  - Attachment 1: a chat-app photo stack that shows only the top photo, with slight offsets behind it (user: shows only the 1st or last photo, not that good).
+  - Attachment 2: four tilted white polaroid frames scattered with little overlap (user: shows more, but takes too much space on phone web).
+  - User's concept: while scrolling and the hall is not reached yet, show a pile where a tiny part of the other photos is visible. When the hall is reached, animate the polaroids apart like attachment 2.
+  - Requested output: update the homepage concept artifact; make Hall A and Hall B in the storyboard artifact (same idea, different pile style and different spread animation); the other halls carry other suggestions that fit the current UI.
+  - Context kept as is: Home convention-hall walk with polaroids at near / mid / far depth, hanging hall signs, tape strips, flip to the back (details), TASK-25 first-activity caption line (approved, build paused), Hall ??? bangai untouched.
+  - Problems any variant must solve:
+    - Phone height budget: 1 column, so the spread state must not make a hall much taller than today.
+    - What "reached" means: the hall sign / polaroid crossing a scroll position, or being centred, or tapped? Same on PC and phone?
+    - Replay and collapse: does it spread once, re-pile when scrolled away, or stay spread after the first time?
+    - Reduced motion: no animation, a plain readable state (pile already spread, or a simple list).
+    - Keyboard and screen reader: the photos are reachable in order, a real button to spread or step through, a clear name per photo (event, Day N), state announced.
+    - Tap on a photo = flip / open: what does it do when the pile is closed, and when spread? How does flip to the back (details) work with 3 photos?
+    - Day 1 / Day 2 / Day 3 labels: shown or not, and only if the event has more than 1 photo.
+    - Events with 1 photo look exactly like today (no pile). Events with 2 photos behave like 3 without a gap.
+- Storyboard variants to compare (the user's two, then my suggestions):
+  - Hall A (user's idea, style 1: neat peek pile that fans / scatters out)
+    - Look: tidy stack, each photo offset a few px with a sliver of the others visible, then fans out in a loose scatter like attachment 2.
+    - Animation: the pile fans out from the base photo with a small rotation spread and a soft stagger.
+    - Phone space cost: pile = 1 polaroid plus a few px; spread = about 1.5 to 2 polaroid heights (needs overlap).
+    - Risk: the sliver is too small to read as photos; the scatter overlaps and hides details; tap targets under 44px in the spread.
+  - Hall B (user's idea, style 2: messy taped pile that drops / deals out with a different animation)
+    - Look: casual pile with random tilts and tape strips, so more of the other photos peek out.
+    - Animation: photos are dealt or dropped one by one into place (a deal, not a fan), each with a small bounce.
+    - Phone space cost: same as A; the tilted pile is slightly wider.
+    - Risk: looks messy next to the tidy hall; random tilt must stay inside the 1-column width; the bounce must be skipped under reduced motion.
+  - Hall C (suggestion): photo-booth strip that unrolls (D1 / D2 / D3)
+    - Look: a narrow vertical strip with three framed cells, rolled up in the hall.
+    - Animation: the strip unrolls downward when reached.
+    - Phone space cost: low closed, about 3 small cells tall when open (can be scaled to fit).
+    - Risk: cells are small, so photos lose impact; the strip is a different shape from the polaroid look.
+  - Hall D (suggestion): day tabs on tape on a single polaroid (flip to switch)
+    - Look: one polaroid with three small tape tabs "D1 D2 D3" on its edge.
+    - Animation: tapping a tab flips the polaroid to the other day's photo.
+    - Phone space cost: lowest, same height as today.
+    - Risk: only one photo visible at a time, so it fails the user's wish to see more; the flip is already used for details, so two flips must be told apart.
+  - Hall E (suggestion): hand-of-cards fan
+    - Look: the photos held in a fan like playing cards, rotated around a bottom corner.
+    - Animation: the fan opens wider when reached and tilts as it is touched.
+    - Phone space cost: low to medium (width of the fan).
+    - Risk: the outer photos are cropped by the fan edge; a card-game feel may be off for the con-hall theme.
+  - Hall F (suggestion): photos clipped on a string under the hall sign that swing apart
+    - Look: a short string with pegs hanging under the hall sign, the polaroids clipped on it.
+    - Animation: the polaroids swing apart like a pendulum when reached.
+    - Phone space cost: medium (the three photos need a row or a 2-row wrap on a 1-column phone).
+    - Risk: the hanging look is close to the existing hall signs; swing needs a lot of care for motion comfort; a 3-wide row is too small on phone.
+  - Hall G (suggestion): swipe / tap stack (send the top photo to the back, 1/3 counter)
+    - Look: a stack with a "1/3" counter, the top photo is full size.
+    - Animation: the tapped or swiped top photo slides away and goes to the back.
+    - Phone space cost: low, same as one polaroid.
+    - Risk: needs a gesture hint; only one photo visible at a time (like attachment 1); the swipe can fight vertical scrolling.
+  - Extra ideas, NOT storyboarded:
+    - Polaroid camera ejecting instant film: a small camera prints the photos out one by one (fun, but needs new art).
+    - Contact sheet on the back of the polaroid: the front shows one photo and the back shows all days as a small sheet (no extra height, but the extra photos are hidden until flip).
+- Open questions (data / admin, planner to decide after the user picks a direction; nothing is decided):
+  - Data: does an event get a `photos` array of up to 3 entries (each with a display copy and a full master, maybe a day label), and is the first kept in `photo` / `photoFull` for back-compat?
+  - Admin uploader: how does the user attach up to 3 photos per event, set the order, and remove one (see IDEA-11 and IDEA-13 about removal)?
+  - Watermark: no change to the lattice rule (IDEA-9 / IDEA-10), every photo of every day carries it; confirm the 20-photo-per-publish limit is still enough.
+  - Which photo is the "cover" when the pile is closed: Day 1, the best one, or the user's choice?
+  - Does the Events page and Gallery also show the extra photos, or only the Hall?
+  - Does the storyboard / concept canvas also show the Hall ??? bangai album, or is it left as is (assumed left as is)?
+- Decision needed (user):
+  1. Which direction: A, B, or one of C to G (or a mix)?
+  2. What does "reached" mean: scroll position, hall centred, or tap?
+  3. After it spreads: does it re-pile when scrolled away, or stay spread?
+  4. Max extra height allowed per hall on phone when spread.
+  5. Show Day 1 / Day 2 / Day 3 labels? On the front or only on the back?
+  6. Tap on a photo: flip to details (as today), open the large view, or bring it to the top?
+  7. Which photo is the cover of a closed pile?
+  8. Same behaviour on PC and phone, or the pile only on phone?
+  9. Should the Events page and Gallery also show all the photos?
+- Decision (user, 2026-11-26):
+  - User's words (verbatim): "On the PC web, use a neat pile (Hall A), but spread it when scrolling to the hall. Go back to the pile when scrolling away. On the mobile web, use Hall D, but with a 1.5-second timer and a meter shown to autoswap photos. The main target is minimum action for user but able to show more things to user to see"
+  - PC (width 768px and up, assumed): variant A, neat peek pile. It spreads when the hall scrolls into view and returns to the pile when scrolled away. No click needed.
+  - Phone (below 768px): variant D, day tabs on tape (D1 D2 D3) on one polaroid. Photos auto-swap every 1.5 seconds, with a visible meter (progress bar) for the timer.
+  - Main goal: minimum user action while showing more photos.
+  - Dropped: variants B, C, E, F, G. They stay in the storyboard history and canvas boards as exploration only.
+  - Assumptions and open questions (for the planner; nobody could be asked):
+    1. Visibility thresholds: spread when about 60 percent of the hall is visible, re-pile when under about 25 percent (25 / 60 hysteresis) so the pile does not flicker at the edge. Planner to confirm the numbers.
+    2. Accessibility: auto-updating content over 5 seconds needs a pause/play control. Auto-swap pauses on: tap on a tab, page hidden, polaroid flipped to the back, hall out of view. Planner to decide whether a pause button is always visible.
+    3. Reduced motion: no auto-swap and no spread animation (show the plain spread or first-photo state, tabs still work by hand).
+    4. Screen readers must not be spammed: no live region on the auto-swap; the tabs are real buttons with names like "Day 2 of 3".
+    5. PC keyboard: a manual toggle (spread / pile) so keyboard users do not depend on scroll position.
+    6. Edge cases: 1 photo looks exactly like today (no pile, no tabs, no timer); 2 photos use the same patterns with 2 tabs and a 2-photo pile.
+    7. Single breakpoint at 768px (same as IDEA-14). Behaviour in between, such as tablets or rotation, is the planner's call.
+    8. Data and admin impact still to be planned: `photos` array up to 3 (display copy + full master, day label), uploader for up to 3 photos, order, remove (see IDEA-11, IDEA-13); cover photo; 20-photo-per-publish limit; whether Events page and Gallery show the extra photos.
+    9. TASK-25 (first-activity caption line, approved, build paused): the caption must still fit and keep equal polaroid height in both the pile and the tabbed polaroid; planner to decide the order of work and whether TASK-25 resumes first.
+    10. The old "Decision needed" questions 1 to 9 above are answered or superseded by this decision, except 4 (max phone height: phone D keeps today's height), 5 (labels: D1 D2 D3 on the tabs), 6 (tap behaviour: tab selects a day, flip to the back as today) and 9 (Events page and Gallery), which the planner should confirm.
+- References: user message 2026-11-26 with two attached images (attachment 1 = chat-app photo stack; attachment 2 = four tilted white polaroids); related: IDEA-3, IDEA-7, IDEA-9, IDEA-10, IDEA-12, IDEA-15
+- Priority (user's view): nice-to-have (assumed, the user did not say)
+
 ## Comparison and recommendation (for the user to decide)
 - UPDATE 2026-11-17: the user chose IDEA-3 + IDEA-5 (see GLOBAL NOTES). The earlier recommendation below (2026-11-16) is superseded.
 
@@ -480,3 +594,9 @@ Mobile:
 | 4 Petal storm | Low-Medium | Medium | Medium | Atmosphere, best as a hero |
 
 - Recommendation: IDEA-1 (wardrobe) as the main concept, since it maps most directly onto reels and fits the Lolita style. Borrow the petals from IDEA-4 as light ambient decoration (cheap), and consider IDEA-2 as a fun secondary feature ("Surprise me" gacha button on the reels page). IDEA-3 is the most distinctive but also the heaviest and most like SleepyStella's site, so park it unless the user wants a storytelling site.
+
+### IDEA-16 decision update 2026-11-26 (phone)
+The user approved the PC part ("pc web approved") and changed the phone part. User words: "phone web i need the meter or countdown timer is the D1, D2, D3 tab and it like fb or ig story auto flip. no need pause button. when user press the D1,D2,D3, animation stop at the selected polaroid, it wont able to play again except page load again."
+- Phone: the D1, D2, D3 tabs are the meter (story-style segments that fill in 1.5 s each) and the photo flips by itself; no separate meter bar, no pause button.
+- Pressing a tab stops the animation on that photo for good; it plays again only after the page is reloaded.
+- Assumed: plays D1, D2, D3 once and stops on D3 (no loop, like stories; total 4.5 s). To confirm with the user.

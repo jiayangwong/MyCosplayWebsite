@@ -147,6 +147,7 @@ a { color: var(--color-purple-deep); }
 .polaroid .back { position: absolute; inset: 0; transform: rotateY(180deg); background: var(--color-dark-card); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
 .polaroid .back .mono { color: var(--color-on-dark-muted); }
 .polaroid .cap { display: block; margin-top: 6px; text-align: left; }
+.polaroid .act { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; margin-top: var(--space-1, 4px); min-height: 2.8em; line-height: 1.4; text-align: left; font-family: var(--font-mono); font-size: var(--fs-small); color: var(--color-text-2); }
 .tape { position: absolute; top: -10px; left: 20%; width: 60%; height: 18px; background: var(--ph-pink); opacity: .85; transform: rotate(-3deg); border: 1px solid var(--color-ink); z-index: 2; }
 .polaroid.lilac .tape { background: var(--ph-lilac); }
 .polaroid .ph { border-radius: 4px; }
@@ -424,3 +425,84 @@ dialog.confirm .acts { display: flex; justify-content: flex-end; gap: 12px; }
 .pager .btn { min-height: 44px; min-width: 44px; }
 .pager .btn:disabled { opacity: .5; cursor: not-allowed; }
 .empty { margin: 0; padding: var(--space-4); border: 2px dashed var(--color-ink); border-radius: var(--radius-card); text-align: center; font-weight: 700; }
+
+/* ===== IDEA-16: hall photos (storyboard). Phone = D (story-bar tabs, auto-flip once), 768px and up = A (peek pile, spreads in view). Tokens only; #FFE066 is the existing storyboard-note yellow. ===== */
+.hall-item.pile-hall { width: 100%; max-width: 340px; }
+.pile { --H: calc(var(--w) + 72px); position: relative; width: 100%; margin-top: var(--space-4); }
+.pile-stage { position: relative; height: calc(var(--H) + 8px); }
+.pl { position: absolute; left: 50%; top: 0; width: var(--w); margin-left: calc(var(--w) / -2); }
+.pl .polaroid { margin-top: 0; }
+.dlab { position: absolute; left: 18px; top: 18px; z-index: 3; background: var(--color-surface); border: 1px solid var(--color-ink); border-radius: 2px; padding: 0 6px; font: 700 11px/16px var(--font-mono); transform: rotate(-4deg); }
+.sb-note { margin: var(--space-2) auto 0; text-align: center; width: max-content; max-width: 100%; background: #FFE066; border: 1px dashed var(--color-ink); padding: 2px 8px; font-weight: 700; }
+.sb-help { margin: var(--space-3) 0 0; background: #FFE066; border: 1px dashed var(--color-ink); padding: 6px 10px; font-weight: 700; max-width: 62ch; }
+.pile-toggle, .pile-hint { display: none; }
+
+/* Phone (under 768px): one polaroid, tape tabs D1-D3, tabs are the story bars */
+@media (max-width: 767px) {
+  .pl { transition: opacity .2s linear; z-index: 1; }
+  .pl.on { z-index: 2; }
+  .pl:not(.on) { opacity: 0; pointer-events: none; }
+  .dtabs { display: flex; justify-content: center; gap: var(--space-2); margin: var(--space-2) 0 -14px; position: relative; z-index: 30; }
+  .dtab { position: relative; overflow: hidden; min-width: 64px; min-height: var(--tap-min); border: var(--outline); border-radius: var(--radius-sm); background: var(--ph-lilac); color: var(--color-ink); font: 700 13px var(--font-mono); cursor: pointer; }
+  .dtab:nth-child(2) { transform: rotate(1.5deg); } .dtab:nth-child(3) { transform: rotate(-1deg); }
+  .dtab .fill { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--color-purple-deep); color: var(--color-surface); clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0); pointer-events: none; }
+  .dtab .fill { transition: opacity 200ms; }
+  .pile.xf .dtab .fill { opacity: 0; }
+  .pile.stopped .dtab .fill { display: none; }
+  .pile.stopped .dtab[aria-selected="true"] { background: var(--color-pink); box-shadow: var(--shadow-hover); }
+  .dtab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+  .pile .tape { display: none; }
+}
+
+/* 768px and up: neat peek pile, fans out when the hall is in view */
+@media (min-width: 768px) {
+  .dtabs { display: none; }
+  .hall-item.pile-hall, .hall-item.mid.pile-hall, .hall-item.far.pile-hall { width: 100%; max-width: 720px; margin-left: auto; margin-right: auto; }
+  .pile { --s: .72; --k: .78; --sh: calc(var(--s) * var(--H) + 28px + 48px); }
+  .pile[data-n="2"] { --k: .5; }
+  .pile:not([data-n="1"]) .pile-stage { height: var(--sh); }
+  .pile:not([data-n="1"]) .pl { --x: var(--px, 0px); --y: var(--py, 0px); --r: var(--pr, 0deg); --z: var(--pz, 1); z-index: var(--z); transform-origin: 50% 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(var(--s)); transition: transform .4s cubic-bezier(.4, 0, .2, 1); }
+  .pile[data-n="1"] .pl { transform: none; }
+  .pile[data-n="1"] .pile-stage { height: calc(var(--H) + 8px); }
+  /* closed: Day 1 on top, 14px slivers of D2 and D3 above it */
+  .pl[data-d="1"] { --py: 28px; --pz: 3; --sx: calc(var(--w) * var(--k) * -1); --sy: 8px; --sr: -4deg; --pr: 0deg; }
+  .pl[data-d="2"] { --py: 14px; --pz: 2; --sx: 0px; --sy: 22px; --sr: 3deg; --pr: 0deg; }
+  .pl[data-d="3"] { --py: 0px; --pz: 1; --sx: calc(var(--w) * var(--k)); --sy: 0px; --sr: -3deg; --pr: 0deg; }
+  .pile[data-n="2"] .pl[data-d="2"] { --sx: calc(var(--w) * var(--k)); --sy: 14px; }
+  .pile.open .pl { --x: var(--sx); --y: var(--sy); --r: var(--sr); transition: transform .65s cubic-bezier(.2, .85, .25, 1) var(--dl, 0ms); }
+  .pile.open .pl[data-d="2"] { --dl: 90ms; } .pile.open .pl[data-d="3"] { --dl: 180ms; }
+  .pile:not(.open) .pl:not([data-d="1"]) .tape { opacity: 0; }
+  .pile.open .pl.lift { --r: 0deg; --z: 20; }
+  .pile:not([data-n="1"]) .pile-toggle { display: block; position: absolute; left: 0; right: 0; top: 0; height: var(--sh); z-index: 40; padding: 0; background: transparent; border: 0; border-radius: var(--radius-card); cursor: pointer; font: inherit; }
+  .pile.open .pile-toggle { pointer-events: none; }
+  .pile-toggle:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+  .pile-hint { display: block; position: absolute; left: 50%; top: calc(var(--s) * var(--H) + 36px); transform: translateX(-50%); white-space: nowrap; background: var(--color-surface); border: 1px dashed var(--color-ink); border-radius: var(--radius-sm); padding: 2px 8px; color: var(--color-ink); transition: opacity var(--dur-fast); }
+  .pile.open .pile-hint { opacity: 0; }
+}
+@media (min-width: 900px) {
+  .pile { --s: 1; --k: .86; --sh: calc(var(--H) + 28px + 48px); }
+  .pile[data-n="2"] { --k: .56; }
+  .hall-item.pile-hall { width: min(calc(var(--w) * 3.1), 100%); max-width: none; }
+  .hall-item.near.pile-hall { margin-left: auto; margin-right: auto; }
+  .hall-item.mid.pile-hall { margin-left: 15%; margin-right: auto; width: min(calc(var(--w) * 3.1), 85%); }
+  .hall-item.far.pile-hall { margin-left: auto; margin-right: 15%; width: min(calc(var(--w) * 3.1), 85%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl, .pile .pl, .pile.open .pl { transition: none !important; }
+  .dtab .fill { display: none !important; }
+}
+
+/* ===== IDEA-16 admin: photo chip + D1-D3 slots (tokens only) ===== */
+.ph-chip { display: inline-block; font: 700 11px var(--font-mono); border: 1px solid var(--color-ink); border-radius: 999px; padding: 1px 8px; background: var(--color-bg); white-space: nowrap; }
+.ph-chip[data-n="3"] { background: var(--color-ink); color: var(--color-pink); }
+.adm-row[aria-current="true"] { box-shadow: var(--shadow-hover); background: var(--ph-lilac); }
+.slots { list-style: none; padding: 0; margin: 0 0 var(--space-2); display: grid; gap: var(--space-2); }
+.slot { display: grid; grid-template-columns: auto 44px 1fr; gap: var(--space-2); align-items: center; border: var(--outline); border-radius: var(--radius-btn); padding: var(--space-2); background: var(--color-surface); }
+.slot.is-empty { border-style: dashed; color: var(--color-muted); }
+.slot-d { font-weight: 700; }
+.slot-th { display: block; width: 44px; height: 44px; background: var(--ph-pink); border: 1px solid var(--color-ink); border-radius: var(--radius-sm); font: 400 9px/44px var(--font-mono); text-align: center; overflow: hidden; }
+.slot.is-empty .slot-th { background: transparent; border-style: dashed; }
+.slot-b { grid-column: 1 / -1; display: flex; gap: var(--space-2); }
+.slot-b .btn { min-width: 44px; min-height: 44px; padding: 0; font-size: 16px; }
+@media (min-width: 480px) { .slot-b { grid-column: auto; grid-row: 1; grid-column: 4; } .slot { grid-template-columns: auto 44px 1fr auto; } }
+.slots-fs { border: 0; padding: 0; margin: var(--space-4) 0 0; }

@@ -38,3 +38,10 @@ The user told the planner team to start TASK-19 and TASK-20, then continue with 
 
 ## Addendum 2026-11-25: IDEA-14 / TASK-24 admin collapsible panels + event paging
 STORYBOARD APPROVED (admin screen: all panels collapsible, only Events open on load, events list 5/10 per page). The user said "Approved all" in chat on 2026-11-25, covering the TASK-24 plan and the admin storyboard. Deploy is NOT approved yet; the release-manager must ask.
+
+## Addendum 2026-11-26: IDEA-15 / TASK-25 Hall polaroid first activity
+STORYBOARD APPROVED (home Hall screen: second caption line with the event's first activity, max 2 lines with ellipsis, 2 lines reserved). The user said "2 lines fine, storyboard approved" in chat on 2026-11-26 after seeing the storyboard and the assumptions D1-D9. Treated as approval to build TASK-25. Deploy is NOT approved yet; the release-manager must ask.
+
+## Addendum 2026-11-26: IDEA-16 Hall photo pile (TASK-25 to TASK-29)
+STORYBOARD APPROVED (home Hall: PC pile that spreads when the hall is in view and returns when scrolled away; phone D1 D2 D3 story-style tabs, two rounds then stop, a tab press stops it until reload; admin photo slots D1 D2 D3 with a "n photos" chip). The user said "pc web approved" and then "two rounds then, all approved, after programmer done, just merge and deploy 1st" in chat on 2026-11-26. The plan (docs/plan.md section 11 and TASK-25) is approved by the same words.
+DEPLOY: the same message tells the team to merge and deploy right after the programmer is done, before review and QA. The full Playwright suite must pass before the merge. Reviewer, QA and bugfixer then work at the next 19:30 GMT+8 window on the deployed result.

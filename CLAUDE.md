@@ -17,9 +17,9 @@ This project uses nine subagents in `.claude/agents/`. Route work like this:
 
 Flow: idea-collector -> planner -> designer -> storyboard-creator -> [programmer -> reviewer -> qa <-> bugfixer] -> release-manager
 
-## Daily schedule (user decision 2026-11-23)
+## Daily schedule (user decision 2026-11-23, window updated 2026-11-26)
 - **programmer** works whenever the user gives tasks, and does not wait for review. It builds the next tasks and leaves them for review.
-- **reviewer, qa, bugfixer, release-manager** rest by default and start at **19:30 Malaysia time (GMT+8)** every day, only if something is pending for them. This replaces "run automatically" in step 5. A direct user request in chat overrides it.
+- **reviewer, qa, bugfixer, release-manager** only work between **19:30 and 08:00 (GMT+8)**: they rest by default, start at **19:30 GMT+8** every day, and only if something is pending for them. Outside that window they do not run. This replaces "run automatically" in step 5. A direct user request in chat overrides it.
 - A push notification is sent when the programmer finishes a task group, and when each of these four roles starts.
 
 ## Gates
