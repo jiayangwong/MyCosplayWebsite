@@ -1,7 +1,8 @@
 // Home: the convention hall walk-through (newest event first) and the YOU ARE HERE year timeline.
-import { loadEvents, groupByYear, formatDate, yearOf } from './events-data.js';
+import { loadEvents, groupByYear, formatDate, yearOf, eventPhotos } from './events-data.js';
 import { siteUrl } from './nav.js';
 import { buildBangaiStation } from './bangai.js';
+import { wirePile } from './hall-pile.js';
 
 const BANGAI_YEAR = '???';
 const DEPTHS = ['near', 'far', 'mid'];
@@ -26,13 +27,14 @@ function make(tag, className, text) {
   return node;
 }
 
-function polaroidPicture(event, index) {
-  const alt = `${event.name} ${yearOf(event)}`;
-  if (event.photo) {
+function polaroidPicture(event, index, pic) {
+  const alt = pic ? `${event.name} ${yearOf(event)}, day ${pic.day}` : `${event.name} ${yearOf(event)}`;
+  const path = pic ? pic.photo : event.photo;
+  if (path) {
     const img = make('img', 'polaroid-photo');
-    img.src = siteUrl(event.photo);
+    img.src = siteUrl(path);
     img.alt = alt;
-    img.loading = index < 2 ? 'eager' : 'lazy';
+    img.loading = (pic ? pic.day === 1 && index < 2 : index < 2) ? 'eager' : 'lazy';
     img.decoding = 'async';
     return img;
   }
@@ -45,28 +47,27 @@ function polaroidPicture(event, index) {
   return ph;
 }
 
-function buildStation(event, index) {
-  const li = make('li', `station depth-${DEPTHS[index % DEPTHS.length]} side-${index % 2 ? 'right' : 'left'}`);
-  li.id = `hall-${event.id}`;
-  li.dataset.kind = 'event';
-  li.dataset.id = event.id;
-
-  const inner = make('div', 'station-inner');
-  const sign = make('div', `hall-sign${index % 2 ? ' is-alt' : ''}`);
-  sign.append(make('span', 'hall-sign-label', `HALL ${hallLetter(index)}`));
-  sign.append(make('span', 'hall-sign-name', event.name.toUpperCase()));
-
+/**
+ * One flip card (front polaroid + back). Used once for a 0-1 photo event (as before) and once per photo of a
+ * 2-3 photo event (`pic` = { photo, day, total }), which adds the day label and "Day n" on the back.
+ */
+function buildFlip(event, index, pic) {
   const flip = make('div', 'flip');
   flip.style.setProperty('--tilt', index % 2 ? '2deg' : '-2deg');
   const flipInner = make('div', 'flip-inner');
-  const backId = `back-${event.id}`;
+  const backId = pic ? `back-${event.id}-${pic.day}` : `back-${event.id}`;
 
   const front = make('button', 'polaroid');
   front.type = 'button';
   front.setAttribute('aria-expanded', 'false');
   front.setAttribute('aria-controls', backId);
   front.append(make('span', `polaroid-tape${index % 2 ? ' is-lilac' : ''}`));
-  front.append(polaroidPicture(event, index));
+  if (pic) {
+    const label = make('span', 'polaroid-daylabel', `D${pic.day}`);
+    label.setAttribute('aria-hidden', 'true');
+    front.append(label);
+  }
+  front.append(polaroidPicture(event, index, pic));
   front.append(make('span', 'polaroid-caption', `${formatDate(event.date)} · ${event.short}${event.sample ? ' · SAMPLE' : ''}`));
   const firstActivity = Array.isArray(event.activities) && typeof event.activities[0] === 'string' ? event.activities[0].trim() : '';
   if (firstActivity) {
@@ -81,7 +82,7 @@ function buildStation(event, index) {
 
   const back = make('div', 'polaroid-back');
   back.id = backId;
-  back.append(make('p', 'eyebrow', `${event.short} · ${formatDate(event.date)}`));
+  back.append(make('p', 'eyebrow', `${event.short} · ${formatDate(event.date)}${pic ? ` · Day ${pic.day}` : ''}`));
   back.append(make('p', 'polaroid-back-name', event.name));
   if (event.activities && event.activities.length) {
     back.append(make('p', 'polaroid-back-meta', event.activities.join(' · ')));
@@ -113,9 +114,72 @@ function buildStation(event, index) {
 
   flipInner.append(front, back);
   flip.append(flipInner);
-  inner.append(sign, flip);
+  return flip;
+}
+
+function buildStation(event, index) {
+  const li = make('li', `station depth-${DEPTHS[index % DEPTHS.length]} side-${index % 2 ? 'right' : 'left'}`);
+  li.id = `hall-${event.id}`;
+  li.dataset.kind = 'event';
+  li.dataset.id = event.id;
+
+  const inner = make('div', 'station-inner');
+  const sign = make('div', `hall-sign${index % 2 ? ' is-alt' : ''}`);
+  sign.append(make('span', 'hall-sign-label', `HALL ${hallLetter(index)}`));
+  sign.append(make('span', 'hall-sign-name', event.name.toUpperCase()));
+
+  const photos = eventPhotos(event);
+  if (photos.length < 2) {
+    inner.append(sign, buildFlip(event, index, null));
+  } else {
+    li.classList.add('has-pile');
+    inner.append(sign, buildPile(event, index, photos));
+  }
   li.append(inner);
   return li;
+}
+
+/** 2-3 photos: tabs (phone), toggle (PC) and one flip card per photo in a stage. Behaviour lives in hall-pile.js. */
+function buildPile(event, index, photos) {
+  const n = photos.length;
+  const full = `${event.name} ${yearOf(event)}`;
+  const pile = make('div', 'pile');
+  pile.id = `pile-${event.id}`;
+  pile.dataset.n = String(n);
+  pile.dataset.name = full;
+  const tabs = make('div', 'dtabs');
+  tabs.setAttribute('role', 'tablist');
+  tabs.setAttribute('aria-label', `${full}: choose the day`);
+  const stage = make('div', 'pile-stage');
+  const toggle = make('button', 'pile-toggle');
+  toggle.type = 'button';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', pile.id);
+  toggle.setAttribute('aria-label', `${full}: ${n} photos, day 1 to day ${n}. Show all photos`);
+  toggle.dataset.name = full;
+  toggle.append(make('span', 'pile-hint mono', `${n} photos · D1-D${n}`));
+  stage.append(toggle);
+  photos.forEach((p, i) => {
+    const day = i + 1;
+    const tab = make('button', 'dtab', `D${day}`);
+    tab.type = 'button';
+    tab.setAttribute('role', 'tab');
+    tab.id = `${event.id}-t${day}`;
+    tab.setAttribute('aria-controls', `${event.id}-p${day}`);
+    tab.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+    tab.tabIndex = i === 0 ? 0 : -1;
+    const fill = make('span', 'fill', `D${day}`);
+    fill.setAttribute('aria-hidden', 'true');
+    tab.append(fill);
+    tabs.append(tab);
+    const pl = make('div', i === 0 ? 'pl on' : 'pl');
+    pl.dataset.d = String(day);
+    pl.id = `${event.id}-p${day}`;
+    pl.append(buildFlip(event, index, { photo: p.photo, day, total: n }));
+    stage.append(pl);
+  });
+  pile.append(tabs, stage);
+  return pile;
 }
 
 function buildYearMarker(year) {
@@ -258,6 +322,8 @@ export async function mountHall({ hallList, timelineSlot, summary }) {
     const years = groups.map((g) => g.year);
     summary.textContent = `${events.length} events · ${years[0]} → ${years[years.length - 1]}`;
   }
+
+  hallList.querySelectorAll('.pile').forEach((pile) => wirePile(pile));
 
   const timeline = buildTimeline(groups);
   timelineSlot.append(timeline);

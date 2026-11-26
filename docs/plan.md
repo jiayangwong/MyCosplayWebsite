@@ -1295,7 +1295,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - A viewport of 767px wide shows the phone mode (TASK-29) instead; resizing to 800px switches to the pile without a reload.
 - Existing specs likely to change (the programmer confirms by searching tests/ for `polaroid`, `.flip`, `polaroid-caption`, `aria-expanded`, `loading`, `hall-`): `task-3` (count of `.polaroid` per station, eager count) - only if fixtures add multi-photo events; `task-19` ("every other polaroid flips": the pile toggle is not a polaroid); `task-25` (activity line now on every polaroid of a pile); `task-9` (a11y: button names). The full suite passes.
 - Plan: **approved by the user 2026-11-26** ("pc web approved", confirmed by "all approved"; the PC half of the home storyboard is approved unchanged)
-- Status: todo
+- Status: built 2026-11-26, waiting for review (branch task/TASK-28-hall-pc-pile, stacked on task/TASK-26-photos-data)
 - Review: pending
 - QA: pending
 
