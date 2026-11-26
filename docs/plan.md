@@ -1226,7 +1226,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - `normalizeEvent` fills the mirror; leaves an old-shape event deep-equal to the input.
   - `loadEvents` with the fixture routed in: invalid events dropped, valid multi-photo events present with the mirror set.
 - Existing specs likely to change: none expected. Run `task-2`, `task-10` (validateEvent cases) and the full suite.
-- Status: todo
+- Status: built 2026-11-26, waiting for review (branch task/TASK-26-photos-data, stacked on task/TASK-25-activity-line)
 - Review: pending
 - QA: pending
 

@@ -1,6 +1,8 @@
 // Event data: load data/events.json, sort newest first, group by year, validate, and make ids.
-// Format (see docs/plan.md section 4): { version: 1, events: [{ id, date, short, name, venue?, activities?, link?, photo?, photoFull?, sample? }] }
+// Format (see docs/plan.md section 4): { version: 1, events: [{ id, date, short, name, venue?, activities?, link?, photo?, photoFull?, photos?, sample? }] }
 // photo = watermarked display copy (1200px), photoFull = watermarked full-size master (Gallery viewer only).
+// photos (TASK-26, optional, only for events with 2-3 photos) = [{ photo, photoFull? }] in day order (D1, D2, D3);
+// the top-level photo / photoFull always mirror photos[0], so code that shows one photo keeps reading them.
 
 export const EVENTS_URL = new URL('../data/events.json', import.meta.url).href;
 
@@ -92,7 +94,64 @@ export function validateEvent(event) {
   else if (hasValue(e.photoFull) && !hasValue(e.photo)) {
     errors.push({ field: 'photoFull', message: 'Full-size photo needs a Display photo too.' });
   }
+  if (e.photos !== undefined) errors.push(...photosErrors(e));
   return errors;
+}
+
+export const MAX_EVENT_PHOTOS = 3;
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** Errors ({ field: 'photos', message }) for the optional `photos` list of an event. */
+function photosErrors(e) {
+  const err = (message) => [{ field: 'photos', message }];
+  const list = e.photos;
+  if (!Array.isArray(list)) return err('Photos must be a list.');
+  if (list.length === 0) return err('Photos must have at least 1 photo.');
+  if (list.length > MAX_EVENT_PHOTOS) return err(`Photos can have at most ${MAX_EVENT_PHOTOS} photos.`);
+  const seen = new Set();
+  for (let i = 0; i < list.length; i += 1) {
+    const entry = list[i];
+    const label = `Photo ${i + 1}`;
+    if (!isObject(entry)) return err(`${label} must be an object with a photo path.`);
+    if (!hasValue(entry.photo)) return err(`${label} needs a Display photo.`);
+    const photoError = photoPathError(entry.photo);
+    if (photoError) return err(`${label} display photo ${photoError}`);
+    const fullError = photoPathError(entry.photoFull);
+    if (fullError) return err(`${label} full-size photo ${fullError}`);
+    if (seen.has(entry.photo)) return err(`${label} uses the same display photo as an earlier photo.`);
+    seen.add(entry.photo);
+  }
+  const first = list[0];
+  if (hasValue(e.photo) && e.photo !== first.photo) return err('Photo must equal the first entry of photos.');
+  if (hasValue(e.photoFull) && e.photoFull !== first.photoFull) return err('Full-size photo must equal the first entry of photos.');
+  return [];
+}
+
+/** The photos of an event in day order: [{ photo, photoFull }] (photoFull is undefined when missing). Max 3. */
+export function eventPhotos(event) {
+  const e = event || {};
+  const full = (value) => (hasValue(value) ? value : undefined);
+  if (Array.isArray(e.photos)) {
+    return e.photos
+      .filter((p) => isObject(p) && hasValue(p.photo))
+      .slice(0, MAX_EVENT_PHOTOS)
+      .map((p) => ({ photo: p.photo, photoFull: full(p.photoFull) }));
+  }
+  return hasValue(e.photo) ? [{ photo: e.photo, photoFull: full(e.photoFull) }] : [];
+}
+
+/** Adds the mirror (top-level photo / photoFull = photos[0]) to an event that has `photos`.
+ *  An event without a usable `photos` list is returned as it is (same object). */
+export function normalizeEvent(event) {
+  if (!isObject(event) || !Array.isArray(event.photos) || !isObject(event.photos[0]) || !hasValue(event.photos[0].photo)) return event;
+  const first = event.photos[0];
+  const copy = { ...event, photo: first.photo };
+  if (hasValue(first.photoFull)) copy.photoFull = first.photoFull;
+  else delete copy.photoFull;
+  return copy;
 }
 
 export function slugify(text) {
@@ -129,7 +188,7 @@ export async function loadEvents(url = EVENTS_URL) {
     const data = await response.json();
     const events = Array.isArray(data) ? data : data.events;
     if (!Array.isArray(events)) throw new Error('events.json has no "events" list');
-    return sortEvents(events.filter((e) => validateEvent(e).length === 0));
+    return sortEvents(events.filter((e) => validateEvent(e).length === 0).map(normalizeEvent));
   } catch (error) {
     console.warn('Could not load events:', error.message);
     return [];
