@@ -16,7 +16,7 @@
     {
       "id": "2026-10-17-af",
       "date": "2026-10-17",
-      "short": "AF+",
+      "short": "AF+ 3rd",
       "name": "Anime Fest Plus",
       "venue": "LaLaport BBCC",
       "activities": [
@@ -24,6 +24,18 @@
       ],
       "photo": "media/events/2026-10-17-af/33187.webp",
       "photoFull": "media/events/2026-10-17-af/33187-full.webp"
+    },
+    {
+      "id": "2026-09-27-af-2nd",
+      "date": "2026-09-27",
+      "short": "AF+ 2nd",
+      "name": "Anime Fest Plus",
+      "venue": "World Trade Centre Kuala Lumpur (WTCKL)",
+      "activities": [
+        "Pink mermaid Lolita"
+      ],
+      "photo": "media/events/2026-09-27-af-2nd/31208.webp",
+      "photoFull": "media/events/2026-09-27-af-2nd/31208-full.webp"
     },
     {
       "id": "2026-08-28-amg",
