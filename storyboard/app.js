@@ -74,94 +74,113 @@
   }
 })();
 
-/* IDEA-16: Hall pile variants A-G. Storyboard-only behaviour. */
+/* IDEA-16: hall photos. Storyboard-only behaviour.
+   768px and up: peek pile that spreads when the hall is about 60% visible, back to a pile below about 25%.
+   Under 768px: one photo, Day tabs, auto-swap every 1.5 s with a meter while 60% visible. */
 (function () {
-  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var STEP = 1500;
+  var wide = matchMedia('(min-width: 768px)'), rm = matchMedia('(prefers-reduced-motion: reduce)');
+  var piles = [];
   function unflip(pl) {
     pl.classList.remove('lift');
     var po = pl.querySelector('.polaroid'); po.classList.remove('flipped'); po.setAttribute('aria-pressed', 'false');
   }
   document.querySelectorAll('.pile').forEach(function (pile) {
-    var v = pile.dataset.v, stage = pile.querySelector('.pile-stage');
+    var n = +pile.dataset.n, stage = pile.querySelector('.pile-stage');
     var pls = Array.prototype.slice.call(pile.querySelectorAll('.pl'));
-    var timer = null;
-    var replay = pile.querySelector('[data-replay]'), collapse = pile.querySelector('[data-collapse]'), toggle = pile.querySelector('.pile-toggle');
+    if (n < 2) { pls[0].classList.add('on'); return; }
+    var tabs = Array.prototype.slice.call(pile.querySelectorAll('.dtab'));
+    var toggle = pile.querySelector('.pile-toggle'), pauseBtn = pile.querySelector('.pause'), fill = pile.querySelector('.meter i');
+    var ratio = 0, inView = false, open = false, manual = false;           /* PC state */
+    var cur = 0, el = 0, last = 0, raf = 0, running = false, tabHold = false, userPause = false; /* phone state */
 
-    if (v === 'D') {
-      var tabs = pile.querySelectorAll('.dtab'), cur = 0;
-      var show = function (n) {
-        cur = n;
-        pls.forEach(function (pl, i) { pl.classList.toggle('on', i === n); pl.inert = i !== n; if (i !== n) unflip(pl); });
-        tabs.forEach(function (t, i) { t.setAttribute('aria-pressed', i === n ? 'true' : 'false'); });
-      };
-      tabs.forEach(function (t, i) { t.addEventListener('click', function () { show(i); }); });
-      replay.addEventListener('click', function () {
-        clearTimeout(timer); show(0);
-        var n = 0; (function step() { timer = setTimeout(function () { n++; if (n < 3) { show(n); step(); } else { show(0); } }, reduce ? 300 : 1000); })();
-      });
-      show(0); return;
-    }
+    function anyFlipped() { return pls.some(function (pl) { return pl.querySelector('.polaroid').classList.contains('flipped'); }); }
+    function setFill(f) { fill.style.setProperty('--p', f); }
 
-    if (v === 'G') {
-      var order = [0, 1, 2], busy = false, moved = false, sx = null, force = false;
-      var count = pile.querySelector('.pile-count');
-      var apply = function () {
-        pls.forEach(function (pl, i) { var pos = order.indexOf(i); pl.dataset.pos = pos; pl.inert = pos !== 0; });
-        count.textContent = (order[0] + 1) + '/3 · D' + (order[0] + 1);
-      };
-      var next = function () {
-        if (busy) return; busy = true;
-        var top = pls[order[0]]; unflip(top);
-        top.classList.add('fly');
-        setTimeout(function () {
-          top.classList.add('snap');
-          order.push(order.shift()); apply(); top.classList.remove('fly');
-          void top.offsetWidth; top.classList.remove('snap'); busy = false;
-        }, reduce ? 0 : 280);
-      };
-      stage.addEventListener('click', function (e) {
-        var top = pls[order[0]].querySelector('.polaroid');
-        if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); return; }
-        if (force || e.target.closest('.back a')) return;
-        if (!top.classList.contains('flipped') && e.target.closest('.polaroid')) { e.stopPropagation(); next(); }
-      }, true);
-      stage.addEventListener('pointerdown', function (e) { sx = e.clientX; moved = false; });
-      stage.addEventListener('pointerup', function (e) {
-        if (sx !== null && Math.abs(e.clientX - sx) > 40 && !pls[order[0]].querySelector('.polaroid').classList.contains('flipped')) { moved = true; next(); setTimeout(function () { moved = false; }, 50); }
-        sx = null;
-      });
-      pile.querySelector('[data-flip]').addEventListener('click', function () { force = true; pls[order[0]].querySelector('.polaroid').click(); force = false; });
-      replay.addEventListener('click', function () {
-        clearTimeout(timer); order = [0, 1, 2]; apply(); pls.forEach(unflip);
-        timer = setTimeout(next, reduce ? 0 : 500);
-      });
-      apply(); return;
-    }
-
-    /* A, B, C, E, F: pile that spreads when the hall is reached */
-    var played = false;
+    /* PC pile */
     function setOpen(on) {
-      pile.classList.toggle('open', on);
-      if (toggle) toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+      open = on; pile.classList.toggle('open', on);
+      toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
       pls.forEach(function (pl) { pl.inert = !on; if (!on) unflip(pl); });
     }
-    if (toggle) toggle.addEventListener('click', function () { played = true; setOpen(!pile.classList.contains('open')); });
-    collapse.addEventListener('click', function () { played = true; clearTimeout(timer); setOpen(false); });
-    replay.addEventListener('click', function () {
-      played = true; clearTimeout(timer); setOpen(false);
-      timer = setTimeout(function () { setOpen(true); }, reduce ? 0 : 900);
+    toggle.addEventListener('click', function () { manual = true; setOpen(!open); });
+
+    /* Phone tabs */
+    function show(i) {
+      cur = i;
+      pls.forEach(function (pl, k) { pl.classList.toggle('on', k === i); pl.inert = k !== i; if (k !== i) unflip(pl); });
+      tabs.forEach(function (t, k) { t.setAttribute('aria-selected', k === i ? 'true' : 'false'); t.tabIndex = k === i ? 0 : -1; });
+    }
+    function pick(i, focus) { show(i); el = 0; setFill(0); tabHold = true; evaluate(); if (focus) tabs[i].focus(); }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { pick(i); });
+      t.addEventListener('keydown', function (e) {
+        var k = e.key, j = -1;
+        if (k === 'ArrowRight') j = (cur + 1) % n; else if (k === 'ArrowLeft') j = (cur + n - 1) % n;
+        else if (k === 'Home') j = 0; else if (k === 'End') j = n - 1;
+        if (j >= 0) { e.preventDefault(); pick(j, true); }
+      });
     });
+    pauseBtn.addEventListener('click', function () {
+      userPause = !userPause;
+      pauseBtn.textContent = userPause ? 'Play' : 'Pause';
+      pauseBtn.setAttribute('aria-label', userPause ? 'Play photo swap' : 'Pause photo swap');
+      evaluate();
+    });
+    function tick(t) {
+      if (!running) return;
+      el += Math.min(t - last, 100); last = t;
+      if (el >= STEP) { el = 0; show((cur + 1) % n); }
+      setFill(el / STEP);
+      raf = requestAnimationFrame(tick);
+    }
+    function evaluate() {
+      var go = !wide.matches && !rm.matches && inView && ratio >= 0.6 && !document.hidden && !anyFlipped() && !userPause && !tabHold;
+      if (go && !running) { running = true; last = performance.now(); raf = requestAnimationFrame(tick); }
+      else if (!go && running) { running = false; cancelAnimationFrame(raf); }
+    }
+    pile._eval = evaluate;
+
+    function mode() {
+      if (wide.matches) {
+        running = false; cancelAnimationFrame(raf);
+        pls.forEach(function (pl) { pl.classList.remove('on'); pl.removeAttribute('role'); pl.removeAttribute('aria-labelledby'); });
+        setOpen(rm.matches ? true : (manual ? open : (inView && ratio >= 0.6)));
+      } else {
+        pile.classList.remove('open'); manual = false;
+        pls.forEach(function (pl, k) { pl.setAttribute('role', 'tabpanel'); pl.setAttribute('aria-labelledby', tabs[k].id); pl.classList.remove('lift'); });
+        show(cur); el = 0; setFill(0); evaluate();
+      }
+    }
+    pile._mode = mode;
+
     stage.addEventListener('click', function (e) {
       var po = e.target.closest('.polaroid'); if (!po) return;
       var pl = po.closest('.pl'), on = po.classList.contains('flipped');
       pls.forEach(function (o) { if (o !== pl) unflip(o); });
-      pl.classList.toggle('lift', on);
+      if (wide.matches) pl.classList.toggle('lift', on);
+      evaluate();
     });
-    setOpen(false);
-    if (reduce || !('IntersectionObserver' in window)) { played = true; setOpen(true); return; }
+
     var io = new IntersectionObserver(function (es) {
-      es.forEach(function (en) { if (en.isIntersecting && !played) { played = true; setOpen(true); io.disconnect(); } });
-    }, { threshold: 0.6 });
+      es.forEach(function (en) {
+        ratio = en.intersectionRatio; inView = en.isIntersecting && ratio > 0;
+        if (wide.matches) {
+          if (rm.matches) return;
+          if (!inView) { manual = false; if (open) setOpen(false); }
+          else if (!manual) { if (!open && ratio >= 0.6) setOpen(true); else if (open && ratio <= 0.25) setOpen(false); }
+        } else {
+          if (!inView) { tabHold = false; el = 0; setFill(0); }
+          evaluate();
+        }
+      });
+    }, { threshold: [0, 0.25, 0.6, 1] });
     io.observe(stage);
+    piles.push(pile);
+    mode();
   });
+  function allModes() { piles.forEach(function (p) { p._mode(); }); }
+  (wide.addEventListener ? wide.addEventListener.bind(wide, 'change') : wide.addListener.bind(wide))(allModes);
+  (rm.addEventListener ? rm.addEventListener.bind(rm, 'change') : rm.addListener.bind(rm))(allModes);
+  document.addEventListener('visibilitychange', function () { piles.forEach(function (p) { p._eval(); }); });
 })();

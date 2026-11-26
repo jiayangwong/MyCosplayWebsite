@@ -489,7 +489,7 @@ Mobile:
 
 ## IDEA-16: Hall: multi-photo events shown as a photo pile that spreads when the hall is reached
 - Date: 2026-11-26
-- Status: ready-for-planning (NOT planned yet: the user will first pick a direction from the storyboard variants below)
+- Status: direction chosen by the user 2026-11-26, ready-for-planning (see "Decision" below)
 - Summary: One event can last up to 3 days, so it can have up to 3 photos with different looks. The Hall needs a way to show them without hiding photos or eating phone height. The user's concept is a pile that shows a sliver of the other photos while scrolling, then spreads out like loose polaroids when the hall is reached.
 - Details:
   - User's words (verbatim): "1 event maximum have 3 days, so might 3 different look. so im thinking how should the Halls show the photos. my idea is making a pile of photos. attachment1 will only showing the 1st or last photo, not that good. attachment2 able to show more but take many space especially using phone web. what if combine this 2 idea, when scrolling and havent reach the Hall, it show a pile but able to see tiny part of other photo. when reach the hall, use animation to separate the polaroid like attachment2. update homepage concept artifact, make this idea into hall A and B storyboard artifact with different style of stacking photo into a pile and separate animation. give me few of suggestion other than mine that fit to current UI design. the rest of the hall u may try for other suggestion."
@@ -563,6 +563,23 @@ Mobile:
   7. Which photo is the cover of a closed pile?
   8. Same behaviour on PC and phone, or the pile only on phone?
   9. Should the Events page and Gallery also show all the photos?
+- Decision (user, 2026-11-26):
+  - User's words (verbatim): "On the PC web, use a neat pile (Hall A), but spread it when scrolling to the hall. Go back to the pile when scrolling away. On the mobile web, use Hall D, but with a 1.5-second timer and a meter shown to autoswap photos. The main target is minimum action for user but able to show more things to user to see"
+  - PC (width 768px and up, assumed): variant A, neat peek pile. It spreads when the hall scrolls into view and returns to the pile when scrolled away. No click needed.
+  - Phone (below 768px): variant D, day tabs on tape (D1 D2 D3) on one polaroid. Photos auto-swap every 1.5 seconds, with a visible meter (progress bar) for the timer.
+  - Main goal: minimum user action while showing more photos.
+  - Dropped: variants B, C, E, F, G. They stay in the storyboard history and canvas boards as exploration only.
+  - Assumptions and open questions (for the planner; nobody could be asked):
+    1. Visibility thresholds: spread when about 60 percent of the hall is visible, re-pile when under about 25 percent (25 / 60 hysteresis) so the pile does not flicker at the edge. Planner to confirm the numbers.
+    2. Accessibility: auto-updating content over 5 seconds needs a pause/play control. Auto-swap pauses on: tap on a tab, page hidden, polaroid flipped to the back, hall out of view. Planner to decide whether a pause button is always visible.
+    3. Reduced motion: no auto-swap and no spread animation (show the plain spread or first-photo state, tabs still work by hand).
+    4. Screen readers must not be spammed: no live region on the auto-swap; the tabs are real buttons with names like "Day 2 of 3".
+    5. PC keyboard: a manual toggle (spread / pile) so keyboard users do not depend on scroll position.
+    6. Edge cases: 1 photo looks exactly like today (no pile, no tabs, no timer); 2 photos use the same patterns with 2 tabs and a 2-photo pile.
+    7. Single breakpoint at 768px (same as IDEA-14). Behaviour in between, such as tablets or rotation, is the planner's call.
+    8. Data and admin impact still to be planned: `photos` array up to 3 (display copy + full master, day label), uploader for up to 3 photos, order, remove (see IDEA-11, IDEA-13); cover photo; 20-photo-per-publish limit; whether Events page and Gallery show the extra photos.
+    9. TASK-25 (first-activity caption line, approved, build paused): the caption must still fit and keep equal polaroid height in both the pile and the tabbed polaroid; planner to decide the order of work and whether TASK-25 resumes first.
+    10. The old "Decision needed" questions 1 to 9 above are answered or superseded by this decision, except 4 (max phone height: phone D keeps today's height), 5 (labels: D1 D2 D3 on the tabs), 6 (tap behaviour: tab selects a day, flip to the back as today) and 9 (Events page and Gallery), which the planner should confirm.
 - References: user message 2026-11-26 with two attached images (attachment 1 = chat-app photo stack; attachment 2 = four tilted white polaroids); related: IDEA-3, IDEA-7, IDEA-9, IDEA-10, IDEA-12, IDEA-15
 - Priority (user's view): nice-to-have (assumed, the user did not say)
 

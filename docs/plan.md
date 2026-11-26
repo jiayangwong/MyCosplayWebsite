@@ -17,6 +17,7 @@ PLAN APPROVED: 2026-11-18
 - Revised: 2026-11-25 by the planner for IDEA-14 (every admin panel collapsible + Events list paging). New: section 9, TASK-24 (one task), planner assumptions C1-C12. **Waiting for user approval**; the rest of the plan is unchanged.
 - Revised: 2026-11-25 by the planner after the user's change "1 more, except for events, all panel default collapse when page just loaded". C2 now: on load ONLY the Events list is open; GitHub, Publish, Event form, Moments and the Media uploader (with Site photos / Moment photo) start collapsed, same on phone and PC, not remembered. Changed: C2, C4 note, TASK-24 criteria (a), the TASK-24 tests, the existing-test impact list (new `openFold` helper), question 27. TASK-24 is still **waiting for user approval**.
 - Revised: 2026-11-26 by the planner for IDEA-15 (Hall polaroid: first activity under date and short name). New: section 10, TASK-25 (one task), planner assumptions D1-D9. **Waiting for user approval**; the rest of the plan is unchanged.
+- Revised: 2026-11-26 by the planner for IDEA-16 (Hall photo pile, up to 3 photos per event; user chose Hall A pile on PC and Hall D tabs + 1.5 s autoswap on phone). New: section 11, TASK-26 to TASK-29, planner assumptions E1-E14, questions 35-41. **Waiting for user approval**; the rest of the plan is unchanged.
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
@@ -1166,3 +1167,178 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 32. **First activity only, front only (D1, D2):** line 2 is `activities[0]`; nothing when there is none; the back keeps the full list. OK?
 33. **Reserved space (D4):** every polaroid reserves 2 lines, so polaroids without an activity get a small empty strip under the date. OK, or should those polaroids be shorter?
 34. **Japanese in activities (D7):** will any activity ever be in Japanese? If yes, this line needs a different design.
+
+---
+
+## 11. Hall photo pile (IDEA-16) - 2026-11-26
+
+- Plan status: **waiting for user approval** (not approved yet; do not start the programmer on TASK-26 to TASK-29 until the user approves).
+- Source: docs/ideas.md IDEA-16. One event lasts up to 3 days, so it can have up to 3 photos (3 looks). User decision (verbatim): "On the PC web, use a neat pile (Hall A), but spread it when scrolling to the hall. Go back to the pile when scrolling away. On the mobile web, use Hall D, but with a 1.5-second timer and a meter shown to autoswap photos. The main target is minimum action for user but able to show more things to user to see".
+- Four tasks: TASK-26 (data), TASK-27 (admin), TASK-28 (Hall PC), TASK-29 (Hall phone). Each on its own branch from `site-v1`, merged back into `site-v1`.
+- **Storyboard first:** `storyboard/index.html` today shows the exploration variants A-G (Halls A-G, "Replay animation" / "Collapse" storyboard buttons). The storyboard-creator rewrites it to the chosen design (PC: variant A pile that spreads on scroll; phone: variant D tabs + meter + pause/play; 1-photo and 2-photo halls; TASK-25 activity line) and adds the multi-photo slot list to `storyboard/admin/index.html`. The user approves it in docs/approval.md before TASK-27, TASK-28 and TASK-29 are built. TASK-26 has no UI and can be built before that.
+- Real files today:
+  - `data/events.json`: one optional `photo` (display copy) + `photoFull` (master) per event.
+  - `js/events-data.js`: `validateEvent` (`photoPathError` for `photo` / `photoFull`), `loadEvents` (drops invalid events), `sortEvents`, `groupByYear`.
+  - `js/hall.js` `buildStation()`: one `.flip` > `.flip-inner` > `button.polaroid` (tape, `polaroidPicture()`, `.polaroid-caption`) + `.polaroid-back`; flip by click, "Flip back". `wireCamera()` and `wireTimeline()` run from one rAF scroll handler. `reduceMotion` media query -> `.hall-wrap.is-static`.
+  - `js/admin/manager.js`: form fields `#f-photo` / `#f-photo-full` (`FIELDS`, `EXPORT_ORDER`), `attachPhoto(path, fullPath)`, `revertPhoto()` (TASK-16), `usedPhotoPaths()`, event rows (`.event-row-meta`).
+  - `js/admin/pending.js`: `addPendingPair()` **replaces** an older pending pair of the same event ("an event shows one photo") - must change to one pending pair per slot.
+  - `js/admin/watermark.js`: cards, "Attach to selected event", X (TASK-23), suggested names with `-2`, `-3`.
+  - `js/admin/publish.js`: allowed paths, removal rules (`isRemovable`, paths used as `photo` / `photoFull`), `brokenPhotoLinks()` (TASK-16), `MAX_PHOTOS` = 20 pairs, "Remove from publish".
+  - `tests/wm-guard.js`: checks every `photo` / `photoFull` in `data/events.json`.
+
+### Planner assumptions (the user can veto any; see questions 35-41)
+- **E1 - Data shape:** an event may have `photos`: an array of 1 to 3 entries `{ "photo": "...", "photoFull": "..." }` (`photoFull` optional per entry, same path rules as TASK-10). Array order = day order (D1, D2, D3).
+- **E2 - Back-compat mirror:** top-level `photo` / `photoFull` always equal `photos[0]`. Everything that shows one photo (Gallery, Events page, admin preview, og) keeps reading `photo` / `photoFull` and needs no change.
+- **E3 - 1 photo = byte-for-byte unchanged JSON:** Export / Publish write `photos` only when the event has 2 or 3 photos. An event with 1 photo is written exactly as today (`photo`, `photoFull` only), so existing data, tests and diffs do not change.
+- **E4 - Day order = the order in the admin list** (upload order by default, changed with up / down). Labels are `D1`, `D2`, `D3` by position, not by date. Every polaroid of an event shows the same caption line (event date · short) and the same TASK-25 activity line (`activities[0]`); the day label sits on the tape.
+- **E5 - Breakpoint:** one breakpoint, **768px** (same as the admin phone layout): 768px and wider = PC pile (TASK-28), under 768px = phone tabs (TASK-29). It is checked with `matchMedia('(min-width: 768px)')` and switches live on resize / rotation without a reload.
+- **E6 - Visibility** is measured with `IntersectionObserver` on the station's photo stage (not on scroll events). "About 60 percent visible" = intersection ratio >= 0.6; "below about 25 percent" = ratio < 0.25. If the stage is taller than the viewport can show at 60 percent, the threshold becomes `min(0.6, 0.95 x viewportHeight / stageHeight)`. "Leaves the viewport" = ratio 0.
+- **E7 - No layout shift:** on PC the stage reserves the spread size in both states (pile and spread), so spreading or piling never moves the page and never re-triggers the observer.
+- **E8 - Tap on a photo = flip to details** (as today) in the spread (PC) and on the shown photo (phone). The back shows the event name, `<date> · Day n` (only when 2-3 photos), activities, and "Watch reel" / "See event" + "Flip back".
+- **E9 - Gallery and Events page show only the first photo** (`photo` / `photoFull`). Showing all days there is a later idea.
+- **E10 - Pause button wording (phone):** a 44px icon button with `aria-label` "Pause photos" / "Play photos" (the visible icon changes; no visible text, to keep the polaroid height).
+- **E11 - Hall ??? (bangai)** and the YOU ARE HERE strip are untouched. The hall letter, sign and timeline tick stay one per event.
+- **E12 - Tokens only;** no new colours. New timing values (650 ms spread, 90 ms stagger, 400 ms collapse, 200 ms crossfade, 1.5 s swap) go into `css/tokens.css` as duration tokens if the style guide has no matching ones (the designer confirms).
+- **E13 - 2 photos** behave like 3 without a gap (pile of 2; tabs D1 D2). **1 photo** looks and behaves exactly as today (no pile, no tabs, no meter, no pause button).
+- **E14 - Publish limit unchanged:** 20 pairs (photos) per publish; one event with 3 photos counts as 3.
+
+### TASK-26: Data model + loader for up to 3 photos per event (`photos`)
+- Linked idea(s): IDEA-16 (with IDEA-7, IDEA-9, IDEA-10)
+- Depends on: TASK-10 (photo pairs). No UI, no storyboard needed.
+- Acceptance criteria:
+  - `validateEvent(e)` accepts an optional `photos` array and rejects with a `{ field: 'photos' }` error: not an array; 0 entries; more than 3 entries; an entry that is not an object or has no `photo`; any `photo` / `photoFull` that fails `photoPathError`; the same display path twice in one event; top-level `photo` / `photoFull` that do not equal `photos[0]` (when both are present).
+  - New export `eventPhotos(e)` returns `[{ photo, photoFull }]` in day order: `e.photos` when present, else `[{ photo, photoFull }]` from the top-level fields when `photo` is set, else `[]`. Never returns more than 3. `photoFull` is `undefined` (not `''`) when missing.
+  - New export `normalizeEvent(e)` (used by `loadEvents`): adds the mirror (top-level `photo` / `photoFull` = `photos[0]`) when only `photos` is given; it never changes an event without `photos`.
+  - `loadEvents()` still returns `[]` on failure and drops invalid events; old files (no `photos`) load exactly as before.
+  - Data contract in section 4 is extended (this section is the contract): `photos` is optional; 1-photo events are stored without it (E3).
+  - `data/events.json` itself is not changed by this task (no real multi-photo data yet).
+  - Gallery, Events page, admin and hall code are not changed by this task; they keep reading `photo` (proved by the existing tests).
+- Files: `js/events-data.js`, `tests/fixtures/events-multi.json` (new: events with 0, 1, 2, 3 photos, one 1-photo event in the old shape, one in the new shape), `tests/task-26.spec.js`.
+- **Automated tests (`tests/task-26.spec.js`, desktop + phone, `page.evaluate` with import):**
+  - Valid: 1, 2, 3 entries; entries with and without `photoFull`; old shape (no `photos`).
+  - Errors: 4 entries; `[]`; `"photos": "x"`; entry without `photo`; `photoFull`-only entry; `/abs.webp`, `https://x/y.webp`, `../x.webp` inside an entry; duplicate display path; mirror mismatch.
+  - `eventPhotos` for each fixture event (old shape gives 1, none gives 0, 3 gives 3 in order).
+  - `normalizeEvent` fills the mirror; leaves an old-shape event deep-equal to the input.
+  - `loadEvents` with the fixture routed in: invalid events dropped, valid multi-photo events present with the mirror set.
+- Existing specs likely to change: none expected. Run `task-2`, `task-10` (validateEvent cases) and the full suite.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-27: Admin - attach up to 3 photos per event, order, remove, publish
+- Linked idea(s): IDEA-16 (with IDEA-7, IDEA-8, IDEA-9, IDEA-11, IDEA-13, IDEA-14)
+- Depends on: TASK-26; TASK-7, TASK-13, TASK-16, TASK-23, TASK-24 (built); updated admin storyboard approved.
+- Acceptance criteria:
+  - **Photo slot list in the Event form:** a group "Photos (up to 3)" with one row per photo, labelled D1, D2, D3. Row D1 keeps the existing inputs `#f-photo` / `#f-photo-full` (ids unchanged, so typed paths still work); rows D2 / D3 use `#f-photo-2` / `#f-photo-full-2` and `#f-photo-3` / `#f-photo-full-3`. Each row shows a small preview of its display copy (or "No photo"), and buttons Move up (↑), Move down (↓) and Remove (X), each a real `<button>` with `aria-label` such as "Move photo D2 up" / "Remove photo D2", at least 44 x 44 px, tokens only.
+  - ↑ is disabled on D1, ↓ on the last row. Moving swaps the two rows (both paths travel together); labels re-number by position.
+  - **Attach to selected event** fills the **next empty slot** (D1, then D2, then D3) with both paths. With 3 slots filled, Attach is disabled for that event with the hint "This event has 3 photos. Remove one first." The watermark, the 2-file rule (display + master), the marker and the `-2`, `-3` name rule stay unchanged per photo.
+  - Pending list: `addPendingPair` keeps one pending pair **per slot path**, not per event (attaching a second photo no longer drops the first pending pair). The Publish panel lists each pair as today.
+  - **Remove (X) on a slot:** removes that slot and closes the gap (D3 becomes D2). If the slot's pair is pending, it asks first (same text style as TASK-23 B1) and also removes the pair from the publish list. Removing a published slot makes its 2 files unused, so the next Publish shows them in the existing removal confirmation (TASK-13); Cancel there keeps them.
+  - **"Remove from publish"** on a pair: if the event still holds that pair in a slot, that slot is removed from the draft (the published slots are not touched); if not, the draft is not changed (TASK-16 rule "changed meanwhile"). The note line says "Photo D<n> removed from <short> <year> (not published yet)." The TASK-16 put-back still applies to a 1-photo event whose only pending pair replaced its published photo.
+  - Save writes the event with E2 / E3: `photo` / `photoFull` = slot D1; `photos` only when 2-3 slots are filled. Saving with an empty D1 but a filled D2 moves D2 up (no gaps are saved).
+  - Export and Publish text follow `exportText()`: `photos` is written right after `photoFull` in `EXPORT_ORDER`, only for 2-3 photos.
+  - Publish (extends TASK-13 / TASK-16): allowed paths, removal candidates, the "used by any event" rule, `brokenPhotoLinks()` and the TASK-15 marker check all use **every** path of `eventPhotos(e)` (plus `photo` / `photoFull`). A file used by any slot of any event is never removed; a slot pointing at a file that is not on GitHub and not in this publish stops the publish with the TASK-16 message naming the event and the path. `MAX_PHOTOS` stays 20 pairs.
+  - Event list rows: the meta line ends with a chip "2 photos" / "3 photos" (nothing for 0 or 1). Phone rules of TASK-23 / TASK-24 kept: buttons under the name, 44px, no horizontal scroll at 360px.
+  - Repo guard (`tests/wm-guard.js`): every path in `photos` must exist and carry the marker (or be allowlisted).
+  - All new text is set with `textContent`.
+- Files: `js/admin/manager.js` (slots in the form, `readForm`, `fillForm`, `attachPhoto` -> next slot, `revertPhoto` per slot, `usedPhotoPaths`, `EXPORT_ORDER`, row chip), `js/admin/pending.js` (pair per slot), `js/admin/watermark.js` (Attach disabled at 3), `js/admin/publish.js` (paths from `eventPhotos`), `admin/index.html` (slot rows), `css/admin.css`, `tests/wm-guard.js`, `tests/task-27.spec.js`.
+- **Automated tests (`tests/task-27.spec.js`, desktop + phone, fake repo + fake token, `openFold` as in TASK-24):**
+  - Upload 3 fixtures, attach each to one event: slots D1, D2, D3 filled in order, 3 pending pairs, Attach then disabled with the hint; draft JSON has `photos` (3) and `photo` / `photoFull` = D1.
+  - ↓ on D1 then ↑ on D3: order changes, labels re-number, draft follows; ↑ disabled on D1, ↓ on last.
+  - X on D2 (pending): confirm text, Cancel = no change; confirm -> 2 slots, pair gone from `#pub-pending`.
+  - 1 photo: draft / Export text of that event has no `photos` key and equals the TASK-10 shape.
+  - Publish 3 new photos: one tree with `data/events.json` + 6 image blobs, one commit; decoded events.json has `photos` (3).
+  - Remove a published D2 then Publish: removal dialog lists exactly its 2 files; a file shared by another event's slot is never listed.
+  - Broken slot link (draft points D3 at a missing file, no pending pair): stop with the TASK-16 message, no `POST` / `PATCH`.
+  - Remove from publish on D3: slot removed, note shows; on a 1-photo event that replaced a published photo: TASK-16 put-back still works.
+  - Row chip "3 photos"; phone: buttons below the name, 44 x 44, no horizontal scroll at 360px.
+  - Repo guard self-test: a missing and an unmarked `photos` path are both reported.
+- Existing specs likely to change (expectations only; the programmer confirms by searching tests/ for `photoFull`, `f-photo`, `Attach to selected event`, `addPendingPair`, `pend-remove`, `brokenPhotoLinks`, `photo"`): `task-7` (attach fills `#f-photo` - still true for D1), `task-10`, `task-13` (a second attach to the same event used to replace the pending pair; now it fills D2), `task-16` (revert notes), `task-23` (X on a pending card), `task-24` (attach opens the form), `task-15` / `task-17` (guard). The full suite passes.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-28: Hall PC (768px and wider) - neat peek pile that spreads on scroll
+- Linked idea(s): IDEA-16 (with IDEA-3, IDEA-15)
+- Depends on: TASK-26; TASK-25 merged (see build order); storyboard (chosen design) approved.
+- Acceptance criteria:
+  - **Shared station markup (also used by TASK-29):** an event with 2-3 photos gets one `.pile` in its station with one polaroid per photo (`eventPhotos(e)` order). Each polaroid has the tape, the photo (alt `<full name> <year>, day <n>`), a day label `D<n>` on the tape (`aria-hidden`), the caption `<date> · <short>` (+ ` · SAMPLE`), the TASK-25 activity line (static, the same on every polaroid of the event), and its own back (E8) with flip / "Flip back". Events with 0-1 photo render exactly as today (TASK-3 / TASK-25 tests pass unchanged).
+  - **Pile state (variant A):** the photos are stacked almost straight (rotation at most 2 degrees), D1 on top, each lower photo showing a 14px sliver (below and to the right). A pile toggle `button` covers the pile with `aria-expanded="false"`, `aria-controls` = the pile id, and `aria-label` "<full name> <year>: 3 photos, day 1 to day 3. Show all photos". The photos under it are `inert` while piled.
+  - **Spread state:** the photos sit side by side in a loose tilted spread (like the storyboard), not overlapping their photo area, inside the station width at 768px and 1280px (scaled down if needed, no horizontal scroll). The toggle has `aria-expanded="true"` and label "... Stack the photos"; the photos are focusable in D1, D2, D3 order.
+  - **Scroll automation:** with `IntersectionObserver` on the stage (E6): ratio >= 0.6 -> spread; ratio < 0.25 -> pile; in between nothing changes (hysteresis). Works scrolling down and up, with native scroll only (no `wheel` preventDefault, no scroll-jacking). No click needed.
+  - **Animation:** spread 650 ms with a 90 ms stagger per photo (D1 first); collapse about 400 ms, all photos together. Transforms / opacity only. A change of direction mid-animation goes smoothly to the new state (no jump, no stuck state).
+  - **No layout shift (E7):** the station's height and the page's scroll position do not change between pile and spread.
+  - **Keyboard and manual toggle:** Enter / Space on the toggle (and a click) toggles the state; after a manual toggle, scroll automation is paused for that hall until its ratio reaches 0, then it resumes. Focus is never lost: when the pile closes while focus is on a photo or its back, focus moves to the toggle.
+  - **Tap a photo** (spread) = the existing flip to its back. If a photo is flipped when the pile closes, it flips back first.
+  - **Reduced motion** (`prefers-reduced-motion: reduce`): the hall stays the stacked list (TASK-3) and multi-photo stations show the spread state from the start, with no animation and no scroll automation; the toggle still works, instantly.
+  - **2 photos** = pile of 2 / spread of 2; **1 photo** = unchanged.
+  - Hall ??? and the YOU ARE HERE strip unchanged; hover tilt stays on single polaroids and on spread photos.
+  - Only the first 2 stations' images load eagerly (TASK-3 rule counts stations, not photos); photos 2-3 of later stations are `loading="lazy"`.
+  - Tokens only (E12); matches the approved storyboard.
+- Files: `js/hall.js` (station builder for 2-3 photos, pile controller), possibly a new `js/hall-pile.js` (observer + state machine, pure helpers for the threshold rule), `css/home.css` / `css/components.css`, `css/tokens.css` (durations, if E12), `tests/task-28.spec.js`.
+- **Automated tests (`tests/task-28.spec.js`, desktop project; events mocked with `mockEvents` from `tests/fixtures/events-multi.json`):**
+  - Markup: 3-photo station has 3 polaroids in order with D1-D3 labels, alt texts, caption and activity line on each; 1-photo station has no `.pile` and matches today.
+  - Pile on load (station below the fold): toggle `aria-expanded="false"`, photos inert, sliver offsets of 14px (bounding boxes).
+  - Scroll the station to about 70 percent visible -> spread (`aria-expanded="true"`) after the animation; scroll back to about 40 percent -> still spread; to about 10 percent -> pile. Same going up.
+  - Station `boundingBox().height` and `window.scrollY` are equal before and after spread.
+  - Keyboard: focus toggle, Enter -> spread; Space -> pile; then scroll to 70 percent -> stays piled (paused); scroll fully away and back -> spreads again.
+  - Click a spread photo -> its back shows; scroll away -> it flips back and piles; focus on the toggle if it was inside.
+  - Timing: with `page.clock`, the last photo reaches its spread transform at about 650 + 2 x 90 ms (computed transform checked at the end, not mid-way).
+  - Reduced motion: spread from load, no transitions (`transition-duration` 0s), toggle works.
+  - 2-photo event: pile of 2. Hall ??? has no `.pile`. No horizontal scroll at 768 and 1280.
+  - A viewport of 767px wide shows the phone mode (TASK-29) instead; resizing to 800px switches to the pile without a reload.
+- Existing specs likely to change (the programmer confirms by searching tests/ for `polaroid`, `.flip`, `polaroid-caption`, `aria-expanded`, `loading`, `hall-`): `task-3` (count of `.polaroid` per station, eager count) - only if fixtures add multi-photo events; `task-19` ("every other polaroid flips": the pile toggle is not a polaroid); `task-25` (activity line now on every polaroid of a pile); `task-9` (a11y: button names). The full suite passes.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### TASK-29: Hall phone (under 768px) - one polaroid, day tabs, 1.5 s autoswap with meter
+- Linked idea(s): IDEA-16 (with IDEA-3, IDEA-15)
+- Depends on: TASK-28 (shared station markup); storyboard approved.
+- Acceptance criteria:
+  - **Look (variant D):** one polaroid per station, the same height as today plus one row for the tabs (the station must not grow by more than the 44px tab row). Above / on its edge, three tape tabs `D1 D2 D3` in a `role="tablist"` (`aria-label` "<full name> <year>: choose the day"), each a `role="tab"` button with `aria-selected`, `aria-controls` = the photo panel, at least 44 x 44 px. Roving focus: Left / Right arrow keys move between tabs, Home / End go to the first / last.
+  - **Autoswap:** while the stage is at least 60 percent visible (E6), the shown photo swaps every 1.5 s in the order D1, D2, D3, D1 (loop), starting from the photo shown now. The active tab is highlighted and has `aria-selected="true"`.
+  - **Meter:** a thin bar on the polaroid that fills from 0 to 100 percent in 1.5 s and resets at each swap. It is `aria-hidden="true"`. It stops (keeps its width) while paused.
+  - **Pause / play:** a 44 x 44 px button with `aria-label` "Pause photos" / "Play photos" and `aria-pressed` (E10); always available while the station has 2-3 photos (WCAG 2.2.2 for auto-updating content). Pause stops swapping and the meter until Play is pressed (it does not resume by itself).
+  - **Tab tap:** selects that day at once and pauses autoplay until the stage leaves the viewport (ratio 0) and comes back; then autoplay resumes from that day.
+  - **Also pauses:** when the stage is under 60 percent visible, when the page is hidden (`visibilitychange`), and while the polaroid is flipped to its back (resumes after "Flip back" if nothing else pauses it).
+  - **Swap:** a 200 ms crossfade between photos (opacity only). Only the shown photo is in the accessibility tree; the others are `hidden` / `aria-hidden`.
+  - **No announcements:** no `aria-live` region for the swaps.
+  - **Tap the photo** = flip to the back of the shown day (E8).
+  - **Reduced motion:** no autoswap, no meter animation, no pause button; tabs only, instant swap.
+  - **2 photos** = tabs D1 D2; **1 photo** = no tabs, no meter, no pause button (exactly as today).
+  - Photos 2-3 load lazily (not before the station is near the viewport). TASK-25 activity line stays static under the caption. Hall ??? and the strip unchanged. No horizontal scroll at 360px and 412px. Tokens only (E12).
+- Files: `js/hall.js` / `js/hall-pile.js` (phone controller), `css/home.css` / `css/components.css`, `tests/task-29.spec.js`.
+- **Automated tests (`tests/task-29.spec.js`, phone project (Pixel 7) + a 360px case; `page.clock.install()` before `goto`, swaps checked with `page.clock.runFor(1500)`; visibility by scrolling the station into / out of view):**
+  - Markup: tablist with 3 tabs, `aria-selected` on D1, 44 x 44 boxes, meter `aria-hidden`, no `aria-live` inside the station.
+  - In view: after 1500 ms D2 is shown and selected, after 3000 ms D3, after 4500 ms D1 again; the meter width resets at each swap.
+  - Out of view (scrolled away, under 60 percent): no swap after 3000 ms.
+  - Pause: no swap after 3000 ms; Play -> swaps again.
+  - Tab tap on D3: D3 shown at once, no swap after 3000 ms; scroll away (ratio 0) and back -> autoplay resumes from D3 (next is D1).
+  - Flip: tap the photo -> back shows, no swap; "Flip back" -> swaps again.
+  - Page hidden (dispatch `visibilitychange` with `document.hidden` stubbed): no swap.
+  - Keyboard: Right / Left / Home / End move the tab focus and selection.
+  - Reduced motion: no pause button, no swap after 3000 ms, tabs still switch.
+  - 2 photos: tabs D1 D2 and the loop D1, D2, D1. 1 photo: no tablist, no meter, no pause button.
+  - Station height grows by at most 44px versus a 1-photo station of the same depth. No horizontal scroll at 360px.
+  - A viewport of 768px shows the PC pile instead.
+- Existing specs likely to change: as TASK-28 (`task-3`, `task-19`, `task-25`, `task-9`) on the phone project. The full suite passes.
+- Status: todo
+- Review: pending
+- QA: pending
+
+### Build order for IDEA-16
+1. **TASK-25 first, on its own** (approved, small, its build is paused with work in progress). Do not merge it into TASK-28 / TASK-29: it is approved and ready, and building it first gives one place for the caption + activity line that TASK-28 then reuses on every polaroid of a pile (its tests also become the regression check for the pile). Building them together would mean two agents editing `buildStation()` at once.
+2. Storyboard rewrite to the chosen design (storyboard-creator, user approval in docs/approval.md). TASK-26 can be built in parallel (no UI).
+3. **TASK-26** (data + loader).
+4. **TASK-28** (PC pile, includes the shared multi-photo station markup) -> **TASK-29** (phone). They can be tested with fixture data before the admin part exists.
+5. **TASK-27** (admin) after TASK-26; it can run in parallel with TASK-28 / TASK-29 (different files). The feature is only useful for Puzz once TASK-27 is merged, so the release needs all four.
+
+### Questions for IDEA-16 (2026-11-26) - the planner's defaults, say if you disagree
+35. **Thresholds (E6):** spread / start autoswap at about 60 percent of the hall visible; pile again below about 25 percent. OK?
+36. **Breakpoint (E5):** PC pile from 768px wide, phone tabs under 768px (same as the admin). Tablets in portrait (768px) get the pile. OK?
+37. **Pause button (E10):** an icon button named "Pause photos" / "Play photos", no visible text. OK, or do you want visible text?
+38. **Gallery and Events page (E9):** show only the first photo (D1) for now. OK?
+39. **Day order (E4):** D1-D3 = the order in the admin list (upload order, change with up / down), not by date. OK?
+40. **Caption per day (E4):** every polaroid of an event shows the same event date and the same first activity; only the D1 / D2 / D3 label changes. Or do you want each day to show its own date (event date + 1, + 2) and its own activity (activities[0], [1], [2])?
+41. **Reduced motion on PC (TASK-28):** for visitors who turn off animations, multi-photo halls are always spread (no scroll pile). OK?
