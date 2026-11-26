@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "events": [
+    { "id": "2026-06-20-zero", "date": "2026-06-20", "short": "ZERO", "name": "Event with no photo", "activities": ["Meet-up"] },
+    { "id": "2026-05-16-old", "date": "2026-05-16", "short": "OLD", "name": "One photo, old shape", "activities": ["Cosplay"], "photo": "media/events/old/cover.webp", "photoFull": "media/events/old/cover-full.webp" },
+    { "id": "2026-04-11-new1", "date": "2026-04-11", "short": "NEW1", "name": "One photo, new shape", "photos": [{ "photo": "media/events/new1/a.webp", "photoFull": "media/events/new1/a-full.webp" }] },
+    { "id": "2026-03-14-two", "date": "2026-03-14", "short": "TWO", "name": "Two photos", "activities": ["Stage walk"], "photo": "media/events/two/a.webp", "photoFull": "media/events/two/a-full.webp", "photos": [{ "photo": "media/events/two/a.webp", "photoFull": "media/events/two/a-full.webp" }, { "photo": "media/events/two/b.webp" }] },
+    { "id": "2026-02-07-three", "date": "2026-02-07", "short": "THREE", "name": "Three photos", "activities": ["Photo spot"], "photo": "media/events/three/a.webp", "photoFull": "media/events/three/a-full.webp", "photos": [{ "photo": "media/events/three/a.webp", "photoFull": "media/events/three/a-full.webp" }, { "photo": "media/events/three/b.webp", "photoFull": "media/events/three/b-full.webp" }, { "photo": "media/events/three/c.webp" }] },
+    { "id": "2026-01-10-onlyphotos", "date": "2026-01-10", "short": "ONLYP", "name": "Two photos, only photos given", "photos": [{ "photo": "media/events/onlyp/a.webp", "photoFull": "media/events/onlyp/a-full.webp" }, { "photo": "media/events/onlyp/b.webp" }] },
+    { "id": "2025-12-06-four", "date": "2025-12-06", "short": "FOUR", "name": "Invalid: four photos", "photos": [{ "photo": "a.webp" }, { "photo": "b.webp" }, { "photo": "c.webp" }, { "photo": "d.webp" }] },
+    { "id": "2025-11-01-dup", "date": "2025-11-01", "short": "DUP", "name": "Invalid: duplicate path", "photos": [{ "photo": "a.webp" }, { "photo": "a.webp" }] },
+    { "id": "2025-10-04-mismatch", "date": "2025-10-04", "short": "MISM", "name": "Invalid: mirror mismatch", "photo": "other.webp", "photos": [{ "photo": "a.webp" }, { "photo": "b.webp" }] }
+  ]
+}
