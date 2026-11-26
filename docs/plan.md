@@ -1336,7 +1336,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - A viewport of 768px shows the PC pile instead.
 - Existing specs likely to change: as TASK-28 (`task-3`, `task-19`, `task-25`, `task-9`) on the phone project. The full suite passes.
 - Risks: (1) the IntersectionObserver plus `page.clock` can race in tests -> wait for the observer callback (for example a `data-story-state` attribute) before `runFor`; (2) the CSS fill must be driven by the controller's elapsed time (not a free-running CSS animation), so pause / resume and the clock stay in sync; (3) "stopped" and "done" must be kept in memory only (not localStorage), so a reload restarts it as the user asked; (4) the round-2 reset must empty all fills in the same frame that D1 is shown (no flash of full tabs, no CSS transition back to 0); (5) **accessibility trade-off (accepted by the user, 2026-11-26):** the run is 9 s, which is longer than the 5 s WCAG 2.2.2 exception, and there is no pause button by the user's choice. What keeps it acceptable: pressing any tab stops it for good (that is the stop mechanism, reachable by tap and keyboard), the run is finite (two rounds, 9 s, once per page load), it pauses off screen / when flipped / when the page is hidden, there are no `aria-live` announcements, and with reduced motion there is no auto-flip at all. Remaining weak point: the stop-by-tab is not labelled as a stop control, so a visitor may not know it exists; the reviewer / QA should not flag the missing pause button as a bug.
-- Status: todo
+- Status: built 2026-11-26, waiting for review (branch task/TASK-29-hall-phone-tabs, stacked on task/TASK-28-hall-pc-pile)
 - Review: pending
 - QA: pending
 

@@ -233,9 +233,42 @@
 }
 .pile-toggle, .pile-hint, .dtabs { display: none; }
 
-/* Under 768px before TASK-29: only the first photo is shown. */
+/* Under 768px (TASK-29): one polaroid at a time; the D1 D2 D3 tabs are story-style bars that fill and flip it. */
 @media (max-width: 767px) {
-  .pl:not(.on) { display: none; }
+  .pile .polaroid-tape { display: none; }
+  .pile-stage { padding-bottom: 0; }
+  .pl { z-index: 1; transition: opacity var(--dur-xfade) linear; }
+  .pl.on { z-index: 2; }
+  .pl:not(.on) { opacity: 0; pointer-events: none; }
+  .dtabs { display: flex; width: var(--w); max-width: 100%; gap: calc(var(--space-1) / 2); margin: 0 0 var(--space-2); }
+  .dtab {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--tap-min);
+    overflow: hidden;
+    padding: 0;
+    border: var(--outline);
+    border-radius: var(--radius-sm);
+    background: var(--ph-lilac);
+    color: var(--color-ink);
+    font: 700 13px var(--font-mono);
+    cursor: pointer;
+  }
+  .dtab .fill {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-purple-deep);
+    color: var(--color-surface);
+    clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0);
+    pointer-events: none;
+  }
+  .pile.stopped .dtab .fill { display: none; }
+  .pile.stopped .dtab[aria-selected="true"] { background: var(--color-pink); box-shadow: var(--shadow-hover); }
+  .dtab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 }
 
 @media (min-width: 768px) {
@@ -309,5 +342,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pl, .pile.open .pl { transition: none !important; }
+  .dtab .fill { display: none !important; }
   .pile-hint { transition: none; }
 }
