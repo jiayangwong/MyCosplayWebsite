@@ -60,6 +60,12 @@
   --tap-min: 44px;
   --dur-fast: 180ms;
   --dur-slow: 600ms;
+  /* IDEA-16 hall photos: pile spread / stagger / collapse, photo crossfade, story tab step (the step is also STEP in js/hall-pile.js) */
+  --dur-spread: 650ms;
+  --dur-stagger: 90ms;
+  --dur-collapse: 400ms;
+  --dur-xfade: 200ms;
+  --dur-story: 1500ms;
   --header-h: 72px;
   /* v2 (style guide): focus ring on the dark viewer scrim */
   --focus-ring-on-dark: 3px solid #FFFFFF;

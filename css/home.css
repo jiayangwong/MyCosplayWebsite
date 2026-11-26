@@ -211,3 +211,137 @@
 .polaroid-shy:hover .kao, .polaroid-shy:focus-visible .kao { animation: shy-peek 700ms ease-in-out 1; }
 @keyframes shy-peek { 0%, 100% { transform: translateX(0) rotate(0); } 30% { transform: translateX(-6px) rotate(-4deg); } 65% { transform: translateX(5px) rotate(3deg); } }
 @media (prefers-reduced-motion: reduce) { .polaroid-shy:hover .kao, .polaroid-shy:focus-visible .kao { animation: none; } }
+
+/* ---------- IDEA-16: 2-3 photo stations ----------
+   Same markup everywhere (js/hall.js buildPile, behaviour in js/hall-pile.js).
+   768px and up (TASK-28): neat peek pile that spreads when the hall is in view.
+   The stage always has the spread size, so spreading or piling never moves the page. */
+.pile { --w: var(--polaroid-w, 260px); position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
+.pile-stage { position: relative; display: grid; justify-items: center; width: 100%; }
+.pl { grid-area: 1 / 1; width: var(--w); max-width: 100%; }
+.polaroid-daylabel {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  z-index: 3;
+  background: var(--color-surface);
+  border: 1px solid var(--color-ink);
+  border-radius: 2px;
+  padding: 0 6px;
+  font: 700 11px/16px var(--font-mono);
+  transform: rotate(-4deg);
+}
+.pile-toggle, .pile-hint, .dtabs { display: none; }
+
+/* Under 768px (TASK-29): one polaroid at a time; the D1 D2 D3 tabs are story-style bars that fill and flip it. */
+@media (max-width: 767px) {
+  .pile .polaroid-tape { display: none; }
+  .pile-stage { padding-bottom: 0; }
+  .pl { z-index: 1; transition: opacity var(--dur-xfade) linear; }
+  .pl.on { z-index: 2; }
+  .pl:not(.on) { opacity: 0; pointer-events: none; }
+  .dtabs { display: flex; width: var(--w); max-width: 100%; gap: calc(var(--space-1) / 2); margin: 0 0 var(--space-2); }
+  .dtab {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--tap-min);
+    overflow: hidden;
+    padding: 0;
+    border: var(--outline);
+    border-radius: var(--radius-sm);
+    background: var(--ph-lilac);
+    color: var(--color-ink);
+    font: 700 13px var(--font-mono);
+    cursor: pointer;
+  }
+  .dtab .fill {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-purple-deep);
+    color: var(--color-surface);
+    clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0);
+    pointer-events: none;
+  }
+  .pile.stopped .dtab .fill { display: none; }
+  .pile.stopped .dtab[aria-selected="true"] { background: var(--color-pink); box-shadow: var(--shadow-hover); }
+  .dtab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+}
+
+@media (min-width: 768px) {
+  .hall .station.has-pile { justify-content: center; padding-left: 0; padding-right: 0; }
+  .hall .station.has-pile .station-inner { width: 100%; margin-left: 0; margin-right: 0; }
+  .pile { --s: .72; --k: .78; margin-top: 0; }
+  .pile[data-n="2"] { --k: .5; }
+  .pile-stage { padding-top: 0; padding-bottom: 48px; }
+  .pl {
+    --x: 0px; --y: var(--py, 0px); --r: 0deg; --z: var(--pz, 1);
+    z-index: var(--z);
+    transform-origin: 50% 0;
+    transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(var(--s));
+    transition: transform var(--dur-collapse) cubic-bezier(.4, 0, .2, 1);
+  }
+  .pl[data-d="1"] { --py: 28px; --pz: 3; --sx: calc(var(--w) * var(--k) * -1); --sy: 8px; --sr: -4deg; }
+  .pl[data-d="2"] { --py: 14px; --pz: 2; --sx: 0px; --sy: 22px; --sr: 3deg; }
+  .pl[data-d="3"] { --py: 0px; --pz: 1; --sx: calc(var(--w) * var(--k)); --sy: 0px; --sr: -3deg; }
+  .pile[data-n="2"] .pl[data-d="2"] { --sx: calc(var(--w) * var(--k)); --sy: 14px; }
+  .pile.open .pl {
+    --x: var(--sx); --y: var(--sy); --r: var(--sr);
+    transition: transform var(--dur-spread) cubic-bezier(.2, .85, .25, 1) var(--dl, 0ms);
+  }
+  .pile.open .pl[data-d="2"] { --dl: var(--dur-stagger); }
+  .pile.open .pl[data-d="3"] { --dl: calc(var(--dur-stagger) * 2); }
+  .pile:not(.open) .pl:not([data-d="1"]) .polaroid-tape { opacity: 0; }
+  .pile.open .pl.lift { --r: 0deg; --z: 20; }
+  .pile-toggle {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-card);
+    cursor: pointer;
+    font: inherit;
+  }
+  .pile.open .pile-toggle { pointer-events: none; }
+  .pile-toggle:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+  .pile-hint {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: calc(var(--s) * 100% * .9);
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: var(--color-surface);
+    border: 1px dashed var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+    transition: opacity var(--dur-fast);
+  }
+  .pile.open .pile-hint { opacity: 0; }
+  .pl .flip { max-width: none; }
+}
+
+@media (min-width: 900px) {
+  .pile { --s: .85; --k: .8; }
+  .pile[data-n="2"] { --k: .52; }
+}
+
+@media (min-width: 1100px) {
+  .pile { --s: 1; --k: .86; }
+  .pile[data-n="2"] { --k: .56; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pl, .pile.open .pl { transition: none !important; }
+  .dtab .fill { display: none !important; }
+  .pile-hint { transition: none; }
+}
