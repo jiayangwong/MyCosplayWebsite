@@ -282,11 +282,13 @@ test('attach fills both photo fields, saves the draft, and adds a pending pair',
   await expect(card(page).locator('.wm-path')).toContainText(`media/events/${id}/flat-2400x1600-full.webp`);
 
   await card(page).getByRole('button', { name: 'Attach to selected event' }).click();
-  await expect(page.locator('#f-photo')).toHaveValue(`media/events/${id}/flat-2400x1600.webp`);
-  await expect(page.locator('#f-photo-full')).toHaveValue(`media/events/${id}/flat-2400x1600-full.webp`);
+  // TASK-27: the event already has a published photo (D1), so the new pair fills the next empty slot, D2.
+  await expect(page.locator('#f-photo-2')).toHaveValue(`media/events/${id}/flat-2400x1600.webp`);
+  await expect(page.locator('#f-photo-full-2')).toHaveValue(`media/events/${id}/flat-2400x1600-full.webp`);
   const saved = await page.evaluate((eventId) => JSON.parse(localStorage.getItem('puzzkezz.events.draft')).events.find((e) => e.id === eventId), id);
-  expect(saved.photo).toBe(`media/events/${id}/flat-2400x1600.webp`);
-  expect(saved.photoFull).toBe(`media/events/${id}/flat-2400x1600-full.webp`);
+  expect(saved.photos[1].photo).toBe(`media/events/${id}/flat-2400x1600.webp`);
+  expect(saved.photos[1].photoFull).toBe(`media/events/${id}/flat-2400x1600-full.webp`);
+  expect(saved.photo).toBe(saved.photos[0].photo); // D1 untouched, mirror kept
 
   const pending = await page.evaluate(async () => {
     const m = await import('/js/admin/pending.js');

@@ -430,3 +430,53 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 .pager { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); }
 .pager .btn { min-height: var(--tap-min, 44px); min-width: var(--tap-min, 44px); }
 .pager .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* TASK-27: photo slots D1 D2 D3 in the Event form + the "n photos" chip on event rows. */
+.slots { list-style: none; padding: 0; margin: 0 0 var(--space-2); display: grid; gap: var(--space-2); }
+.slot {
+  display: grid;
+  grid-template-columns: auto var(--tap-min) minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: start;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-btn);
+  padding: var(--space-2);
+  background: var(--color-surface);
+}
+.slot.is-empty { border-style: dashed; }
+.slot-d { font-family: var(--font-mono); font-weight: 700; min-width: 2ch; }
+.slot-th {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  overflow: hidden;
+  border: 1px solid var(--color-ink);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--color-muted);
+}
+.slot-th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slot-fields { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.slot-b { grid-column: 1 / -1; display: flex; gap: var(--space-2); }
+.slot-btn { min-width: var(--tap-min); min-height: var(--tap-min); font-size: 1rem; }
+@media (min-width: 768px) {
+  .slot { grid-template-columns: auto var(--tap-min) minmax(0, 1fr) auto; }
+  .slot-b { grid-column: 4; grid-row: 1; }
+}
+.ph-chip {
+  display: inline-block;
+  margin-left: var(--space-1);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-bg);
+  font: 700 0.6875rem var(--font-mono);
+  white-space: nowrap;
+}
+.ph-chip[data-n="3"] { background: var(--color-ink); color: var(--color-pink); }
+.wm-attach-msg { margin: var(--space-1) 0 0; color: var(--color-error); font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; }

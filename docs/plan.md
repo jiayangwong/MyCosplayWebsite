@@ -1260,7 +1260,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
   - Row chip "3 photos"; phone: buttons below the name, 44 x 44, no horizontal scroll at 360px.
   - Repo guard self-test: a missing and an unmarked `photos` path are both reported.
 - Existing specs likely to change (expectations only; the programmer confirms by searching tests/ for `photoFull`, `f-photo`, `Attach to selected event`, `addPendingPair`, `pend-remove`, `brokenPhotoLinks`, `photo"`): `task-7` (attach fills `#f-photo` - still true for D1), `task-10`, `task-13` (a second attach to the same event used to replace the pending pair; now it fills D2), `task-16` (revert notes), `task-23` (X on a pending card), `task-24` (attach opens the form), `task-15` / `task-17` (guard). The full suite passes.
-- Status: todo
+- Status: built 2026-11-26, waiting for review (branch task/TASK-27-admin-photo-slots, stacked on task/TASK-26-photos-data). Note: event rows show the chip for every event (No photos / 1 photo / 2 photos / 3 photos) as in the approved storyboard; the plan text said 2 / 3 only.
 - Review: pending
 - QA: pending
 

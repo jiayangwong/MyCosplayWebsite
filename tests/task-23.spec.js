@@ -64,7 +64,8 @@ async function attach(page, id) {
   await expectResult(card(page, i)).toHaveAttribute('data-state', 'ready', { timeout: 30000 });
   await edit(page, id);
   await card(page, i).getByRole('button', { name: 'Attach to selected event' }).press('Enter');
-  await expectResult(page.locator('#f-photo')).toHaveValue(`media/events/${id}/flat-800x600.webp`);
+  // TASK-27: the pair fills the next empty slot (D1 for an event without a photo, D2 after a published one).
+  await expect.poll(() => page.evaluate(() => ['f-photo', 'f-photo-2', 'f-photo-3'].map((x) => document.getElementById(x).value))).toContain(`media/events/${id}/flat-800x600.webp`);
   return i;
 }
 
@@ -219,11 +220,11 @@ test.describe('X remove button', () => {
     expect(errors).toEqual([]);
   });
 
-  test('X on an attached card asks first; Cancel changes nothing; confirm = Remove from publish (published photo comes back)', async ({ page, github }) => {
+  test('X on an attached card asks first; Cancel changes nothing; confirm = Remove from publish (the pair\'s slot goes, the published photo stays)', async ({ page, github }) => {
     await setup(page, github, { events: [ev(X, OLD), ev('2025-08-09-omt')], files: { [OLD.photo]: webp('old'), [OLD.photoFull]: webp('old-full') } });
     const i = await attach(page, X);
     const before = await draftEvent(page, X);
-    expect(before.photo).toBe(`media/events/${X}/flat-800x600.webp`);
+    expect(before.photos[1].photo).toBe(`media/events/${X}/flat-800x600.webp`); // TASK-27: D2
     await openFold(page, 'pub');
     await expect(page.locator('#pub-pending .pend-pair')).toHaveCount(1);
 
@@ -237,7 +238,7 @@ test.describe('X remove button', () => {
     await expect(page.locator('.wm-card')).toHaveCount(1);
     await expect(page.locator('#pub-pending .pend-pair')).toHaveCount(1);
     expect(await draftEvent(page, X)).toEqual(before);
-    await expect(page.locator('#f-photo')).toHaveValue(before.photo);
+    await expect(page.locator('#f-photo-2')).toHaveValue(before.photos[1].photo);
 
     await xBtn(page, i, 'flat-800x600.png').click();
     await page.keyboard.press('Escape'); // Esc = Cancel
@@ -251,7 +252,8 @@ test.describe('X remove button', () => {
     expect(await draftEvent(page, X)).toMatchObject(OLD);
     await expect(page.locator('#f-photo')).toHaveValue(OLD.photo);
     await expect(page.locator('#f-photo-full')).toHaveValue(OLD.photoFull);
-    await expect(page.locator('#pub-note')).toHaveText('Photo for CF 2026 set back to the published photo.');
+    await expect(page.locator('#pub-note')).toHaveText('Photo D2 removed from CF 2026 (not published yet).');
+    await expect(page.locator('#f-photo-2')).toHaveValue('');
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('puzzkezz.events.draft')).events.find((e) => e.id === '2026-03-14-cf').photo)).toBe(OLD.photo);
     // No pending files left: the leave-page warning stops.
     expect(await page.evaluate(async () => (await import('/js/admin/pending.js')).hasUnsavedFiles())).toBe(false);

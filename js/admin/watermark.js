@@ -5,7 +5,8 @@
 // on a canvas also drops EXIF data (GPS location, camera details).
 import { SITE } from '../site-config.js';
 import { slugify } from '../events-data.js';
-import { onEventChange, attachPhoto, usedPhotoPaths, isEditingSavedEvent } from './manager.js';
+import { onEventChange, onSlotsChange, attachPhoto, replaceSlotPath, slotHasPath, slotsFull, usedPhotoPaths, isEditingSavedEvent } from './manager.js';
+import { askRemove } from './confirm-remove.js';
 import { addPendingPair, removePendingItem, pendingPaths, markPipelineFile, isPendingItem, onPendingChange, pendingHooks } from './pending.js';
 import { addWatermarkMarker } from './wm-marker.js';
 
@@ -338,7 +339,8 @@ function setState(item, state, message) {
   const hasFiles = state === 'ready';
   ui.downloadDisplay.disabled = !hasFiles;
   ui.downloadMaster.disabled = !hasFiles;
-  ui.attach.disabled = !hasFiles || item.tooBig;
+  ui.attach.disabled = !hasFiles || item.tooBig || slotsFull();
+  syncAttachMsg(item);
   ui.pair.hidden = !(item.display && state !== 'error');
   $('wm-download-all').disabled = !items.some((i) => i.state === 'ready');
 }
@@ -420,11 +422,30 @@ function attach(item) {
     return;
   }
   if (item.state !== 'ready' || item.tooBig) return;
+  if (slotsFull()) { syncAttachMsg(item); return; }
   item.attached = { eventId, name: item.name, unsaved: !isEditingSavedEvent() };
   const p = paths(item);
   addPendingPair({ eventId, photo: p.display, photoFull: p.master, item });
   attachPhoto(p.display, p.master);
   assignNames();
+}
+
+/** TASK-27: Attach is disabled while the event has 3 photos; the card says why. */
+const FULL_TEXT = 'This event already has 3 photos';
+function syncAttachMsg(item) {
+  const full = slotsFull();
+  item.ui.attachMsg.hidden = !full;
+  item.ui.attachMsg.textContent = full ? `! ${FULL_TEXT}` : '';
+  if (full) item.ui.attach.setAttribute('aria-describedby', item.ui.attachMsg.id);
+  else item.ui.attach.removeAttribute('aria-describedby');
+}
+
+function syncAllAttach() {
+  for (const item of items) {
+    if (!item.ui) continue;
+    item.ui.attach.disabled = item.state !== 'ready' || item.tooBig || slotsFull();
+    syncAttachMsg(item);
+  }
 }
 
 /**
@@ -434,19 +455,18 @@ function attach(item) {
  */
 function rekeyUnsavedPairs(newId) {
   if (!newId || isEditingSavedEvent()) return;
-  const formPhoto = $('f-photo').value.trim();
   for (const item of items) {
     const a = item.attached;
     if (!a || !a.unsaved || a.eventId === newId) continue;
     const oldDisplay = `media/events/${a.eventId}/${a.name}.webp`;
-    if (formPhoto !== oldDisplay) continue;
+    if (!slotHasPath(oldDisplay)) continue;
     item.attached = null;
     assignNames(); // picks a free name for the new id
     item.attached = { eventId: newId, name: item.name, unsaved: true };
     const p = paths(item);
     removePendingItem(item);
     addPendingPair({ eventId: newId, photo: p.display, photoFull: p.master, item });
-    attachPhoto(p.display, p.master);
+    replaceSlotPath(oldDisplay, p.display, p.master); // the photo keeps its slot (D1, D2 or D3)
   }
 }
 
@@ -465,34 +485,8 @@ function removeNow(item) {
 
 /** Asks before taking a photo out of the publish. Resolves true on "Remove", false on Cancel or Esc. */
 function confirmRemove(item) {
-  const dialog = $('wm-remove-confirm');
   const who = pendingHooks.describe ? pendingHooks.describe(item) : '';
-  $('wm-remove-text').textContent = `Remove ${item.file.name}? It is attached to ${who || 'an event'} and will be taken out of the publish.`;
-  return new Promise((resolve) => {
-    const yes = $('wm-remove-yes');
-    const no = $('wm-remove-no');
-    let settled = false;
-    const finish = (ok) => {
-      if (settled) return;
-      settled = true;
-      yes.removeEventListener('click', onYes);
-      no.removeEventListener('click', onNo);
-      dialog.removeEventListener('cancel', onCancel);
-      dialog.removeEventListener('close', onClose);
-      if (dialog.open) dialog.close();
-      resolve(ok);
-    };
-    const onYes = () => finish(true);
-    const onNo = () => finish(false);
-    const onCancel = (e) => { e.preventDefault(); finish(false); };
-    const onClose = () => finish(false);
-    yes.addEventListener('click', onYes);
-    no.addEventListener('click', onNo);
-    dialog.addEventListener('cancel', onCancel);
-    dialog.addEventListener('close', onClose);
-    dialog.showModal();
-    no.focus(); // the safe choice
-  });
+  return askRemove(`Remove ${item.file.name}? It is attached to ${who || 'an event'} and will be taken out of the publish.`);
 }
 
 let askingFor = null;
@@ -536,6 +530,7 @@ function button(className, label, onClick) {
   return b;
 }
 
+let cardCounter = 0;
 function buildCard(item) {
   const card = make('li', 'wm-card');
   const pair = make('div', 'wm-pair');
@@ -557,6 +552,7 @@ function buildCard(item) {
     downloadDisplay: button('btn-secondary', 'Download display', () => download(item, 'display')),
     downloadMaster: button('btn-secondary', 'Download full size', () => download(item, 'master')),
     attach: button('btn-primary', 'Attach to selected event', () => attach(item)),
+    attachMsg: make('p', 'wm-attach-msg'),
     remove: make('button', 'wm-x'),
   };
   ui.remove.type = 'button';
@@ -565,8 +561,11 @@ function buildCard(item) {
   cross.setAttribute('aria-hidden', 'true');
   ui.remove.append(cross);
   ui.remove.addEventListener('click', () => removeItem(item));
+  ui.attachMsg.hidden = true;
+  ui.attachMsg.id = `wm-attach-msg-${++cardCounter}`;
+  ui.attachMsg.setAttribute('role', 'status');
   actions.append(ui.attach, ui.downloadDisplay, ui.downloadMaster);
-  card.append(ui.remove, pair, nameRow, bar, error, pathsBox, actions); // X first: Tab order = top to bottom
+  card.append(ui.remove, pair, nameRow, bar, error, pathsBox, actions, ui.attachMsg); // X first: Tab order = top to bottom
   return ui;
 }
 
@@ -626,6 +625,7 @@ function init() {
 
   window.addEventListener('publish-busy-change', (e) => { publishBusy = Boolean(e.detail && e.detail.busy); syncRemoveButtons(); });
   onPendingChange(syncRemoveButtons);
+  onSlotsChange(syncAllAttach);
   onEventChange((id) => {
     eventId = id;
     rekeyUnsavedPairs(id);

@@ -42,9 +42,10 @@ export function onPendingChange(fn) {
   listeners.add(fn);
 }
 
-/** Adds a pair. An event shows one photo, so a newer attach replaces an older pending pair for the same event. */
+/** Adds a pair. TASK-27: one pending pair per slot path (an event can hold up to 3 photos), so attaching a second
+ *  photo keeps the first pair; only a pair with the same display path is replaced. */
 export function addPendingPair(pair) {
-  const old = pairs.findIndex((p) => p.eventId === pair.eventId);
+  const old = pairs.findIndex((p) => p.photo === pair.photo);
   if (old !== -1) pairs.splice(old, 1);
   pairs.push(pair);
   changed();
