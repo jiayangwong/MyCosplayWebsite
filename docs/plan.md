@@ -1262,7 +1262,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 - Existing specs likely to change (expectations only; the programmer confirms by searching tests/ for `photoFull`, `f-photo`, `Attach to selected event`, `addPendingPair`, `pend-remove`, `brokenPhotoLinks`, `photo"`): `task-7` (attach fills `#f-photo` - still true for D1), `task-10`, `task-13` (a second attach to the same event used to replace the pending pair; now it fills D2), `task-16` (revert notes), `task-23` (X on a pending card), `task-24` (attach opens the form), `task-15` / `task-17` (guard). The full suite passes.
 - Status: built 2026-11-26, waiting for review (branch task/TASK-27-admin-photo-slots, stacked on task/TASK-26-photos-data). Note: event rows show the chip for every event (No photos / 1 photo / 2 photos / 3 photos) as in the approved storyboard; the plan text said 2 / 3 only.
 - Review: approved 2026-11-26
-- QA: failed - see BUG-14, BUG-15, BUG-16 (2026-11-26; all minor; same on live v1.2.0). The specs and the other criteria pass.
+- QA: passed 2026-11-26 (re-test on fix/review-qa-v1.2.0: BUG-14, BUG-15, BUG-16 verified; full suite 732 passed, 42 skipped, 26 failed only on this sandbox's Google Fonts console error, those 26 pass with the fonts stubbed)
 
 ### TASK-28: Hall PC (768px and wider) - neat peek pile that spreads on scroll
 - Linked idea(s): IDEA-16 (with IDEA-3, IDEA-15)
@@ -1297,7 +1297,7 @@ Build order for IDEA-15: storyboard home Hall update (storyboard-creator, user a
 - Plan: **approved by the user 2026-11-26** ("pc web approved", confirmed by "all approved"; the PC half of the home storyboard is approved unchanged)
 - Status: built 2026-11-26, waiting for review (branch task/TASK-28-hall-pc-pile, stacked on task/TASK-26-photos-data)
 - Review: approved 2026-11-26
-- QA: failed - see BUG-12, BUG-13 (2026-11-26; both minor; same on live v1.2.0). The specs and the other criteria pass.
+- QA: blocked on user decision - see BUG-12 (2026-11-26; minor, open: the spread photos overlap, which conflicts with the spread-state criterion; same in the approved storyboard). BUG-13 verified in the re-test; the specs and the other criteria pass.
 
 ### TASK-29: Hall phone (under 768px) - one polaroid, story tabs D1 D2 D3 that fill and auto-flip for two rounds
 - Linked idea(s): IDEA-16 (with IDEA-3, IDEA-15)
