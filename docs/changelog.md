@@ -2,6 +2,7 @@
 
 ## Unreleased
 - 2026-11-26 TASK-26: review fix: the spec no longer asserts that the real data/events.json has no `photos` key; it checks that every real event passes `validateEvent` and `loadEvents` keeps them all. Waiting for re-review (tests/task-26.spec.js)
+- 2026-11-26 TASK-29: review fix: the phone tab row takes 8px back from the gap above it (negative top margin), so a 2-3 photo station is exactly 44px taller than a 1-photo one; the 8px gap above the polaroid stays and nothing overlaps; test bound back to 44px (+1px). Waiting for re-review (css/home.css, tests/task-29.spec.js)
 
 ## v1.0.0 - released 2026-11-19
 First public version. Release notes are in docs/release.md. Entries below were made while building it.

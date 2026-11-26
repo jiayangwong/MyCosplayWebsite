@@ -240,7 +240,7 @@
   .pl { z-index: 1; transition: opacity var(--dur-xfade) linear; }
   .pl.on { z-index: 2; }
   .pl:not(.on) { opacity: 0; pointer-events: none; }
-  .dtabs { display: flex; width: var(--w); max-width: 100%; gap: calc(var(--space-1) / 2); margin: 0 0 var(--space-2); }
+  .dtabs { display: flex; width: var(--w); max-width: 100%; gap: calc(var(--space-1) / 2); margin: calc(var(--space-2) * -1) 0 var(--space-2); }
   .dtab {
     position: relative;
     flex: 1 1 0;

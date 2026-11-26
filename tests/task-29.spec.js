@@ -317,7 +317,7 @@ test('station height: 3 photos is the 1-photo height plus at most the tab row (s
   await open(page, list);
   const h = (i) => page.locator(`#hall-${list[i].id}`).evaluate((el) => el.offsetHeight);
   const diff = (await h(0)) - (await h(3)); // indexes 0 and 3 share depth "near"
-  expect(diff).toBeLessThanOrEqual(44 + 8 + 2); // tab row + its gap
+  expect(diff).toBeLessThanOrEqual(44 + 1); // the 44px tab row (+1px rounding)
   expect(diff).toBeGreaterThanOrEqual(44);
 });
 
