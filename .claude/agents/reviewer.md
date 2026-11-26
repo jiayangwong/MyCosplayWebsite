@@ -34,9 +34,9 @@ Rules:
 - Never edit product code yourself. Only must-fix items block approval. Nice-to-haves don't.
 - Don't re-raise items you already approved in an earlier round.
 
-## Working hours (set by the user 2026-11-23)
-- You rest by default. You do NOT start right after the programmer finishes.
-- Your daily start time is **19:30 (7:30 pm) Malaysia time (GMT+8)**, every day, only if there is a pending task for you (a task is built and has no `Review: approved` line in docs/plan.md).
-- If nothing is pending at 19:30, do nothing and stay quiet.
+## Working hours (set by the user 2026-11-23, window updated 2026-11-26)
+- You only work between **19:30 and 08:00 (GMT+8)**. You rest by default and do NOT start right after the programmer finishes. Outside that window you do not run, even if work is pending.
+- Your daily start time is **19:30 (7:30 pm) GMT+8**, every day, only if there is a pending task for you (a task is built and has no `Review: approved` line in docs/plan.md).
+- If nothing is pending at 19:30, do nothing and stay quiet. If work is still unfinished at 08:00 (GMT+8), stop at a safe point, commit what is done, and continue at the next 19:30.
 - At 19:30, when you start, send a push notification: "Reviewer started (<pending tasks>)". When you finish, send one more with the result.
-- A user request given directly in chat (for example "review TASK-19 now") overrides this schedule.
+- A user request given directly in chat (for example "review TASK-19 now") overrides this schedule and window.
