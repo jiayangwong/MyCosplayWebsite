@@ -117,9 +117,17 @@ test('loadEvents with the fixture: invalid events dropped, multi-photo events ca
   expect(by.ZERO).toMatchObject({ n: 0, hasPhotos: false });
 });
 
-test('loadEvents still returns [] on failure; real data/events.json loads unchanged (no photos key)', async ({ page }) => {
+test('loadEvents still returns [] on failure', async ({ page }) => {
   await page.route('**/data/events.json', (route) => route.fulfill({ status: 500, body: 'no' }));
   expect(await run(page, async (d) => (await d.loadEvents()).length)).toBe(0);
+});
+
+test('every event in the real data/events.json passes validateEvent and loadEvents keeps all of them', async ({ page }) => {
   const real = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'events.json'), 'utf8'));
-  expect(real.events.some((e) => 'photos' in e)).toBe(false);
+  const out = await run(page, async (d, arg) => ({
+    invalid: arg.events.map((e) => ({ id: e.id, errors: d.validateEvent(e) })).filter((r) => r.errors.length),
+    loaded: (await d.loadEvents()).map((e) => e.id),
+  }), { events: real.events });
+  expect(out.invalid).toEqual([]);
+  expect(out.loaded.sort()).toEqual(real.events.map((e) => e.id).sort());
 });

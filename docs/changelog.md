@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- 2026-11-26 TASK-26: review fix: the spec no longer asserts that the real data/events.json has no `photos` key; it checks that every real event passes `validateEvent` and `loadEvents` keeps them all. Waiting for re-review (tests/task-26.spec.js)
+
 ## v1.0.0 - released 2026-11-19
 First public version. Release notes are in docs/release.md. Entries below were made while building it.
 
