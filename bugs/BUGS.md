@@ -130,5 +130,8 @@
 - Steps: publish a portrait from /admin (data/site.json now has `"portrait": "media/site/portrait.webp"`), run the full suite.
 - Expected: tests mock their own site data or follow the real one.
 - Actual: 18 failures (9 tests x desktop + phone): task-14 lines 133, 151, 245, 432; task-16 lines 484, 505, 515, 553; task-8 line 34 (About `.portrait` is a photo now, no "Portrait" aria-label). They assumed `portrait: null` in the real data/site.json.
-- Status: open (minor, does not block the release; for the bugfixer)
+- Status: fixed (awaiting QA re-test; the fix reaches main with TASK-25..29)
+- Cause: task-8/14/16 read the real data/site.json and assumed `portrait: null`; once a portrait was published, the About page shows a photo and the admin draft starts from a set portrait.
+- Fix (tests only, already on the TASK-25..29 branches, commits a1e087a and 7f6ad13, so no new edits were needed): new tests/fixtures/site-null.json (`portrait: null`); tests/task-14.spec.js and tests/task-16.spec.js serve that fixture and seed the fake repo with it, and the "portrait null" check reads the fixture, not the real file; tests/task-8.spec.js:34 mocks data/site.json with `portrait: null`. Real data/site.json and data/events.json untouched.
+- How verified (bugfixer 2026-11-26 19:30 run, system Chrome 153 at /usr/bin/google-chrome through an uncommitted config): on origin/site-v1, task-8/14/16 give exactly the 18 failures above. On bugfix/BUG-11 (TASK-29 + TASK-27) every task-8/14/16 test passes on desktop and phone, both in the full suite and on its own. Full suite: 709 passed, 40 skipped, 31 failed, none in task-8/14/16. 24 of the failures come from this sandbox's Google Fonts console error (same as noted in the earlier QA runs); 7 are load flakes in task-12/13 that pass when run again.
 
