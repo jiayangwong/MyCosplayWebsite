@@ -60,6 +60,14 @@ async function openBackup(page) {
   await expect(page.locator('#export-events')).toBeVisible();
 }
 
+/** TASK-37: opens the Analytics panel and its Settings disclosure (passcode + opt-out) if they are closed. Safe to call twice. */
+async function openAnalyticsSettings(page) {
+  await openFold(page, 'an-panel');
+  const d = page.locator('#an-settings');
+  if (!(await d.evaluate((el) => el.open))) await d.locator('> summary').click();
+  await expect(d.locator('.an-set-in')).toBeVisible();
+}
+
 /** TASK-24: pages the Events list until the row of event `id` is shown (starts at page 1). */
 async function showEvent(page, id) {
   const row = page.locator(`.event-row[data-id="${id}"]`);
@@ -75,4 +83,4 @@ async function showEvent(page, id) {
   await expect(row).toHaveCount(1);
 }
 
-module.exports = { openFold, openBackup, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };
+module.exports = { openFold, openBackup, openAnalyticsSettings, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };

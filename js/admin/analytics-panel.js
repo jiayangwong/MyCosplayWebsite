@@ -3,7 +3,7 @@
 // came from the Worker is set with textContent, never innerHTML. Nothing is fetched until the panel is open.
 import {
   TABS, MESSAGES, analyticsFetch, hasPasscode, isConfigured, readOptOut, rangeLine, savePasscode,
-  forgetPasscode, writeOptOut, dayLabel, fullDayLabel,
+  forgetPasscode, writeOptOut, dayLabel, fullDayLabel, malaysiaClock,
 } from './analytics-client.js';
 import { lineChart, formatNumber } from './charts.js';
 
@@ -23,6 +23,7 @@ const S = {
   loadingKey: '',
   r90off: false,
   open: false,
+  compare: false, // the Overview "Compare with previous period" switch, page session only
 };
 
 const keyOf = (tab = S.tab, days = S.days) => `${tab}|${days}`;
@@ -107,6 +108,7 @@ function layout() {
   const m = mode();
   $('an-notset').hidden = m !== 'notset';
   $('an-pass-block').hidden = m === 'notset';
+  $('an-npmsg').hidden = m !== 'nopass';
   const ready = m === 'ready';
   $('an-ctl').hidden = !ready;
   $('an-tps').hidden = !ready;
@@ -120,6 +122,12 @@ function layout() {
   else r90.closest('label').removeAttribute('aria-disabled');
   document.querySelectorAll('#an-range input').forEach((i) => { i.checked = Number(i.value) === S.days; });
   updateChip();
+}
+
+/** Settings opens by itself (never closes by itself): not set up, no passcode, wrong passcode. */
+function openSettings() {
+  const d = $('an-settings');
+  if (d && !d.open) d.open = true;
 }
 
 function mountOf(tab = S.tab) {
@@ -203,6 +211,7 @@ function paint() {
     setBusy(mount, true);
     mount.appendChild(skeleton(tab));
   }
+  $('an-upd').textContent = answer && answer.generatedAt ? `Updated ${malaysiaClock(answer.generatedAt)} Malaysia time` : '';
   $('an-refresh').disabled = S.loadingKey === key;
   if (S.loadingKey === key) $('an-refresh').setAttribute('aria-disabled', 'true');
   else $('an-refresh').removeAttribute('aria-disabled');
@@ -250,7 +259,51 @@ function tile(label, cur, prev, days) {
   return t;
 }
 
+/** The "Compare with previous period" switch (off on every page load; toggling redraws the chart, never refetches). */
+function compareSwitch(available, onChange) {
+  const row = el('div', 'an-cmp');
+  const label = el('label', 'an-switch');
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.id = 'an-compare';
+  cb.setAttribute('role', 'switch');
+  cb.checked = S.compare && available;
+  cb.disabled = !available;
+  const track = el('span', 'trk');
+  track.setAttribute('aria-hidden', 'true');
+  label.append(cb, track, el('span', null, 'Compare with previous period'));
+  row.appendChild(label);
+  if (!available) {
+    const note = el('span', 'an-note', 'Previous period not available');
+    note.id = 'an-compare-note';
+    cb.setAttribute('aria-describedby', 'an-compare-note');
+    row.appendChild(note);
+  }
+  cb.addEventListener('change', () => {
+    S.compare = cb.checked;
+    onChange();
+  });
+  return row;
+}
+
 function renderOverview(mount, answer) {
+  const d = answer.data;
+  const prevDaily = Array.isArray(d.previousDaily) && d.previousDaily.length === d.daily.length ? d.previousDaily : null;
+  const body = el('div', 'an-ovbody');
+  const draw = () => {
+    const wasOpen = body.querySelector('.an-det') && body.querySelector('.an-det').open;
+    charts.splice(0).forEach((c) => c.destroy());
+    body.textContent = '';
+    drawOverview(body, answer, S.compare && prevDaily !== null, prevDaily);
+    const det = body.querySelector('.an-det');
+    if (det && wasOpen) det.open = true;
+  };
+  mount.appendChild(compareSwitch(prevDaily !== null, draw));
+  mount.appendChild(body);
+  draw();
+}
+
+function drawOverview(mount, answer, compare, prevDaily) {
   const d = answer.data;
   const days = answer.days;
   const wrap = el('div', 'an-ov');
@@ -265,17 +318,31 @@ function renderOverview(mount, answer) {
   mount.appendChild(wrap);
   const daily = d.daily;
   const best = daily.reduce((b, x) => (x.visits > b.visits ? x : b), daily[0]);
-  const summary = `Visits and page views per day, last ${days} days (Malaysia time). ${formatNumber(d.totals.visits)} visits and ${formatNumber(d.totals.pageViews)} page views in total, busiest day ${dayLabel(best.date)} with ${formatNumber(best.visits)} visits.`;
+  let summary = `Visits and page views per day, last ${days} days (Malaysia time). ${formatNumber(d.totals.visits)} visits and ${formatNumber(d.totals.pageViews)} page views in total, busiest day ${dayLabel(best.date)} with ${formatNumber(best.visits)} visits.`;
   const series = [
     { name: 'Visits', values: daily.map((x) => x.visits), color: 'var(--color-ink)', marker: 'circle' },
     { name: 'Page views', values: daily.map((x) => x.pageViews), color: 'var(--color-purple-deep)', marker: 'square' },
   ];
+  let table;
+  if (compare) {
+    summary += ` Compared with the previous ${days} days: ${formatNumber(d.previous.visits)} visits and ${formatNumber(d.previous.pageViews)} page views, shown as dashed lines.`;
+    series.push(
+      { name: `Visits, previous ${days} days`, values: prevDaily.map((x) => x.visits), color: 'var(--color-ink)', dashed: true },
+      { name: `Page views, previous ${days} days`, values: prevDaily.map((x) => x.pageViews), color: 'var(--color-purple-deep)', dashed: true },
+    );
+    table = {
+      columns: ['Day', 'Visits', 'Page views', 'Previous day', 'Previous visits', 'Previous page views'],
+      rows: daily.map((x, i) => [dayLabel(x.date), x.visits, x.pageViews, dayLabel(prevDaily[i].date), prevDaily[i].visits, prevDaily[i].pageViews]),
+      caption: summary,
+    };
+  }
   charts.push(lineChart(block, {
     series,
     xLabels: daily.map((x) => dayLabel(x.date)),
     xTitles: daily.map((x) => fullDayLabel(x.date)),
     yLabel: 'visits and page views per day',
     summary,
+    table,
   }));
 }
 RENDERERS.overview = renderOverview;
@@ -311,6 +378,7 @@ function load(tab, days, { force = false } = {}) {
       return;
     } else {
       S.errors.set(key, explain(res.ok ? { status: 502, body: null } : res));
+      if (res.status === 401) openSettings();
     }
     if (S.tab === tab && S.days === days) paint();
     layout();
@@ -435,6 +503,7 @@ function onForget() {
   $('an-pass-status').textContent = MESSAGES.noPasscode;
   layout();
   paint();
+  openSettings();
   $('an-pass').focus();
 }
 
@@ -492,6 +561,7 @@ function init() {
   });
 
   layout();
+  if (mode() !== 'ready') openSettings();
   paint();
   S.open = foldBtn.getAttribute('aria-expanded') === 'true';
   document.documentElement.dataset.analyticsReady = 'true';

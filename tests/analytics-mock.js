@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const { test: githubTest, expect, openFold, openBackup } = require('./github-mock');
+const { openAnalyticsSettings } = require('./helpers');
 
 const FAKE_PASSCODE = 'TESTONLY-passcode-not-real-123456';
 const FAKE_WORKER = 'https://analytics-test.invalid';
@@ -208,4 +209,4 @@ async function openAnalytics(page) {
   await openFold(page, 'an-panel');
 }
 
-module.exports = { test, expect, FAKE_PASSCODE, FAKE_WORKER, PASSCODE_KEY, OPTOUT_KEY, FakeWorker, seedPasscode, gotoAdmin, openAnalytics, openFold, openBackup, readFixture };
+module.exports = { test, expect, FAKE_PASSCODE, FAKE_WORKER, PASSCODE_KEY, OPTOUT_KEY, FakeWorker, seedPasscode, gotoAdmin, openAnalytics, openAnalyticsSettings, openFold, openBackup, readFixture };

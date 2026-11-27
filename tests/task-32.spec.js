@@ -2,7 +2,7 @@
 // Everything runs against the fake Worker in tests/analytics-mock.js; nothing reaches Cloudflare.
 const fs = require('fs');
 const path = require('path');
-const { test, expect, FAKE_PASSCODE, FAKE_WORKER, PASSCODE_KEY, OPTOUT_KEY, seedPasscode, gotoAdmin, openAnalytics } = require('./analytics-mock');
+const { test, expect, FAKE_PASSCODE, FAKE_WORKER, PASSCODE_KEY, OPTOUT_KEY, seedPasscode, gotoAdmin, openAnalytics, openAnalyticsSettings } = require('./analytics-mock');
 const { noHorizontalScroll } = require('./helpers');
 
 const TABS = ['overview', 'sources', 'pages', 'audience', 'performance'];
@@ -99,7 +99,7 @@ test.describe('passcode', () => {
     await expect(view(page)).toHaveAttribute('data-analytics-ready', 'true');
     await expect(chip(page)).toHaveText('Last 30 days');
     expect(analytics.count('overview', 30)).toBe(1); // collapsed again after the reload: nothing fetched yet
-    await openAnalytics(page);
+    await openAnalyticsSettings(page);
     await expect(page.locator('#an-saved')).toBeVisible();
     await expect.poll(() => analytics.count('overview', 30)).toBe(2);
   });
@@ -107,7 +107,7 @@ test.describe('passcode', () => {
   test('Forget asks first: Keep / Esc keep it, Yes forgets it', async ({ page }) => {
     await seedPasscode(page);
     await gotoAdmin(page);
-    await openAnalytics(page);
+    await openAnalyticsSettings(page);
     await page.click('#an-forget');
     await expect(page.locator('#an-forget-ask')).toBeVisible();
     await expect(page.locator('#an-forget-no')).toBeFocused();
@@ -128,7 +128,7 @@ test.describe('passcode', () => {
   test('Test sends one request for overview / 7 days with the passcode only in the Authorization header', async ({ page, analytics }) => {
     await seedPasscode(page);
     await gotoAdmin(page);
-    await openAnalytics(page);
+    await openAnalyticsSettings(page);
     await expect.poll(() => analytics.count('overview', 30)).toBe(1);
     await page.click('#an-test');
     await expect(page.locator('#an-pass-status')).toHaveText('Passcode works. The Worker answered.');
@@ -243,7 +243,7 @@ test.describe('text', () => {
     for (const t of TABS) {
       await page.click(`#an-tab-${t}`);
       await expect(view(page)).toHaveAttribute('data-analytics-view', 'data');
-      expect(await page.locator('#an-panel').innerText()).not.toMatch(/UTC/);
+      expect(await page.locator('#an-panel').textContent()).not.toMatch(/UTC/);
     }
   });
 

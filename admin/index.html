@@ -446,6 +446,10 @@
           <span class="msg-icon" aria-hidden="true">&ndash;</span>
           <div class="msg-body"><p class="msg-text">Analytics is not set up yet. See worker/README.md.</p></div>
         </div>
+        <div class="msg" id="an-npmsg" data-state="none" role="status" hidden>
+          <span class="msg-icon" aria-hidden="true">&ndash;</span>
+          <div class="msg-body"><p class="msg-text">No passcode saved. Paste one in Settings below.</p></div>
+        </div>
         <div class="an-ctl" id="an-ctl" hidden>
           <div class="an-tabs" id="an-tabs" role="tablist" aria-label="Analytics views">
             <button type="button" class="an-tab" role="tab" id="an-tab-overview" data-tab="overview" aria-selected="true" aria-controls="an-tp-overview" tabindex="0">Overview</button>
@@ -463,7 +467,8 @@
                 <label><input type="radio" name="an-days" value="90" aria-describedby="an-r90">90 days</label>
               </div>
             </fieldset>
-            <button type="button" class="btn btn-secondary an-refresh" id="an-refresh">Refresh</button>
+            <button type="button" class="btn btn-secondary an-refresh" id="an-refresh" aria-label="Refresh"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M16 10a6 6 0 1 1-2-4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14.5 1.5v4.5H10" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="rt">Refresh</span></button>
+            <span class="an-upd" id="an-upd"></span>
           </div>
         </div>
         <p class="an-note" id="an-r90" hidden>90 days is not available yet. Cloudflare has not kept that much data.</p>
@@ -474,38 +479,46 @@
           <div class="an-tp" role="tabpanel" id="an-tp-audience" aria-labelledby="an-tab-audience" hidden></div>
           <div class="an-tp" role="tabpanel" id="an-tp-performance" aria-labelledby="an-tab-performance" hidden></div>
         </div>
-        <div class="an-pass" id="an-pass-block" hidden>
-          <div class="field" id="an-pass-field">
-            <label for="an-pass">Passcode</label>
-            <input type="password" id="an-pass" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="an-pass-help an-pass-error">
-            <p class="panel-hint" id="an-pass-help">Stays in this browser only. Paste the long passcode you made for the Worker.</p>
-            <p class="field-error" id="an-pass-error" role="alert" hidden></p>
-          </div>
-          <p class="an-saved mono" id="an-saved" hidden>Passcode saved</p>
-          <div class="form-actions" id="an-pass-actions">
-            <button type="button" class="btn btn-primary" id="an-save">Save</button>
-            <button type="button" class="btn btn-secondary" id="an-test" disabled>Test</button>
-            <button type="button" class="btn btn-secondary is-danger" id="an-forget" disabled>Forget passcode</button>
-          </div>
-          <div class="an-ask" id="an-forget-ask" role="group" aria-labelledby="an-forget-q" hidden>
-            <p class="mono" id="an-forget-q">Forget the passcode on this browser?</p>
-            <div class="form-actions">
-              <button type="button" class="btn btn-secondary is-danger" id="an-forget-yes">Yes, forget it</button>
-              <button type="button" class="btn btn-secondary" id="an-forget-no">Keep it</button>
+        <details class="an-set" id="an-settings">
+          <summary>Settings</summary>
+          <div class="an-set-in">
+            <div class="an-pass" id="an-pass-block" hidden>
+              <div class="field" id="an-pass-field">
+                <label for="an-pass">Passcode</label>
+                <input type="password" id="an-pass" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="an-pass-help an-pass-error">
+                <p class="panel-hint" id="an-pass-help">Stays in this browser only. Paste the long passcode you made for the Worker.</p>
+                <p class="field-error" id="an-pass-error" role="alert" hidden></p>
+              </div>
+              <p class="an-saved mono" id="an-saved" hidden>Passcode saved</p>
+              <div class="form-actions" id="an-pass-actions">
+                <button type="button" class="btn btn-primary" id="an-save">Save</button>
+                <button type="button" class="btn btn-secondary" id="an-test" disabled>Test</button>
+                <button type="button" class="btn btn-secondary is-danger" id="an-forget" disabled>Forget passcode</button>
+              </div>
+              <div class="an-ask" id="an-forget-ask" role="group" aria-labelledby="an-forget-q" hidden>
+                <p class="mono" id="an-forget-q">Forget the passcode on this browser?</p>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary is-danger" id="an-forget-yes">Yes, forget it</button>
+                  <button type="button" class="btn btn-secondary" id="an-forget-no">Keep it</button>
+                </div>
+              </div>
+              <p class="mono an-pass-status" id="an-pass-status" role="status"></p>
+            </div>
+            <div class="an-optbox" id="an-optbox">
+              <label class="an-opt"><input type="checkbox" id="an-optout" aria-describedby="an-opt-help">Don't count my visits on this browser</label>
+              <p class="an-note an-opt-help" id="an-opt-help">Only this browser. The Instagram app browser keeps its own setting.</p>
             </div>
           </div>
-          <p class="mono an-pass-status" id="an-pass-status" role="status"></p>
-        </div>
-        <div class="an-optbox" id="an-optbox">
-          <label class="an-opt"><input type="checkbox" id="an-optout" aria-describedby="an-opt-help">Don't count my visits on this browser</label>
-          <p class="an-note an-opt-help" id="an-opt-help">Only this browser. The Instagram app browser keeps its own setting.</p>
-        </div>
-        <ul class="an-foot" id="an-foot" aria-label="About these numbers">
-          <li>Page loads only (no clicks).</li>
-          <li>Numbers are sampled by Cloudflare and approximate.</li>
-          <li>Days are Malaysia time (GMT+8), midnight to midnight.</li>
-          <li>Updated about every 10 minutes.</li>
-        </ul>
+        </details>
+        <details class="an-about" id="an-about">
+          <summary><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 4.5v1" stroke="currentColor" stroke-width="1.5"/></svg>About these numbers</summary>
+          <ul class="an-foot" id="an-foot">
+            <li>Page loads only (no clicks).</li>
+            <li>Numbers are sampled by Cloudflare and approximate.</li>
+            <li>Days are Malaysia time (GMT+8), midnight to midnight.</li>
+            <li>Updated about every 10 minutes.</li>
+          </ul>
+        </details>
       </div>
     </section>
 

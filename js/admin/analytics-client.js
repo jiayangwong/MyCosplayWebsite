@@ -150,3 +150,12 @@ export function rangeLine(from, to) {
   const left = a.y === b.y ? dayLabel(from) : `${dayLabel(from)} ${a.y}`;
   return `${left} - ${dayLabel(to)} ${b.y} (Malaysia time)`;
 }
+
+/** '2026-11-26T12:00:00Z' -> '20:00' (Malaysia clock time = UTC + 8 hours, plain arithmetic, no browser time zone). */
+export function malaysiaClock(iso) {
+  const ms = Date.parse(iso);
+  if (!Number.isFinite(ms)) return '';
+  const d = new Date(ms + 8 * 3600 * 1000);
+  const two = (n) => String(n).padStart(2, '0');
+  return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`;
+}
