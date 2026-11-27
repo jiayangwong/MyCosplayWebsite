@@ -1563,7 +1563,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Phone 360px: no horizontal page scroll, tabs 44px tall.
 - Existing specs likely to change: any test that counts fold panels or checks the order of panels / the fold chips (`task-18`, `task-23`, `task-24`, `qa-task-23`), and any check of the exact admin CSP string (`task-11`). Expectations only; the programmer searches tests/ for `fold-btn`, `.fold`, `Content-Security-Policy`, `connect-src`. Known from reading (2026-11-27): `tests/task-24.spec.js` `PANELS` lists 6 panels and checks "only Events open" and no horizontal scroll with all open / all collapsed -> add `['an-panel', <body id>, <chip id>]` (collapsed on load); `tests/task-23.spec.js` "one column (phone)" order test compares GitHub, Events, form, Publish, Moments, uploader positions -> still passes with Analytics last, after the uploader (add `#an-panel` at the end of the list); `tests/task-23.spec.js` / `tests/task-18.spec.js` desktop "Moments below the form" -> still passes. Any test that assumes the Media uploader is the last panel must be updated to Analytics (expectations only).
 - Status: built, waiting for review (branch `task-32-analytics-panel`, chained on `task-36-admin-shell`, 2026-11-27; Worker URL empty = "Not set up")
-- Review: pending
+- Review: changes made, re-review pending (2026-11-28 must-fix round, see docs/reviews.md)
 - QA: pending
 
 ### TASK-33: Chart kit (plain SVG + table fallback) and the Overview tab
@@ -1746,7 +1746,7 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
   - `#new-event` (clicked or pressed in task-12, task-21, task-23, task-24) stays a top-level toolbar button with the same id: no change, unless a test checks its class (`btn-primary`): search.
   - **Not read by the planner, the programmer must search them:** every file in `tests/` (including `task-7`, `task-10`, `task-13`, `task-14`, `task-15`, `task-16`, `task-22`, `task-27`, `qa-task-23`, `qa-task-24`, `qa-idea-12-admin`, `qa-bug-9-10` and any newer spec) for `export-events`, `discard-draft`, `import-file`, `Export events.json`, `Discard draft`, `Import events.json`, `.toolbar`, `file-button`, `btn-accent`, `btn-primary` and `new-event`; apply the same rules (Export / Discard clicks or key presses -> `openBackup` first; class checks on `#new-event` / `#publish-btn` / `#export-events` -> the H5 rule). Expectations only, never weakened. Then the full suite passes in both projects.
 - Status: built, waiting for review (branch `task-36-admin-shell`, based on `task-31-worker` because that branch carries the approved docs; 2026-11-27)
-- Review: pending
+- Review: changes made, re-review pending (2026-11-28 must-fix round, see docs/reviews.md)
 - QA: pending
 
 ### TASK-37: Analytics panel layout - placement, controls row, Settings and About, compare switch, tile column
