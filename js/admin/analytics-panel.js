@@ -5,7 +5,7 @@ import {
   TABS, MESSAGES, analyticsFetch, hasPasscode, isConfigured, readOptOut, rangeLine, savePasscode,
   forgetPasscode, writeOptOut, dayLabel, fullDayLabel, malaysiaClock,
 } from './analytics-client.js';
-import { lineChart, barChart, stackedBar, patternSwatch, numberTable, formatNumber } from './charts.js';
+import { lineChart, barChart, stackedBar, sharePercents, patternSwatch, numberTable, formatNumber } from './charts.js';
 import { rateVital, formatMs, formatCls, isFewSamples, thresholdText, RATINGS } from './vitals.js';
 
 const $ = (id) => document.getElementById(id);
@@ -227,6 +227,25 @@ export function percentChange(cur, prev) {
   return Math.round(((cur - prev) / prev) * 100);
 }
 
+function infoIcon() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '14');
+  svg.setAttribute('height', '14');
+  svg.setAttribute('viewBox', '0 0 14 14');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const c = document.createElementNS(NS, 'circle');
+  c.setAttribute('cx', '7'); c.setAttribute('cy', '7'); c.setAttribute('r', '6');
+  c.setAttribute('fill', 'none'); c.setAttribute('stroke', 'currentColor'); c.setAttribute('stroke-width', '1.5');
+  const d = document.createElementNS(NS, 'path');
+  d.setAttribute('d', 'M7 6.2v3.6M7 4v1');
+  d.setAttribute('fill', 'none'); d.setAttribute('stroke', 'currentColor'); d.setAttribute('stroke-width', '1.5');
+  svg.append(c, d);
+  svg.style.flex = 'none';
+  return svg;
+}
+
 function arrowIcon(kind) {
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
@@ -444,13 +463,12 @@ function renderAudience(mount, answer) {
   const byType = new Map((d.devices || []).map((x) => [x.type, Number(x.visits) || 0]));
   const kinds = ['mobile', 'desktop', 'tablet', 'other'].filter((k) => k !== 'other' || byType.get('other') > 0);
   const items = kinds.map((k) => ({ ...DEVICE[k], value: byType.get(k) || 0 }));
-  const total = items.reduce((t, i) => t + i.value, 0);
-  const pct = (v) => Math.round((v / (total || 1)) * 100);
+  const shares = sharePercents(items.map((i) => i.value));
   const b = block(mount, 'Phone, PC and tablet');
   charts.push(stackedBar(b, {
     items,
     nameHeader: 'Device',
-    summary: `Visits by device, last ${answer.days} days (Malaysia time). ${items.map((i) => `${i.label} ${pct(i.value)} percent`).join(', ')}.`,
+    summary: `Visits by device, last ${answer.days} days (Malaysia time). ${items.map((i, k) => `${i.label} ${shares[k]} percent`).join(', ')}.`,
     caption: `Visits by device, last ${answer.days} days (Malaysia time)`,
   }));
   const cols = el('div', 'an-cols');
@@ -521,7 +539,13 @@ function deviceColumn(label, kind, p) {
   col.appendChild(h4);
   const samples = Number(p.samples) || 0;
   col.appendChild(el('p', 'an-samp', `from ${formatNumber(samples)} page loads`));
-  if (isFewSamples(samples)) col.appendChild(el('p', 'an-samp an-few', 'Few samples, may be unreliable'));
+  if (isFewSamples(samples)) {
+    col.appendChild(el('p', 'an-samp an-few', 'Few samples, may be unreliable'));
+    const guess = el('p', 'an-samp an-few-2');
+    guess.appendChild(infoIcon());
+    guess.appendChild(el('span', null, `Few samples (${formatNumber(samples)}). Treat as a guess.`));
+    col.appendChild(guess);
+  }
   const table = [];
   VITAL_ROWS.forEach((r) => {
     const v = p[r.key] === undefined ? null : p[r.key];
@@ -583,7 +607,7 @@ function renderPerformance(mount, answer) {
       big: false,
       valueLabel: 'page loads',
       nameHeader: 'Rating',
-      summary: `${VITAL_TITLE[k]}, share of page loads by rating, last ${answer.days} days (Malaysia time). ${items.map((i) => `${i.label} ${Math.round((i.value / total) * 100)} percent`).join(', ')}.`,
+      summary: `${VITAL_TITLE[k]}, share of page loads by rating, last ${answer.days} days (Malaysia time). ${(() => { const sh = sharePercents(items.map((i) => i.value)); return items.map((i, k) => `${i.label} ${sh[k]} percent`).join(', '); })()}.`,
       caption: `${VITAL_TITLE[k]}: page loads by rating, last ${answer.days} days (Malaysia time)`,
     }));
   });

@@ -343,7 +343,7 @@ function swatch(item, id) {
  */
 export function stackedBar(container, { items, summary, caption, valueLabel = 'visits', nameHeader = 'Item', big = true }) {
   const total = items.reduce((t, i) => t + i.value, 0);
-  const pct = (v) => Math.round((v / (total || 1)) * 100);
+  const shares = sharePercents(items.map((i) => i.value));
   const holder = h('div', 'an-stack');
   container.appendChild(holder);
   uid += 1;
@@ -380,14 +380,14 @@ export function stackedBar(container, { items, summary, caption, valueLabel = 'v
     const li = h('li');
     li.appendChild(swatch(i, `${id}-s${k}`));
     li.appendChild(h('span', 'nm', i.label));
-    li.appendChild(h('span', big ? 'big' : 'sm', `${pct(i.value)}%`));
+    li.appendChild(h('span', big ? 'big' : 'sm', `${shares[k]}%`));
     li.appendChild(h('span', 'sm', `${formatNumber(i.value)} ${valueLabel}`));
     ul.appendChild(li);
   });
   container.appendChild(ul);
   numberTable(container, {
     columns: [nameHeader, valueLabel.replace(/^./, (c) => c.toUpperCase()), 'Share'],
-    rows: items.map((i) => [i.label, i.value, `${pct(i.value)}%`]),
+    rows: items.map((i, k) => [i.label, i.value, `${shares[k]}%`]),
     caption: caption || summary,
   });
   let ro = null;
