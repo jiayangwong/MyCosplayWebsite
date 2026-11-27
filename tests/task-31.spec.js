@@ -213,6 +213,29 @@ test.describe('GMT+8 days', () => {
     const shaped = W.shapeOverview([], rows, r);
     expect(shaped.previous).toEqual({ visits: 5, pageViews: 8 });
   });
+  test('previousDaily: same length as daily, first / last = previous from / to, sums equal previous, GMT+8 regrouping, null when previous is null', () => {
+    for (const n of [7, 30, 90]) {
+      const r = W.localRange(Date.parse('2026-11-27T16:00:00Z'), n);
+      const rows = [
+        { hour: r.previous.start, visits: 4, pageViews: 6 },
+        { hour: '2026-11-13T17:00:00Z', visits: 1, pageViews: 1 },
+        { hour: r.previous.end, visits: 99, pageViews: 99 },
+      ];
+      const shaped = W.shapeOverview([], rows, r);
+      expect(shaped.previousDaily.length).toBe(shaped.daily.length);
+      expect(shaped.previousDaily[0].date).toBe(r.previous.from);
+      expect(shaped.previousDaily[n - 1].date).toBe(r.previous.to);
+      const sum = shaped.previousDaily.reduce((a, d) => ({ visits: a.visits + d.visits, pageViews: a.pageViews + d.pageViews }), { visits: 0, pageViews: 0 });
+      expect(sum).toEqual(shaped.previous);
+    }
+    const r7 = W.localRange(Date.parse('2026-11-27T16:00:00Z'), 7);
+    const s7 = W.shapeOverview([], [{ hour: '2026-11-13T16:00:00Z', visits: 4, pageViews: 6 }, { hour: '2026-11-13T17:00:00Z', visits: 1, pageViews: 1 }, { hour: '2026-11-20T15:00:00Z', visits: 2, pageViews: 2 }], r7);
+    expect(s7.previousDaily[0]).toEqual({ date: '2026-11-14', visits: 5, pageViews: 7 }); // 16:00Z and 17:00Z on 13 Nov both are 14 Nov in Malaysia
+    expect(s7.previousDaily[6]).toEqual({ date: '2026-11-20', visits: 2, pageViews: 2 });
+    const none = W.shapeOverview([], null, r7);
+    expect(none.previous).toBeNull();
+    expect(none.previousDaily).toBeNull();
+  });
   test('the same now gives the same answer on a machine set to any time zone', async () => {
     const saved = process.env.TZ;
     const out = [];

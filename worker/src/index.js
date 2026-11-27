@@ -213,8 +213,12 @@ export function shapeOverview(hourRows, prevHourRows, range) {
   const daily = hoursToLocalDays(hourRows, range.from, range.to);
   const total = (list) => list.reduce((a, d) => ({ visits: a.visits + d.visits, pageViews: a.pageViews + d.pageViews }), { visits: 0, pageViews: 0 });
   let previous = null;
-  if (prevHourRows) previous = total(hoursToLocalDays(prevHourRows, range.previous.from, range.previous.to));
-  return { daily, totals: total(daily), previous };
+  let previousDaily = null;
+  if (prevHourRows) {
+    previousDaily = hoursToLocalDays(prevHourRows, range.previous.from, range.previous.to);
+    previous = total(previousDaily);
+  }
+  return { daily, totals: total(daily), previous, previousDaily };
 }
 
 export function shapeSources(rows, ownHost) {
