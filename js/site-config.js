@@ -15,4 +15,11 @@ export const SITE = {
     { label: 'Facebook', url: 'https://www.facebook.com/felix.jiang.376' },
   ],
   watermark: '@notpuzzkezz', // default text of the lattice watermark (admin uploader)
+  // Cloudflare Web Analytics (TASK-30). Neither value is a secret (the beacon token is visible in every page's HTML).
+  // siteHost must equal the hostname in CNAME. beaconToken: paste the token from Cloudflare -> Web Analytics -> your
+  // site -> JS snippet (see worker/README.md). While it is '' (PLACEHOLDER) the beacon is never added.
+  analytics: {
+    siteHost: 'puzzkezz-testing.loc.cc',
+    beaconToken: '', // PLACEHOLDER: the real beacon token comes from the user's Cloudflare setup
+  },
 };

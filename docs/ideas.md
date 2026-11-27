@@ -600,3 +600,37 @@ The user approved the PC part ("pc web approved") and changed the phone part. Us
 - Phone: the D1, D2, D3 tabs are the meter (story-style segments that fill in 1.5 s each) and the photo flips by itself; no separate meter bar, no pause button.
 - Pressing a tab stops the animation on that photo for good; it plays again only after the page is reloaded.
 - Assumed: plays D1, D2, D3 once and stops on D3 (no loop, like stories; total 4.5 s). To confirm with the user.
+
+## IDEA-17: Cloudflare Web Analytics graphs in /admin/ (tabs, via a small Worker)
+- Date: 2026-11-27
+- Status: ready-for-planning
+- Summary: Count visits on the public pages with Cloudflare Web Analytics (free, cookie-less) and show the numbers as graphs inside /admin/, split into five tabs. A small free Cloudflare Worker fetches the data so no secret token is ever in the repo or the browser.
+- Details:
+  - User's words (verbatim): "I want Cloudflare Web Analytics in my project. Apply the Cloudflare Web Analytics graphs into the admin page, separated by tabs." After the site was analysed and graphs suggested, the user answered "yes, with worker" (the Worker approach is approved).
+  - Purpose: see whether the site grows and whether the Instagram bio link brings people, because the user wants more reel views. The phone vs PC split matters because the Hall uses a PC pile design and a phone story-tabs design (IDEA-16).
+  - DECIDED by the user:
+    1. Tracking: Cloudflare Web Analytics on the PUBLIC pages only: index, gallery, reels, events, about, contact (and 404). NOT on /admin/, so the user's own visits are not counted.
+    2. Display: graphs inside /admin/, in a tab bar above the existing collapsible panels.
+    3. Data path: a small free Cloudflare Worker holds a read-only Cloudflare API token as a secret, queries the Cloudflare GraphQL Analytics API (datasets rumPageloadEventsAdaptiveGroups, rumPerformanceEventsAdaptiveGroups, rumWebVitalsEventsAdaptiveGroups) and returns only the numbers. The token must never be in the repo or in browser code.
+    4. Protection: the Worker is protected by a passcode. The user pastes it into the admin page once; it stays only in that browser's localStorage (same pattern as the GitHub token in js/admin/github-token.js).
+    5. Five tabs the user accepted:
+       - Overview: visitors and page views per day, 7 / 30 / 90-day switch, totals vs the previous period.
+       - Sources: referrers bar chart (Instagram, Facebook, Google, direct).
+       - Pages: page views per page, entry pages.
+       - Audience: countries, phone vs PC vs tablet, browser.
+       - Performance: page load speed and Core Web Vitals, split by phone and PC.
+  - Known constraints / notes for the planner:
+    - Free Web Analytics counts page loads only. NO custom event or click tracking: reel clicks go to Instagram, and gallery photo opens and the bangai polaroid cannot be counted. Reels page visits plus Instagram as referrer are the closest signals. Click counting would be a separate future idea.
+    - Cloudflare samples analytics data, so the numbers are approximate (the admin page should say so).
+    - The site is static (no build step) on GitHub Pages with a custom domain in CNAME. admin/index.html has a CSP `connect-src 'self' https://api.github.com ...` that needs the Worker URL added. Public pages have no CSP meta tag today. robots.txt already disallows /admin/.
+    - The Worker lives outside the static site: it needs its own folder in the repo (code only, no secrets).
+    - Setup steps the user must do (to be written for them): Cloudflare account; add the site in Web Analytics and copy the beacon token and site tag; create an API token with read-only analytics permission; deploy the Worker; set the secrets and the passcode.
+    - The admin already has collapsible panels (all collapsed except Events on load, IDEA-14). The admin has an existing Playwright test setup with tests/github-mock.js (fake GitHub), so tests need a fake Worker too.
+  - OPEN QUESTIONS for the planner (not answered here):
+    1. Chart style / library: plain SVG or canvas? No external CDN is preferred, because of the admin CSP and the site having no build step.
+    2. Do the tabs sit above ALL existing panels, or only above a new Analytics panel?
+    3. Worker passcode handling (how it is sent, stored, rotated, and what happens on a wrong passcode or rate limit).
+    4. Date range limits of the free tier (is a 90-day view available?).
+    5. Exact Cloudflare dashboard menu names for the setup steps.
+- References: user message 2026-11-27; related: IDEA-8 (token pattern, js/admin/github-token.js), IDEA-14 (collapsible admin panels), IDEA-16 (PC pile vs phone D1-D3 tabs)
+- Priority (user's view): nice-to-have (assumed, the user did not say)

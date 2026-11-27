@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; frame-src https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Events · Puzz Kezz</title>
   <meta name="description" content="Every convention Puzz Kezz has cosplayed at, newest first: Comic Fiesta, AMG, Omatsuri and more.">
@@ -27,11 +28,7 @@
     </div>
     <div id="events-root"></div>
   </main>
-  <script type="module">
-    import { mountChrome } from './js/nav.js';
-    import { mountEventsPage } from './js/events-page.js';
-    mountChrome('events');
-    mountEventsPage(document.getElementById('events-root'));
-  </script>
+  <script type="module" src="js/analytics.js"></script>
+  <script type="module" src="js/page-events.js"></script>
 </body>
 </html>

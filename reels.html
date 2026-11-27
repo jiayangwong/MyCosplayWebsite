@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; frame-src https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reels · さしすせそ · Puzz Kezz</title>
   <meta name="description" content="Five reels, five Japanese reactions: さしすせそ (sa · shi · su · se · so), with romaji, meaning and pronunciation.">
@@ -29,11 +30,7 @@
       <div class="container" id="reels-mount"></div>
     </section>
   </main>
-  <script type="module">
-    import { mountChrome } from './js/nav.js';
-    import { mountReels } from './js/reels.js';
-    mountChrome('reels');
-    mountReels(document.getElementById('reels-mount'));
-  </script>
+  <script type="module" src="js/analytics.js"></script>
+  <script type="module" src="js/page-reels.js"></script>
 </body>
 </html>

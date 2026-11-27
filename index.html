@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; frame-src https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Puzz Kezz · Cosplayer · Walk the hall</title>
   <meta name="description" content="Puzz Kezz, Malaysian cosplayer and Lolita fan. Walk through every convention, newest first, and watch the さしすせそ reels.">
@@ -75,20 +76,7 @@
     </section>
   </main>
 
-  <script type="module">
-    import { mountChrome } from './js/nav.js';
-    import { mountHall } from './js/hall.js';
-    import { mountReels } from './js/reels.js';
-    import { mountPortrait } from './js/portrait.js';
-
-    mountChrome('home');
-    mountPortrait(document.querySelector('.pass-photo'));
-    mountHall({
-      hallList: document.getElementById('hall-list'),
-      timelineSlot: document.getElementById('timeline-slot'),
-      summary: document.getElementById('hall-summary'),
-    });
-    mountReels(document.getElementById('reels-mount'));
-  </script>
+  <script type="module" src="js/analytics.js"></script>
+  <script type="module" src="js/page-home.js"></script>
 </body>
 </html>

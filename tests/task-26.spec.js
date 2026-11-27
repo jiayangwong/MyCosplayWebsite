@@ -8,7 +8,8 @@ const BASE = { id: '2026-03-14-x', date: '2026-03-14', short: 'X', name: 'Event 
 const P = (n, full) => (full ? { photo: `media/${n}.webp`, photoFull: `media/${n}-full.webp` } : { photo: `media/${n}.webp` });
 
 async function run(page, fn, arg) {
-  await page.goto('index.html');
+  // robots.txt has no CSP: the public pages' CSP (TASK-30) forbids the eval inside new Function below.
+  await page.goto('robots.txt');
   return page.evaluate(async ({ src, arg }) => {
     const d = await import('./js/events-data.js');
     // eslint-disable-next-line no-new-func
