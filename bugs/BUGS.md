@@ -175,10 +175,11 @@
 - Steps to reproduce (not yet done): 1. Run worker/src/index.js in the real Workers runtime (`wrangler dev` or `wrangler deploy`). 2. Watch for a startup error such as "Incorrect type for map entry ... is not of type 'function or ExportedHandler'".
 - Expected: the Worker starts.
 - Actual: unknown. `TZ_OFFSET_MIN` (number), `TZ_LABEL` and `NOT_FOUND_PATH` (strings) are named exports of the Worker's main module; from QA's knowledge of workerd, every named export of the main module must be a function, class or handler object. The Node tests cannot show this. No test and no script imports these three, so dropping the `export` keyword is a safe change either way; it still needs one real-runtime check.
-- Status: open
+- Status: verified (real runtime) - evidence provided by the user (see the last line); QA to confirm the final TASK-31 QA status.
 - Cause: (unconfirmed) `TZ_OFFSET_MIN`, `TZ_LABEL` and `NOT_FOUND_PATH` were exported from the main module as a number and strings, which workerd may refuse.
 - Fix: worker/src/index.js: dropped the `export` keyword from those three constants (nothing imported them). Safe change only: NOT reproduced and NOT checked in the real Workers runtime (no workerd / wrangler in this environment; installing one was not allowed). Still needed: one real-runtime check (`wrangler dev` or a deploy) that the Worker starts. The other named exports are functions or plain objects (`EXPECTED_FIELDS`, `QUERIES`); that check should confirm those are accepted too.
 - QA re-test (2026-11-27): NOT verified, so set back to open. This is not a failed fix: the three `export` keywords are gone, and in Node every export of the entry module is a function or object (guard test in tests/qa-task-31.spec.js; all other TASK-31 tests pass). Node cannot show what the Workers runtime accepts, and neither the problem nor the fix has been run there (workerd / wrangler not installed; install not permitted). No further code change is requested. To close: start the Worker once with `wrangler dev` or `wrangler deploy` on a machine where that is allowed (for example the user's, during setup) and confirm it starts.
+- Real-runtime evidence (from the user, 2026-11-27/28): `wrangler deploy` of the Worker from this code (with the QA fixes) succeeded on the real Cloudflare Workers platform (Version ID b1c93d0e-bc07-4f03-9835-d15c8a54f480), and the live Worker answered `/v1/stats?tab=overview&days=7` with the expected JSON (Malaysia-day dates, `previousDaily` included). So the Worker starts and the remaining named exports are accepted.
 
 ## BUG-23: Performance tab says "1 page loads" (and "from 1 page loads") for a count of 1
 - Found by: QA
@@ -187,4 +188,6 @@
 - Steps to reproduce: 1. Open the fake-Worker admin, Analytics, Performance tab. 2. Use a fixture with a rating bucket of 1 (the default performance fixture, CLS Poor = 1) or `samples: 1`.
 - Expected: "1 page load".
 - Actual: "1 page loads" (js/admin/analytics-panel.js:541 and the bar valueLabel 'page loads' at :608 never singularise).
-- Status: open
+- Status: fixed
+- Cause: count texts were built as number + a fixed plural word ('page loads', and the same for 'visits' / 'page views' in bar values, stacked-bar counts and chart summaries), so a count of 1 was never singular.
+- Fix: one helper `countWord(n, plural)` in js/admin/charts.js (visit/visits, page view/page views, page load/page loads, sample/samples) used by barChart values, stackedBar counts, and in js/admin/analytics-panel.js by the "from N page loads" line, the Overview and Sources chart summaries and the Other sites list. Table headers stay plural ("Visits", "Page views", "Page loads"); tile labels and tooltips print "Visits 1" / "Page views 1" style labels, unchanged per docs/style-guide.md; the few-samples line "Few samples (n)" has no count word, unchanged. Regression test tests/bug-23.spec.js (0 / 1 / 2 for each word, Performance, Sources, Pages; fails without the fix).

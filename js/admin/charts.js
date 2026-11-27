@@ -14,6 +14,14 @@ export function formatNumber(n) {
   return nf.format(n);
 }
 
+/** Singular of each count word used in the Analytics panel (BUG-23). */
+const SINGULAR = { visits: 'visit', 'page views': 'page view', 'page loads': 'page load', samples: 'sample' };
+
+/** (1, 'page loads') -> '1 page load'; (0 or 2, 'page loads') -> '0 page loads' / '2 page loads'. */
+export function countWord(n, plural) {
+  return `${formatNumber(n)} ${Number(n) === 1 ? SINGULAR[plural] || plural : plural}`;
+}
+
 /** Axis numbers: 10,000 and over as '12k'. */
 export function axisNumber(n) {
   return n >= 10000 ? `${Math.round(n / 1000)}k` : nf.format(n);
@@ -300,7 +308,7 @@ export function barChart(container, { items, valueLabel = 'visits', summary, cap
     const tr = h('div', 'tr');
     const fl = h('div', `fl${i.value === 0 ? ' zero' : ''}`);
     fl.style.width = i.value === 0 ? '0' : `max(4px, calc((100% - 150px) * ${(i.value / max).toFixed(4)}))`;
-    tr.append(fl, h('div', 'vl', i.value === 0 ? '0' : `${formatNumber(i.value)} ${valueLabel} - ${pcts[idx]}%`));
+    tr.append(fl, h('div', 'vl', i.value === 0 ? '0' : `${countWord(i.value, valueLabel)} - ${pcts[idx]}%`));
     li.append(nm, tr);
     ul.appendChild(li);
   });
@@ -381,7 +389,7 @@ export function stackedBar(container, { items, summary, caption, valueLabel = 'v
     li.appendChild(swatch(i, `${id}-s${k}`));
     li.appendChild(h('span', 'nm', i.label));
     li.appendChild(h('span', big ? 'big' : 'sm', `${shares[k]}%`));
-    li.appendChild(h('span', 'sm', `${formatNumber(i.value)} ${valueLabel}`));
+    li.appendChild(h('span', 'sm', countWord(i.value, valueLabel)));
     ul.appendChild(li);
   });
   container.appendChild(ul);

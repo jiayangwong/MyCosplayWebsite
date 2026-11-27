@@ -5,7 +5,7 @@ import {
   TABS, MESSAGES, analyticsFetch, hasPasscode, isConfigured, readOptOut, rangeLine, savePasscode,
   forgetPasscode, writeOptOut, dayLabel, fullDayLabel, malaysiaClock,
 } from './analytics-client.js';
-import { lineChart, barChart, stackedBar, sharePercents, patternSwatch, numberTable, formatNumber } from './charts.js';
+import { lineChart, barChart, stackedBar, sharePercents, patternSwatch, numberTable, formatNumber, countWord } from './charts.js';
 import { rateVital, formatMs, formatCls, isFewSamples, thresholdText, RATINGS } from './vitals.js';
 
 const $ = (id) => document.getElementById(id);
@@ -338,14 +338,14 @@ function drawOverview(mount, answer, compare, prevDaily) {
   mount.appendChild(wrap);
   const daily = d.daily;
   const best = daily.reduce((b, x) => (x.visits > b.visits ? x : b), daily[0]);
-  let summary = `Visits and page views per day, last ${days} days (Malaysia time). ${formatNumber(d.totals.visits)} visits and ${formatNumber(d.totals.pageViews)} page views in total, busiest day ${dayLabel(best.date)} with ${formatNumber(best.visits)} visits.`;
+  let summary = `Visits and page views per day, last ${days} days (Malaysia time). ${countWord(d.totals.visits, 'visits')} and ${countWord(d.totals.pageViews, 'page views')} in total, busiest day ${dayLabel(best.date)} with ${countWord(best.visits, 'visits')}.`;
   const series = [
     { name: 'Visits', values: daily.map((x) => x.visits), color: 'var(--color-ink)', marker: 'circle' },
     { name: 'Page views', values: daily.map((x) => x.pageViews), color: 'var(--color-purple-deep)', marker: 'square' },
   ];
   let table;
   if (compare) {
-    summary += ` Compared with the previous ${days} days: ${formatNumber(d.previous.visits)} visits and ${formatNumber(d.previous.pageViews)} page views, shown as dashed lines.`;
+    summary += ` Compared with the previous ${days} days: ${countWord(d.previous.visits, 'visits')} and ${countWord(d.previous.pageViews, 'page views')}, shown as dashed lines.`;
     series.push(
       { name: `Visits, previous ${days} days`, values: prevDaily.map((x) => x.visits), color: 'var(--color-ink)', dashed: true },
       { name: `Page views, previous ${days} days`, values: prevDaily.map((x) => x.pageViews), color: 'var(--color-purple-deep)', dashed: true },
@@ -393,7 +393,7 @@ function renderSources(mount, answer) {
     items,
     valueLabel: 'visits',
     nameHeader: 'Source',
-    summary: `Where visits came from, last ${answer.days} days (Malaysia time). ${formatNumber(total)} visits in total: ${sentence}.`,
+    summary: `Where visits came from, last ${answer.days} days (Malaysia time). ${countWord(total, 'visits')} in total: ${sentence}.`,
     caption: `Visits by source, last ${answer.days} days (Malaysia time)`,
   });
   const hosts = el('div', 'an-block');
@@ -401,7 +401,7 @@ function renderSources(mount, answer) {
   const list = Array.isArray(d.otherHosts) ? d.otherHosts.slice(0, 5) : [];
   if (list.length) {
     const ul = el('ul', 'an-hosts');
-    list.forEach((h) => ul.appendChild(el('li', null, `${h.host} - ${formatNumber(Number(h.visits) || 0)} ${Number(h.visits) === 1 ? 'visit' : 'visits'}`)));
+    list.forEach((h) => ul.appendChild(el('li', null, `${h.host} - ${countWord(Number(h.visits) || 0, 'visits')}`)));
     hosts.appendChild(ul);
   } else {
     hosts.appendChild(el('p', 'an-note', 'No other sites in this period.'));
@@ -538,7 +538,7 @@ function deviceColumn(label, kind, p) {
   h4.appendChild(document.createTextNode(label));
   col.appendChild(h4);
   const samples = Number(p.samples) || 0;
-  col.appendChild(el('p', 'an-samp', `from ${formatNumber(samples)} page loads`));
+  col.appendChild(el('p', 'an-samp', `from ${countWord(samples, 'page loads')}`));
   if (isFewSamples(samples)) {
     col.appendChild(el('p', 'an-samp an-few', 'Few samples, may be unreliable'));
     const guess = el('p', 'an-samp an-few-2');
