@@ -1,0 +1,31 @@
+{
+ "data": {
+  "viewer": {
+   "accounts": [
+    {
+     "settings": {
+      "rumPageloadEventsAdaptiveGroups": {
+       "enabled": true,
+       "maxDuration": 2678400,
+       "maxPageSize": 10000,
+       "notOlderThan": 15552000
+      },
+      "rumPerformanceEventsAdaptiveGroups": {
+       "enabled": true,
+       "maxDuration": 2678400,
+       "maxPageSize": 10000,
+       "notOlderThan": 15552000
+      },
+      "rumWebVitalsEventsAdaptiveGroups": {
+       "enabled": true,
+       "maxDuration": 2678400,
+       "maxPageSize": 10000,
+       "notOlderThan": 15552000
+      }
+     }
+    }
+   ]
+  }
+ },
+ "errors": null
+}
