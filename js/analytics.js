@@ -29,6 +29,8 @@ export function loadBeacon({ hostname, siteHost, token, optOut, doc = document }
   if (!shouldLoadBeacon({ hostname, siteHost, token, optOut })) return false;
   if (doc.querySelector('script[data-cf-beacon]')) return false;
   const script = doc.createElement('script');
+  // Cloudflare's current manual snippet uses type="module" (FAQ: keeps the beacon out of very old browsers); defer is kept as the plan asks.
+  script.type = 'module';
   script.defer = true;
   script.src = BEACON_SRC;
   script.setAttribute('data-cf-beacon', JSON.stringify({ token: token.trim() }));

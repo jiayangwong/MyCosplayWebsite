@@ -120,7 +120,7 @@ test('loader with a forced host adds exactly one beacon tag with the token; opt-
     const tags = [...document.head.querySelectorAll('script[data-cf-beacon]')];
     return {
       first, second, count: tags.length,
-      src: tags[0].getAttribute('src'), defer: tags[0].defer, data: tags[0].getAttribute('data-cf-beacon'),
+      src: tags[0].getAttribute('src'), defer: tags[0].defer, type: tags[0].type, data: tags[0].getAttribute('data-cf-beacon'),
     };
   }, HOST);
   expect(result.first).toBe(true);
@@ -128,6 +128,7 @@ test('loader with a forced host adds exactly one beacon tag with the token; opt-
   expect(result.count).toBe(1);
   expect(result.src).toBe('https://static.cloudflareinsights.com/beacon.min.js');
   expect(result.defer).toBe(true);
+  expect(result.type).toBe('module');
   expect(JSON.parse(result.data)).toEqual({ token: 'TEST-TOKEN-not-real' });
   await expect.poll(() => insights.length).toBeGreaterThan(0); // the CSP lets this one host through (we aborted it)
   expect(insights.every((u) => u.startsWith('https://static.cloudflareinsights.com/'))).toBe(true);
