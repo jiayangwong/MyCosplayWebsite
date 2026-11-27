@@ -1746,7 +1746,7 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
   - `#new-event` (clicked or pressed in task-12, task-21, task-23, task-24) stays a top-level toolbar button with the same id: no change, unless a test checks its class (`btn-primary`): search.
   - **Not read by the planner, the programmer must search them:** every file in `tests/` (including `task-7`, `task-10`, `task-13`, `task-14`, `task-15`, `task-16`, `task-22`, `task-27`, `qa-task-23`, `qa-task-24`, `qa-idea-12-admin`, `qa-bug-9-10` and any newer spec) for `export-events`, `discard-draft`, `import-file`, `Export events.json`, `Discard draft`, `Import events.json`, `.toolbar`, `file-button`, `btn-accent`, `btn-primary` and `new-event`; apply the same rules (Export / Discard clicks or key presses -> `openBackup` first; class checks on `#new-event` / `#publish-btn` / `#export-events` -> the H5 rule). Expectations only, never weakened. Then the full suite passes in both projects.
 - Status: built, waiting for review (branch `task-36-admin-shell`, based on `task-31-worker` because that branch carries the approved docs; 2026-11-27)
-- Review: pending
+- Review: changes made, re-review pending (2026-11-28 must-fix round, see docs/reviews.md)
 - QA: pending
 
 ### TASK-37: Analytics panel layout - placement, controls row, Settings and About, compare switch, tile column
