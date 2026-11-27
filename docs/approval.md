@@ -1,5 +1,7 @@
 # Storyboard approval
 
+STORYBOARD APPROVED: 2026-11-27 (by the user, "Approve": admin page with Analytics tabs for IDEA-17 and the layout polish of IDEA-18 - Analytics last, Backup menu, one pink primary, Settings / About disclosures, Compare switch; link https://claude.ai/artifact/JqLvB1N5ycBaANcdiTYpYZ).
+
 STORYBOARD APPROVED: 2026-11-18 (by the user: IDEA-8 / IDEA-9 / IDEA-10 screens, lattice watermark at 2x density, every photo watermarked).
 
 Scope of this review round: IDEA-8 / IDEA-9 additions (TASK-7, TASK-10 to TASK-13). Other screens are unchanged.

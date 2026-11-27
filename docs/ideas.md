@@ -634,3 +634,24 @@ The user approved the PC part ("pc web approved") and changed the phone part. Us
     5. Exact Cloudflare dashboard menu names for the setup steps.
 - References: user message 2026-11-27; related: IDEA-8 (token pattern, js/admin/github-token.js), IDEA-14 (collapsible admin panels), IDEA-16 (PC pile vs phone D1-D3 tabs)
 - Priority (user's view): nice-to-have (assumed, the user did not say)
+
+## IDEA-18: Admin layout polish (six changes kept from the admin design review)
+- Date: 2026-11-27
+- Status: planned (was ready-for-planning 2026-11-27; docs/plan.md section 13, TASK-36 and TASK-37, written 2026-11-27, **waiting for user approval**)
+- Summary: After reviewing the admin page design, the user kept six layout changes for /admin/ (verbatim: "Keep these 1-6 suggestions").
+- Details (the six changes the user kept):
+  1. The Analytics panel moves BELOW the two-column grid (GitHub / Events on the left, Publish / Event form on the right). Still collapsed on load. (Changes IDEA-17's "above the existing panels".)
+  2. Analytics controls. PC: the five tabs on the left; the 7 / 30 / 90 range switch, Refresh and "Updated HH:MM Malaysia time" on the right of the same row. Phone: range switch and an icon Refresh (labelled "Refresh") on one row, "Updated ..." under them, tabs below.
+  3. The passcode block and the "don't count my visits" checkbox go into one collapsed "Settings" disclosure; the four footer notes go into one collapsed "About these numbers" disclosure. Settings opens by itself in the "not set up" and "no passcode" states.
+  4. Overview: a "Compare with previous period" switch, OFF by default (off: 2 lines and 2 legend items; on: dashed previous-period lines and extra legend items; the numbers table follows). Tiles keep the change line; the "Show the numbers" under the tiles and the tile helper text are removed. PC: tiles in a left column (about 240px) and the chart on the right; phone: order unchanged. The range line says "compared with the 30 days before".
+  5. One spacing value for the gaps between panels and grid rows / columns across the whole admin page (24px phone, 32px PC); grid items aligned to the top; the Publish button 12px under its header.
+  6. One pink primary button per screen: NEW EVENT is pink while nothing is pending; PUBLISH TO GITHUB (enabled) is pink when changes are pending, and NEW EVENT becomes secondary. IMPORT, EXPORT and DISCARD DRAFT move into one "Backup" menu (44px, Esc closes it, focus goes back to its button; Discard draft keeps its danger style and its confirmation).
+- NOT chosen by the user (stay as they are):
+  - Merging the GitHub token and the analytics passcode into one "Connections" panel: the user has not decided (open question 59 in the plan).
+  - Review item 7 (Help box) and item 8 (Instagram button in the admin header): not kept; both stay as they are today.
+- Planner notes (details and assumptions H1-H16 are in docs/plan.md section 13):
+  - Change 4 needs the previous period's numbers per day. The Worker (TASK-31) returns only the previous totals today, so a small addition (`previousDaily`) is proposed (plan question 54).
+  - Change 6 moves Import / Export / Discard into the Backup menu; several existing admin tests click those buttons and get a shared `openBackup` helper (list in TASK-36).
+  - Open questions 54-60 are in the plan.
+- References: user message 2026-11-27 ("Keep these 1-6 suggestions"); related: IDEA-7, IDEA-8, IDEA-13, IDEA-14, IDEA-17
+- Priority (user's view): must-have (assumed: the user asked to keep all six)
