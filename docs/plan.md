@@ -1561,7 +1561,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Opt-out checkbox writes and clears the key.
   - Phone 360px: no horizontal page scroll, tabs 44px tall.
 - Existing specs likely to change: any test that counts fold panels or checks the order of panels / the fold chips (`task-18`, `task-23`, `task-24`, `qa-task-23`), and any check of the exact admin CSP string (`task-11`). Expectations only; the programmer searches tests/ for `fold-btn`, `.fold`, `Content-Security-Policy`, `connect-src`. Known from reading (2026-11-27): `tests/task-24.spec.js` `PANELS` lists 6 panels and checks "only Events open" and no horizontal scroll with all open / all collapsed -> add `['an-panel', <body id>, <chip id>]` (collapsed on load); `tests/task-23.spec.js` "one column (phone)" order test compares GitHub, Events, form, Publish, Moments, uploader positions -> still passes with Analytics last, after the uploader (add `#an-panel` at the end of the list); `tests/task-23.spec.js` / `tests/task-18.spec.js` desktop "Moments below the form" -> still passes. Any test that assumes the Media uploader is the last panel must be updated to Analytics (expectations only).
-- Status: todo
+- Status: built, waiting for review (branch `task-32-analytics-panel`, chained on `task-36-admin-shell`, 2026-11-27; Worker URL empty = "Not set up")
 - Review: pending
 - QA: pending
 

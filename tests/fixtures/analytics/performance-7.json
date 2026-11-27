@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "tab": "performance",
+  "days": 7,
+  "from": "2026-11-20",
+  "to": "2026-11-26",
+  "tz": "+08:00",
+  "sampled": true,
+  "generatedAt": "2026-11-26T12:00:00Z",
+  "data": {
+    "byDevice": {
+      "mobile": {
+        "samples": 30,
+        "pageLoadP50Ms": 1800,
+        "fcpP75Ms": 1200,
+        "lcpP75Ms": 2300,
+        "inpP75Ms": 150,
+        "clsP75": 0.04
+      },
+      "desktop": {
+        "samples": 5,
+        "pageLoadP50Ms": 950,
+        "fcpP75Ms": 700,
+        "lcpP75Ms": 1400,
+        "inpP75Ms": 620,
+        "clsP75": null
+      }
+    },
+    "vitals": {
+      "lcp": {
+        "good": 20,
+        "needsImprovement": 3,
+        "poor": 1
+      },
+      "inp": {
+        "good": 18,
+        "needsImprovement": 4,
+        "poor": 2
+      },
+      "cls": {
+        "good": 23,
+        "needsImprovement": 1,
+        "poor": 1
+      }
+    }
+  }
+}

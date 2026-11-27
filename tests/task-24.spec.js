@@ -9,6 +9,7 @@ const SIZE_KEY = 'puzzkezz.admin.eventsPerPage';
 const PANELS = [
   ['gh-panel', 'gh-body', 'gh-chip'], ['events-panel', 'events-body', 'event-count'], ['form-panel', 'form-body', 'form-chip'],
   ['publish-panel', 'pub-body', 'pub-chip'], ['moments-panel', 'mo-body', 'mo-count'], ['wm-panel', 'wm-body', 'wm-chip'],
+  ['an-panel', 'an-body', 'an-chip'], // TASK-32: Analytics, collapsed on load, the last block
 ];
 
 /** n events, newest first: 2026-01-n ... Ids "2026-01-NN-eNN". */
@@ -32,7 +33,7 @@ const size = (page) => page.evaluate(() => document.getElementById('event-page-s
 const isPhone = (page) => page.viewportSize().width < 768;
 
 test.describe('folds', () => {
-  test('six fold buttons, defaults: only Events open (no token, token, draft)', async ({ page, github }) => {
+  test('seven fold buttons, defaults: only Events open (no token, token, draft)', async ({ page, github }) => {
     await load(page, many(21));
     const check = async () => {
       for (const [panel, body, chip] of PANELS) {

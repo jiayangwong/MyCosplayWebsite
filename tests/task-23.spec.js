@@ -543,14 +543,14 @@ test.describe('row layout', () => {
 test.describe('panel order', () => {
   test.beforeEach(async ({ page }) => { await plain(page); });
 
-  test('one column (phone): GitHub, Events, Event form, Publish, then Moments and the uploader', async ({ page }, info) => {
+  test('one column (phone): GitHub, Events, Event form, Publish, then Moments, the uploader and Analytics', async ({ page }, info) => {
     test.skip(info.project.name !== 'phone', 'phone only');
     const y = async (sel) => (await page.locator(sel).boundingBox()).y;
-    const order = [await y('#gh-panel'), await y('#list-title'), await y('#form-title'), await y('#publish-panel'), await y('#moments-panel'), await y('#wm-title')];
+    const order = [await y('#gh-panel'), await y('#list-title'), await y('#form-title'), await y('#publish-panel'), await y('#moments-panel'), await y('#wm-title'), await y('#an-panel')];
     expect(order).toEqual([...order].sort((a, b) => a - b));
     expect(new Set(order).size).toBe(order.length);
     // DOM order is the same.
-    const dom = await page.evaluate(() => ['gh-panel', 'list-title', 'form-title', 'publish-panel', 'moments-panel']
+    const dom = await page.evaluate(() => ['gh-panel', 'list-title', 'form-title', 'publish-panel', 'moments-panel', 'wm-panel', 'an-panel']
       .map((id) => document.getElementById(id))
       .map((el, i, all) => (i ? Boolean(all[i - 1].compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) : true)));
     expect(dom.every(Boolean)).toBe(true);

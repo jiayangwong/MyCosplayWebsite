@@ -1,0 +1,94 @@
+{
+  "v": 1,
+  "tab": "overview",
+  "days": 7,
+  "from": "2026-11-20",
+  "to": "2026-11-26",
+  "tz": "+08:00",
+  "sampled": true,
+  "generatedAt": "2026-11-26T12:00:00Z",
+  "data": {
+    "daily": [
+      {
+        "date": "2026-11-20",
+        "visits": 4,
+        "pageViews": 12
+      },
+      {
+        "date": "2026-11-21",
+        "visits": 7,
+        "pageViews": 22
+      },
+      {
+        "date": "2026-11-22",
+        "visits": 10,
+        "pageViews": 32
+      },
+      {
+        "date": "2026-11-23",
+        "visits": 6,
+        "pageViews": 21
+      },
+      {
+        "date": "2026-11-24",
+        "visits": 15,
+        "pageViews": 45
+      },
+      {
+        "date": "2026-11-25",
+        "visits": 5,
+        "pageViews": 16
+      },
+      {
+        "date": "2026-11-26",
+        "visits": 8,
+        "pageViews": 26
+      }
+    ],
+    "totals": {
+      "visits": 55,
+      "pageViews": 174
+    },
+    "previous": {
+      "visits": 33,
+      "pageViews": 99
+    },
+    "previousDaily": [
+      {
+        "date": "2026-11-13",
+        "visits": 3,
+        "pageViews": 9
+      },
+      {
+        "date": "2026-11-14",
+        "visits": 5,
+        "pageViews": 15
+      },
+      {
+        "date": "2026-11-15",
+        "visits": 7,
+        "pageViews": 21
+      },
+      {
+        "date": "2026-11-16",
+        "visits": 3,
+        "pageViews": 9
+      },
+      {
+        "date": "2026-11-17",
+        "visits": 5,
+        "pageViews": 15
+      },
+      {
+        "date": "2026-11-18",
+        "visits": 7,
+        "pageViews": 21
+      },
+      {
+        "date": "2026-11-19",
+        "visits": 3,
+        "pageViews": 9
+      }
+    ]
+  }
+}

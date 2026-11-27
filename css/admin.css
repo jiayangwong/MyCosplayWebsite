@@ -431,7 +431,7 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 @media (prefers-reduced-motion: reduce) { .fold-btn i { transition: none; } }
 
 /* Moments panel (TASK-21): same list rows and form fields as the event manager */
-.moments-panel { margin-bottom: var(--admin-gap); }
+.moments-panel, .uploader { margin-bottom: var(--admin-gap); }
 .moments-grid { display: grid; gap: var(--space-6); align-items: start; }
 @media (min-width: 1000px) { .moments-grid { grid-template-columns: minmax(320px, 0.9fr) 1.1fr; } }
 .mo-form-head { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; justify-content: space-between; margin: var(--space-4) 0 var(--space-3); }
@@ -496,3 +496,75 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 }
 .ph-chip[data-n="3"] { background: var(--color-ink); color: var(--color-pink); }
 .wm-attach-msg { margin: var(--space-1) 0 0; color: var(--color-error); font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; }
+
+/* ===== TASK-32: Analytics panel (IDEA-17). Last block of the page; tokens only. 900px = phone / PC switch. ===== */
+.an-panel { padding: var(--space-4); }
+@media (min-width: 900px) { .an-panel { padding: var(--space-6); } }
+.an-panel [hidden] { display: none !important; }
+.an-body { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.an-body > * { min-width: 0; margin: 0; }
+@media (min-width: 900px) { .an-body { gap: var(--space-6); } }
+.an-note { margin: 0; font: 400 0.75rem var(--font-mono); color: var(--color-muted); overflow-wrap: anywhere; }
+.an-ctl { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.an-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); align-items: end; min-width: 0; }
+.an-rangeset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.an-rangeset legend { padding: 0; margin-bottom: 6px; font: 700 0.75rem var(--font-mono); text-transform: uppercase; }
+.an-range { display: flex; }
+.an-range label {
+  position: relative; display: flex; flex: 1; align-items: center; justify-content: center;
+  min-width: var(--tap-min); min-height: var(--tap-min); padding: 0 var(--space-2); margin-left: -2px;
+  background: var(--color-surface); color: var(--color-ink); border: 2px solid var(--color-ink);
+  font: 700 0.875rem var(--font-body); letter-spacing: 1px; white-space: nowrap; cursor: pointer;
+}
+.an-range label:first-child { margin-left: 0; border-radius: var(--radius-btn) 0 0 var(--radius-btn); }
+.an-range label:last-child { border-radius: 0 var(--radius-btn) var(--radius-btn) 0; }
+.an-range label:hover { background: var(--ph-lilac); }
+.an-range label:has(input:checked) { background: var(--color-ink); color: var(--color-on-dark); box-shadow: inset 0 -4px 0 var(--color-pink); }
+.an-range label:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: 2px; z-index: 2; }
+.an-range label.is-off { border-color: var(--color-line); color: var(--color-muted); background: var(--color-surface); cursor: not-allowed; }
+.an-range input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.an-refresh { min-height: var(--tap-min); }
+.an-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+.an-tabs {
+  display: flex; gap: var(--space-1); overflow-x: auto; max-width: 100%;
+  padding: 6px 6px 0; border-bottom: 2px solid var(--color-ink);
+  scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--color-line) transparent;
+}
+.an-tabs::-webkit-scrollbar { height: 4px; }
+.an-tabs::-webkit-scrollbar-thumb { background: var(--color-line); }
+.an-tab {
+  flex: none; scroll-snap-align: start; min-height: var(--tap-min); padding: 0 var(--space-4);
+  background: var(--color-surface); color: var(--color-ink); border: 2px solid var(--color-ink); border-bottom: 0;
+  border-radius: var(--radius-btn) var(--radius-btn) 0 0;
+  font: 700 0.875rem var(--font-body); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; cursor: pointer;
+}
+.an-tab:hover { background: var(--ph-lilac); }
+.an-tab[aria-selected="true"] { background: var(--color-ink); color: var(--color-on-dark); box-shadow: inset 0 -4px 0 var(--color-pink); }
+.an-tab:active { transform: translateY(1px); }
+.an-tab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.an-tp { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.an-tp:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+@media (min-width: 900px) { .an-tp { gap: var(--space-6); } }
+.an-range-line { margin: 0; font: 400 0.8125rem var(--font-mono); color: var(--color-ink); }
+.an-tp .msg, .an-body .msg { margin: 0; }
+.an-tp .msg-actions { margin-top: var(--space-2); }
+.an-loading { display: flex; flex-direction: column; gap: var(--space-3); }
+.an-loading-text p { margin: 0; }
+.an-sk {
+  background: var(--color-bg); border: 2px solid var(--color-line); border-radius: var(--radius-card);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 47px, var(--color-line) 47px 48px);
+}
+.an-sk-chart { height: 260px; }
+.an-sk-rows { height: 200px; }
+.an-pass { display: flex; flex-direction: column; gap: var(--space-2); }
+.an-pass .field { margin: 0; }
+.an-pass .field input { max-width: 520px; font-family: var(--font-mono); }
+.an-pass .form-actions { margin: 0; }
+.an-saved { margin: 0; font-size: 0.8125rem; }
+.an-ask { display: flex; flex-direction: column; gap: var(--space-2); }
+.an-ask p, .an-pass-status { margin: 0; font-size: 0.8125rem; overflow-wrap: anywhere; }
+.an-pass-status:empty { display: none; }
+.an-opt { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap-min); font-weight: 700; cursor: pointer; }
+.an-opt input { width: 24px; height: 24px; flex: none; accent-color: var(--color-purple-deep); }
+.an-opt-help { margin-left: 36px; }
+.an-foot { margin: 0; padding: var(--space-3) 0 0; list-style: none; border-top: 1px solid var(--color-line); display: flex; flex-direction: column; gap: var(--space-1); font: 400 0.75rem var(--font-mono); color: var(--color-muted); }

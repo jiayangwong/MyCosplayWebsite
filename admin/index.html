@@ -439,6 +439,76 @@
       </div>
     </section>
 
+    <section class="panel an-panel fold" id="an-panel" aria-labelledby="an-title">
+      <div class="fold-head"><h2 id="an-title" class="panel-title">Analytics</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="an-body" aria-labelledby="an-title an-chip"><span class="fold-chip" id="an-chip">Not set up</span><i aria-hidden="true">&#9662;</i></button></div>
+      <div class="fold-body an-body" id="an-body" hidden>
+        <div class="msg" id="an-notset" data-state="none" role="status" hidden>
+          <span class="msg-icon" aria-hidden="true">&ndash;</span>
+          <div class="msg-body"><p class="msg-text">Analytics is not set up yet. See worker/README.md.</p></div>
+        </div>
+        <div class="an-ctl" id="an-ctl" hidden>
+          <div class="an-tabs" id="an-tabs" role="tablist" aria-label="Analytics views">
+            <button type="button" class="an-tab" role="tab" id="an-tab-overview" data-tab="overview" aria-selected="true" aria-controls="an-tp-overview" tabindex="0">Overview</button>
+            <button type="button" class="an-tab" role="tab" id="an-tab-sources" data-tab="sources" aria-selected="false" aria-controls="an-tp-sources" tabindex="-1">Sources</button>
+            <button type="button" class="an-tab" role="tab" id="an-tab-pages" data-tab="pages" aria-selected="false" aria-controls="an-tp-pages" tabindex="-1">Pages</button>
+            <button type="button" class="an-tab" role="tab" id="an-tab-audience" data-tab="audience" aria-selected="false" aria-controls="an-tp-audience" tabindex="-1">Audience</button>
+            <button type="button" class="an-tab" role="tab" id="an-tab-performance" data-tab="performance" aria-selected="false" aria-controls="an-tp-performance" tabindex="-1">Performance</button>
+          </div>
+          <div class="an-tools">
+            <fieldset class="an-rangeset">
+              <legend>Last 7 / 30 / 90 days (Malaysia time)</legend>
+              <div class="an-range" id="an-range">
+                <label><input type="radio" name="an-days" value="7">7 days</label>
+                <label><input type="radio" name="an-days" value="30" checked>30 days</label>
+                <label><input type="radio" name="an-days" value="90" aria-describedby="an-r90">90 days</label>
+              </div>
+            </fieldset>
+            <button type="button" class="btn btn-secondary an-refresh" id="an-refresh">Refresh</button>
+          </div>
+        </div>
+        <p class="an-note" id="an-r90" hidden>90 days is not available yet. Cloudflare has not kept that much data.</p>
+        <div class="an-tps" id="an-tps" hidden>
+          <div class="an-tp" role="tabpanel" id="an-tp-overview" aria-labelledby="an-tab-overview"></div>
+          <div class="an-tp" role="tabpanel" id="an-tp-sources" aria-labelledby="an-tab-sources" hidden></div>
+          <div class="an-tp" role="tabpanel" id="an-tp-pages" aria-labelledby="an-tab-pages" hidden></div>
+          <div class="an-tp" role="tabpanel" id="an-tp-audience" aria-labelledby="an-tab-audience" hidden></div>
+          <div class="an-tp" role="tabpanel" id="an-tp-performance" aria-labelledby="an-tab-performance" hidden></div>
+        </div>
+        <div class="an-pass" id="an-pass-block" hidden>
+          <div class="field" id="an-pass-field">
+            <label for="an-pass">Passcode</label>
+            <input type="password" id="an-pass" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="an-pass-help an-pass-error">
+            <p class="panel-hint" id="an-pass-help">Stays in this browser only. Paste the long passcode you made for the Worker.</p>
+            <p class="field-error" id="an-pass-error" role="alert" hidden></p>
+          </div>
+          <p class="an-saved mono" id="an-saved" hidden>Passcode saved</p>
+          <div class="form-actions" id="an-pass-actions">
+            <button type="button" class="btn btn-primary" id="an-save">Save</button>
+            <button type="button" class="btn btn-secondary" id="an-test" disabled>Test</button>
+            <button type="button" class="btn btn-secondary is-danger" id="an-forget" disabled>Forget passcode</button>
+          </div>
+          <div class="an-ask" id="an-forget-ask" role="group" aria-labelledby="an-forget-q" hidden>
+            <p class="mono" id="an-forget-q">Forget the passcode on this browser?</p>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary is-danger" id="an-forget-yes">Yes, forget it</button>
+              <button type="button" class="btn btn-secondary" id="an-forget-no">Keep it</button>
+            </div>
+          </div>
+          <p class="mono an-pass-status" id="an-pass-status" role="status"></p>
+        </div>
+        <div class="an-optbox" id="an-optbox">
+          <label class="an-opt"><input type="checkbox" id="an-optout" aria-describedby="an-opt-help">Don't count my visits on this browser</label>
+          <p class="an-note an-opt-help" id="an-opt-help">Only this browser. The Instagram app browser keeps its own setting.</p>
+        </div>
+        <ul class="an-foot" id="an-foot" aria-label="About these numbers">
+          <li>Page loads only (no clicks).</li>
+          <li>Numbers are sampled by Cloudflare and approximate.</li>
+          <li>Days are Malaysia time (GMT+8), midnight to midnight.</li>
+          <li>Updated about every 10 minutes.</li>
+        </ul>
+      </div>
+    </section>
+
     <dialog class="confirm" id="wm-remove-confirm" aria-modal="true" aria-labelledby="wm-remove-title" aria-describedby="wm-remove-text">
       <h3 id="wm-remove-title">Remove this photo?</h3>
       <p class="panel-hint" id="wm-remove-text"></p>
@@ -459,5 +529,6 @@
   <script type="module" src="../js/admin/site-photos.js"></script>
   <script type="module" src="../js/admin/moments.js"></script>
   <script type="module" src="../js/admin/moment-photo.js"></script>
+  <script type="module" src="../js/admin/analytics-panel.js"></script>
 </body>
 </html>
