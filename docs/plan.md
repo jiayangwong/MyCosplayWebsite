@@ -1605,7 +1605,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
 - Files: `js/admin/analytics-panel.js` (2 renderers), `css/admin.css`, `tests/task-34.spec.js`, `tests/fixtures/analytics/sources-*.json`, `pages-*.json`.
 - **Automated tests (`tests/task-34.spec.js`, desktop + phone, fake Worker):** group order and numbers, percent rounding adds up to 100 within 1, other-hosts list, Instagram note; pages labels and paths, 404 row only when non-zero; tables; a 60-character host name stays inside the panel at 360px; host text with `<b>` shows as literal text.
 - Status: built, waiting for review (branch `task-34-sources-pages`, chained on `task-37-analytics-layout`, 2026-11-27)
-- Review: pending
+- Review: changes made, re-review pending (2026-11-28 must-fix round, see docs/reviews.md)
 - QA: pending
 
 ### TASK-35: Audience and Performance tabs
