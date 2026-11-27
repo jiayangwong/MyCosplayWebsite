@@ -1471,7 +1471,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - CSP present on the 7 public pages; the existing public-page specs still pass (proves nothing broke).
 - Existing specs likely to change: none expected; run the full suite (all public-page specs exercise the new CSP).
 - Status: built, waiting for review (branch `task-30-beacon`, 2026-11-27)
-- Review: pending
+- Review: changes requested (2026-11-27, 1 must-fix, see docs/reviews.md)
 - QA: pending
 
 ### TASK-31: Cloudflare Worker (`worker/`) - passcode, CORS, ranges, GraphQL, numbers only, setup README
