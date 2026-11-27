@@ -12,6 +12,10 @@ if (menu) {
   menu.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && menu.open) { e.preventDefault(); close(true); }
   });
+  // Tab out of the menu: close it so it does not cover the next panel (no focus move).
+  menu.addEventListener('focusout', (e) => {
+    if (menu.open && e.relatedTarget && !menu.contains(e.relatedTarget)) close(false);
+  });
   document.addEventListener('click', (e) => {
     if (menu.open && !menu.contains(e.target)) close(false);
   });

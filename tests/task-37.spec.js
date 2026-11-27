@@ -55,10 +55,14 @@ test.describe('(b) controls row', () => {
       const body = await box(page, '#an-body');
       const tabs = await box(page, '#an-tabs');
       const tools = await box(page, '.an-tools');
-      expect(Math.abs(tabs.y - tools.y), 'tops within 4px').toBeLessThanOrEqual(4);
       expect(Math.abs(tabs.x - body.x), 'tablist starts at the content left edge').toBeLessThanOrEqual(2);
       expect(Math.abs(tools.right - body.right), 'tools end at the content right edge').toBeLessThanOrEqual(2);
-      expect(tools.x).toBeGreaterThanOrEqual(tabs.right - 1);
+      if (w >= 1024) {
+        expect(Math.abs(tabs.y - tools.y), 'tops within 4px').toBeLessThanOrEqual(4);
+        expect(tools.x).toBeGreaterThanOrEqual(tabs.right - 1);
+      } else {
+        expect(tools.y, '900-1023px: tools wrap under the tabs').toBeGreaterThanOrEqual(tabs.bottom - 1);
+      }
       for (const sel of ['#an-tab-overview', '#an-tab-sources', '#an-tab-pages', '#an-tab-audience', '#an-tab-performance', '#an-range label:nth-child(1)', '#an-range label:nth-child(2)', '#an-range label:nth-child(3)', '#an-refresh']) {
         expect((await box(page, sel)).height, sel).toBeGreaterThanOrEqual(44);
       }
@@ -75,9 +79,25 @@ test.describe('(b) controls row', () => {
       const upd = await box(page, '#an-upd');
       expect(upd.x).toBeGreaterThanOrEqual(tools.x - 1);
       expect(upd.right).toBeLessThanOrEqual(tools.right + 1);
-      // all five tabs can be reached; at 900px the tablist may scroll inside itself, never the page
+    });
+  }
+
+  // Review fix: five tabs + range + Refresh + Updated did not fit at 900-985px (Performance was cut off).
+  for (const w of [900, 940, 985, 1023, 1024, 1280]) {
+    test(`${w}px: all five tabs are fully visible, the tab strip does not scroll`, async ({ page }) => {
+      await ready(page, w);
       const list = await page.locator('#an-tabs').evaluate((e) => ({ sw: e.scrollWidth, cw: e.clientWidth }));
-      if (w === 1280) expect(list.sw).toBeLessThanOrEqual(list.cw);
+      expect(list.sw, 'tab strip scrollWidth <= clientWidth').toBeLessThanOrEqual(list.cw);
+      const strip = await box(page, '#an-tabs');
+      for (const id of ['overview', 'sources', 'pages', 'audience', 'performance']) {
+        const b = await box(page, `#an-tab-${id}`);
+        expect(b.right, id).toBeLessThanOrEqual(strip.right + 1);
+        expect(b.x, id).toBeGreaterThanOrEqual(strip.x - 1);
+      }
+      const body = await box(page, '#an-body');
+      const tools = await box(page, '.an-tools');
+      expect(tools.right).toBeLessThanOrEqual(body.right + 1);
+      await noHorizontalScroll(page);
     });
   }
 

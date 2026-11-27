@@ -14,7 +14,6 @@ async function open(page, tab) {
 }
 const bars = (loc) => loc.locator('.an-bar').evaluateAll((els) => els.map((e) => ({ name: e.querySelector('.nm').childNodes[0].textContent, value: e.querySelector('.vl').textContent })));
 const tableRows = (loc) => loc.locator('details.an-det tbody tr').evaluateAll((trs) => trs.map((tr) => [...tr.children].map((c) => c.textContent)));
-const pct = (v, total) => Math.round((v / total) * 100);
 
 test.describe('rating helpers (pure)', () => {
   test('Google boundaries: equal to the limit is the better rating', async ({ page }) => {
@@ -45,6 +44,15 @@ test.describe('rating helpers (pure)', () => {
 });
 
 test.describe('Audience', () => {
+  test('device percents add up to 100 for visits 1 / 1 / 1 (largest remainder)', async ({ page, analytics }) => {
+    const f = analytics.fixture('audience', 30);
+    f.data.devices = [{ type: 'mobile', visits: 1 }, { type: 'desktop', visits: 1 }, { type: 'tablet', visits: 1 }];
+    analytics.setFixture('audience', 30, f);
+    await open(page, 'audience');
+    const pcts = await page.locator('#an-tp-audience .an-split li').evaluateAll((els) => els.map((e) => Number(e.querySelector('.big').textContent.replace('%', ''))));
+    expect(pcts.reduce((a, b) => a + b, 0)).toBe(100);
+  });
+
   test('Phone / PC / Tablet in one stacked bar with percent and counts (never mobile / desktop)', async ({ page, analytics }) => {
     await open(page, 'audience');
     const f = analytics.fixture('audience', 30);
@@ -56,13 +64,10 @@ test.describe('Audience', () => {
     const total = f.data.devices.reduce((t, d) => t + d.visits, 0);
     const v = Object.fromEntries(f.data.devices.map((d) => [d.type, d.visits]));
     const items = await tp.locator('.an-split li').evaluateAll((els) => els.map((e) => [...e.querySelectorAll(':scope > span')].map((s) => s.textContent)));
-    expect(items).toEqual([
-      ['Phone', `${pct(v.mobile, total)}%`, `${v.mobile} visits`],
-      ['PC', `${pct(v.desktop, total)}%`, `${v.desktop} visits`],
-      ['Tablet', `${pct(v.tablet, total)}%`, `${v.tablet} visits`],
-    ]);
-    const sum = [v.mobile, v.desktop, v.tablet].reduce((a, b) => a + pct(b, total), 0);
-    expect(Math.abs(sum - 100)).toBeLessThanOrEqual(1);
+    const shown = items.map((r) => Number(r[1].replace('%', '')));
+    expect(items.map((r) => [r[0], r[2]])).toEqual([['Phone', `${v.mobile} visits`], ['PC', `${v.desktop} visits`], ['Tablet', `${v.tablet} visits`]]);
+    [v.mobile, v.desktop, v.tablet].forEach((n, i) => expect(Math.abs(shown[i] - (n / total) * 100)).toBeLessThan(1));
+    expect(shown.reduce((a, c) => a + c, 0)).toBe(100);
     expect((await tp.textContent())).not.toMatch(/mobile|desktop/i);
     // segments carry patterns as well as colours: dots for Phone, hatch for PC
     const fills = await tp.locator('.an-stack svg g[clip-path] rect').evaluateAll((els) => els.map((e) => e.getAttribute('style')));
@@ -193,7 +198,10 @@ test.describe('Performance', () => {
     await open(page, 'performance');
     const cols = page.locator('#an-tp-performance .an-vcol');
     await expect(cols.nth(0).locator('.an-few')).toHaveText('Few samples, may be unreliable');
+    await expect(cols.nth(0).locator('.an-few-2')).toHaveText('Few samples (19). Treat as a guess.');
+    await expect(cols.nth(0).locator('.an-few-2 svg')).toHaveCount(1);
     await expect(cols.nth(1).locator('.an-few')).toHaveCount(0);
+    await expect(cols.nth(1).locator('.an-few-2')).toHaveCount(0);
     await expect(cols.nth(0).locator('.an-samp').first()).toHaveText('from 19 page loads');
   });
 

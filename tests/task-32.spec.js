@@ -136,7 +136,7 @@ test.describe('passcode', () => {
     const last = analytics.requests[analytics.requests.length - 1];
     expect(last.auth).toBe(`Bearer ${FAKE_PASSCODE}`);
     expect(last.url).not.toContain(FAKE_PASSCODE);
-    expect(last.origin).toBe('http://127.0.0.1:4173');
+    expect(last.origin).toBe(new URL(process.env.PW_BASE_URL || 'http://127.0.0.1:4173').origin);
   });
 });
 
@@ -321,7 +321,7 @@ test.describe('states', () => {
     analytics.override(null);
     analytics.failNetwork = true;
     await page.click('#an-tp-overview button:has-text("Try again")');
-    await expect(box).toContainText('Could not load the numbers. Try again.');
+    await expect(box).toContainText('Could not load the numbers. Check your connection, the Worker address and ALLOWED_ORIGIN.');
     analytics.failNetwork = false;
     await page.click('#an-tp-overview button:has-text("Try again")');
     await expect(view(page)).toHaveAttribute('data-analytics-view', 'data');
@@ -333,7 +333,9 @@ test.describe('states', () => {
     analytics.override(403, { error: 'origin' });
     await gotoAdmin(page);
     await openAnalytics(page);
-    await expect(page.locator('#an-tp-overview [role="alert"]')).toContainText('This page is not allowed to read the numbers (check ALLOWED_ORIGIN in the Worker).');
+    // The real Worker's 403 has no CORS headers, so the browser only sees a network error: the hint is in that text.
+    await expect(page.locator('#an-tp-overview [role="alert"]')).toContainText('Could not load the numbers. Check your connection, the Worker address and ALLOWED_ORIGIN.');
+    await expect(page.locator('#an-tp-overview button:has-text("Try again")')).toBeVisible();
   });
 
   test('range-unavailable for 90 days turns 90 off with a note and shows 30 days', async ({ page, analytics }) => {
