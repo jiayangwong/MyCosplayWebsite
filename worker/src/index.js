@@ -9,8 +9,9 @@
 // third-party write-ups, NOT from Cloudflare's published docs (see worker/README.md "What was checked").
 // Run `node scripts/check-schema.mjs` (needs your token) to compare them with your account's real schema.
 
-export const TZ_OFFSET_MIN = 480; // GMT+8 (Malaysia), fixed
-export const TZ_LABEL = '+08:00';
+// Not exported: the Workers runtime may refuse a main-module export that is not a function, class or object (BUG-22).
+const TZ_OFFSET_MIN = 480; // GMT+8 (Malaysia), fixed
+const TZ_LABEL = '+08:00';
 const DAY_MS = 86400000;
 const HOUR_MS = 3600000;
 const TABS = ['overview', 'sources', 'pages', 'audience', 'performance'];
@@ -167,7 +168,7 @@ function numOrNull(v) { return v === null || v === undefined || v === '' || !Num
 const PAGE_LABELS = {
   '/': 'Home', '/index': 'Home', '/gallery': 'Gallery', '/reels': 'Reels', '/events': 'Events', '/about': 'About', '/contact': 'Contact',
 };
-export const NOT_FOUND_PATH = '/404';
+const NOT_FOUND_PATH = '/404';
 /** { path, label } for a request path: `/` and `/index.html` are Home, the 6 pages get their tab names, the rest is Not found. */
 export function labelPath(rawPath) {
   let p = String(rawPath ?? '').split(/[?#]/)[0].trim().toLowerCase();
@@ -341,30 +342,32 @@ async function graphql(env, doc, variables) {
   const timeoutMs = Number(env.UPSTREAM_TIMEOUT_MS) > 0 ? Number(env.UPSTREAM_TIMEOUT_MS) : DEFAULT_TIMEOUT_MS;
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
-  let res;
-  try {
-    res = await fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${env.CF_API_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: doc, variables }),
-      signal: ctl.signal,
-    });
-  } catch {
-    throw new UpstreamError('network');
+  try { // the timeout covers the whole answer, body included (BUG-21)
+    let res;
+    try {
+      res = await fetch(GRAPHQL_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.CF_API_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: doc, variables }),
+        signal: ctl.signal,
+      });
+    } catch {
+      throw new UpstreamError('network');
+    }
+    if (res.status === 429) {
+      const ra = Number(res.headers.get('Retry-After'));
+      throw new UpstreamError('busy', { retryAfter: Number.isFinite(ra) && ra > 0 ? Math.min(Math.ceil(ra), 3600) : 60 });
+    }
+    if (!res.ok) throw new UpstreamError(`http-${res.status}`);
+    let body;
+    try { body = await res.json(); } catch { throw new UpstreamError('bad-json'); }
+    if (!body || (Array.isArray(body.errors) && body.errors.length)) throw new UpstreamError('graphql-errors');
+    const account = body.data?.viewer?.accounts?.[0];
+    if (!account || typeof account !== 'object') throw new UpstreamError('no-account');
+    return account;
   } finally {
     clearTimeout(timer);
   }
-  if (res.status === 429) {
-    const ra = Number(res.headers.get('Retry-After'));
-    throw new UpstreamError('busy', { retryAfter: Number.isFinite(ra) && ra > 0 ? Math.min(Math.ceil(ra), 3600) : 60 });
-  }
-  if (!res.ok) throw new UpstreamError(`http-${res.status}`);
-  let body;
-  try { body = await res.json(); } catch { throw new UpstreamError('bad-json'); }
-  if (!body || (Array.isArray(body.errors) && body.errors.length)) throw new UpstreamError('graphql-errors');
-  const account = body.data?.viewer?.accounts?.[0];
-  if (!account || typeof account !== 'object') throw new UpstreamError('no-account');
-  return account;
 }
 
 const settingsCache = new Map();
@@ -419,7 +422,8 @@ async function runChunks(env, tab, span, lim) {
   return answers;
 }
 
-const list = (v) => (Array.isArray(v) ? v : []);
+/** Rows of one alias; a missing or non-array alias is an unexpected shape (502), not an empty result (BUG-20). */
+const list = (v) => { if (!Array.isArray(v)) throw new UpstreamError('bad-shape'); return v; };
 const dim = (row, key) => row?.dimensions?.[key];
 const collect = (answers, alias) => answers.flatMap((a) => list(a[alias]));
 
@@ -466,11 +470,15 @@ export async function handle(request, env, ctx, nowMs = Date.now()) {
 
   const bad = configProblem(env || {});
   const origin = request.headers.get('Origin');
+  // The allowed origin gets CORS headers even when the rest of the config is bad, so the admin can read the 503 (BUG-19).
+  const allowed = typeof env?.ALLOWED_ORIGIN === 'string' && !isPlaceholder(env.ALLOWED_ORIGIN) && /^https?:\/\/[^/\s]+$/.test(env.ALLOWED_ORIGIN);
+  const originOk = allowed && !!origin && origin === env.ALLOWED_ORIGIN;
   if (bad) {
     console.warn(`not-configured: ${bad}`);
-    return json(503, { error: 'not-configured' });
+    // A preflight from the allowed origin still passes (below), so the browser goes on to read the GET's 503.
+    if (!originOk || request.method !== 'OPTIONS') return json(503, { error: 'not-configured' }, originOk ? origin : null);
   }
-  if (!origin || origin !== env.ALLOWED_ORIGIN) return json(403, { error: 'origin' });
+  if (!originOk) return json(403, { error: 'origin' });
 
   if (request.method === 'OPTIONS') {
     return new Response(null, {

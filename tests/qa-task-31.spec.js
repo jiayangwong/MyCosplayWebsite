@@ -174,9 +174,8 @@ test.describe('schema check script (stubbed Cloudflare)', () => {
   });
 });
 
-// ---------- open bugs ----------
+// ---------- bug re-tests (BUG-19, BUG-20, BUG-21) ----------
 test('BUG-19: not-configured answers to the allowed origin carry CORS headers, so the admin can read them', async () => {
-  test.fail(true, 'BUG-19 open');
   for (const method of ['GET', 'OPTIONS']) {
     const res = await run('tab=overview&days=7', { method }, { ...ENV, PASSCODE: 'short' });
     expect(res.headers.get('Access-Control-Allow-Origin'), method).toBe(ORIGIN);
@@ -184,7 +183,6 @@ test('BUG-19: not-configured answers to the allowed origin carry CORS headers, s
 });
 
 test('BUG-20: an answer without the expected rows is 502 upstream, not a 200 full of zeros', async () => {
-  test.fail(true, 'BUG-20 open');
   globalThis.fetch = async (url, init) => (JSON.parse(init.body).query.startsWith('query Settings') ? settings(GENEROUS) : ok({ somethingElse: 1 }));
   for (const tab of ['overview', 'sources', 'pages', 'audience', 'performance']) {
     expect((await run(`tab=${tab}&days=7`)).status, tab).toBe(502);
@@ -192,7 +190,6 @@ test('BUG-20: an answer without the expected rows is 502 upstream, not a 200 ful
 });
 
 test('BUG-21: the 10 s timeout also covers a Cloudflare answer whose body stalls after the headers', async () => {
-  test.fail(true, 'BUG-21 open');
   // A local server stands in for Cloudflare and is called with the real fetch and the Worker's own abort signal.
   const server = http.createServer((req, res) => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.write('{"data":'); });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
