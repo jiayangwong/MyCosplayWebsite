@@ -56,7 +56,7 @@
 .backup-items .btn { display: flex; width: 100%; min-height: var(--tap-min, 44px); justify-content: flex-start; }
 @media (min-width: 600px) {
   .backup-menu { position: relative; }
-  .backup-items { top: calc(100% + var(--space-1)); }
+  .backup-items { top: calc(100% + var(--space-1)); width: max-content; min-width: 220px; max-width: calc(100vw - 2 * var(--space-4)); }
 }
 @media (prefers-reduced-motion: reduce) { .backup-summary i { transition: none; } }
 .file-button:has(+ #import-file:focus-visible) { outline: var(--focus-ring); outline-offset: 2px; }
@@ -653,6 +653,12 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
   .an-refresh .rt { position: static; width: auto; height: auto; clip: auto; }
   .an-ov { grid-template-columns: 240px minmax(0, 1fr); gap: var(--space-8); }
   .an-tiles { grid-template-columns: 1fr; }
+}
+/* 900-1023px: five tabs + range + Refresh + Updated do not fit in one row (measured: tabs need ~533px, 451px at 900), so the tools row wraps under the tabs. From 1024px it is one row, as in the storyboard. */
+@media (min-width: 900px) and (max-width: 1023px) {
+  .an-ctl { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-2); }
+  .an-tabs, .an-tools { grid-column: 1; }
+  .an-tools { justify-self: end; padding-top: 0; }
 }
 .an-set, .an-about { border-top: 1px solid var(--color-line); }
 .an-set > summary, .an-about > summary { display: flex; align-items: center; gap: var(--space-2); min-height: var(--tap-min); list-style: none; font: 700 0.8125rem var(--font-mono); text-transform: uppercase; cursor: pointer; }
