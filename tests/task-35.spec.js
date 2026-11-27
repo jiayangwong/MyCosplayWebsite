@@ -14,6 +14,7 @@ async function open(page, tab) {
 }
 const bars = (loc) => loc.locator('.an-bar').evaluateAll((els) => els.map((e) => ({ name: e.querySelector('.nm').childNodes[0].textContent, value: e.querySelector('.vl').textContent })));
 const tableRows = (loc) => loc.locator('details.an-det tbody tr').evaluateAll((trs) => trs.map((tr) => [...tr.children].map((c) => c.textContent)));
+const pct = (v, total) => Math.round((v / total) * 100);
 
 test.describe('rating helpers (pure)', () => {
   test('Google boundaries: equal to the limit is the better rating', async ({ page }) => {
