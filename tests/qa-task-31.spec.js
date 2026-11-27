@@ -65,7 +65,7 @@ const GENEROUS = { maxDuration: 400 * 86400, maxPageSize: 10000, notOlderThan: 4
 
 test('every tab x range answers the contract envelope with GMT+8 dates', async () => {
   globalThis.fetch = everyHour(GENEROUS);
-  const keys = { overview: ['daily', 'previous', 'totals'], sources: ['groups', 'otherHosts'], pages: ['entries', 'pages'], audience: ['browsers', 'countries', 'devices'], performance: ['byDevice', 'vitals'] };
+  const keys = { overview: ['daily', 'previous', 'previousDaily', 'totals'], sources: ['groups', 'otherHosts'], pages: ['entries', 'pages'], audience: ['browsers', 'countries', 'devices'], performance: ['byDevice', 'vitals'] };
   const from = { 7: '2026-11-21', 30: '2026-10-29', 90: '2026-08-30' };
   for (const [tab, expected] of Object.entries(keys)) {
     for (const days of [7, 30, 90]) {
