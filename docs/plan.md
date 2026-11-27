@@ -1525,9 +1525,10 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Upstream: GraphQL `errors`, HTTP 500, timeout -> 502; 429 -> 429 with `retryAfter`; response text never contains the token, the passcode or Cloudflare's error message.
   - Cache: second identical request (within 10 min) makes no new GraphQL call; a request with a wrong passcode is 401 even when the answer is cached.
   - Repo secrets scan of `worker/` and `.gitignore` entries.
-- Status: built, waiting for review (branch `task-31-worker`, 2026-11-27). Cloudflare facts: what was confirmed and what was not is written in worker/README.md ("What was checked"); the rum dataset and field names are still UNCONFIRMED and `worker/scripts/check-schema.mjs` checks them against the user's real account. **Amendment `previousDaily` (question 54, 2026-11-27): built on this branch, waiting for review** (worker/src/index.js `shapeOverview`, worker/README.md, tests/task-31.spec.js).
-- Review: pending
-- QA: pending
+- Status: waiting for re-review (branch `task-31-worker`, 2026-11-27; the review's must-fix is fixed). Cloudflare facts: what was confirmed and what was not is written in worker/README.md ("What was checked"); the rum dataset and field names are still UNCONFIRMED and `worker/scripts/check-schema.mjs` checks them against the user's real account. **Amendment `previousDaily` (question 54, 2026-11-27): built on this branch, waiting for review** (worker/src/index.js `shapeOverview`, worker/README.md, tests/task-31.spec.js). Merged with the QA fixes for BUG-19..22 (2026-11-27).
+- Review: approved 2026-11-27 (round 2; code only. Cloudflare schema facts still UNVERIFIED and need the user's account: `worker/scripts/check-schema.mjs` must say OK on every line before the Worker is called working or TASK-32 is switched on, see docs/reviews.md)
+- QA: failed - see BUG-22 (re-test 2026-11-27 of 58d511a: BUG-19, BUG-20, BUG-21 verified; BUG-22 open only because its fix has not been run in the Workers runtime; tests/task-31.spec.js and tests/qa-task-31.spec.js 118 passed, Node with a stubbed Cloudflare). Not "passed": see the blocked part below.
+- QA blocked part: NOT passed and cannot be tested without the user's Cloudflare account: the live schema check (dataset and field names, `datetimeHour`, datetime filters), hourly retention, query span and row limits, and a real deploy / run of the Worker (which also closes or reopens the BUG-22 question). The other criteria passed with a stubbed Cloudflare in Node (tests/task-31.spec.js, tests/qa-task-31.spec.js).
 
 ### TASK-32: Admin Analytics panel - tab bar, passcode, fake Worker, states, range switch
 - Linked idea(s): IDEA-17 (with IDEA-8 token pattern, IDEA-14 folds; IDEA-18 layout)
