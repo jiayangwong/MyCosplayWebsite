@@ -69,10 +69,15 @@ class FakeWorker {
   }
 
   json(route, status, body, extraHeaders = {}) {
+    // Like the real Worker (worker/src/index.js): the 403 for a wrong origin carries NO CORS headers, so the
+    // browser reports a network error and the page never sees the status. (Playwright's route.fulfill adds
+    // CORS headers by itself, so the blocked answer is modelled by aborting the request.)
+    if (status === 403) return route.abort('failed');
+    const cors = this.cors;
     return route.fulfill({
       status,
       contentType: 'application/json',
-      headers: { 'cache-control': 'no-store', ...this.cors, ...extraHeaders },
+      headers: { 'cache-control': 'no-store', ...cors, ...extraHeaders },
       body: JSON.stringify(body),
     });
   }
@@ -104,7 +109,11 @@ class FakeWorker {
   async handle(route) {
     const req = route.request();
     const url = new URL(req.url());
-    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: this.cors });
+    if (req.method() === 'OPTIONS') {
+      // A wrong origin gets no CORS headers on the preflight either (real Worker), so the browser blocks the call.
+      if (this.forced && this.forced.status === 403) return route.abort('failed');
+      return route.fulfill({ status: 204, headers: this.cors });
+    }
     if (req.method() !== 'GET' || url.pathname !== '/v1/stats') {
       this.unhandled.push(`${req.method()} ${req.url()}`);
       return this.json(route, 404, { error: 'not-found' });

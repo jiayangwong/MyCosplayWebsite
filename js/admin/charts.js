@@ -265,6 +265,22 @@ export function lineChart(container, { series, xLabels, xTitles, yLabel = '', su
 
 // ---------------------------------------------------------------- bar chart (TASK-34 / TASK-35 use it)
 /**
+ * Whole-number percents of `values` that add up to 100 (largest-remainder rounding; all zeros -> all 0).
+ * One helper for every chart / summary that shows shares, so the numbers never add up to 98 or 102.
+ */
+export function sharePercents(values) {
+  const total = values.reduce((t, v) => t + (Number(v) || 0), 0);
+  if (!(total > 0)) return values.map(() => 0);
+  const raw = values.map((v) => ((Number(v) || 0) / total) * 100);
+  const out = raw.map(Math.floor);
+  let left = 100 - out.reduce((t, v) => t + v, 0);
+  raw.map((r, i) => ({ i, f: r - out[i] })).sort((a, b) => b.f - a.f || a.i - b.i).forEach(({ i }) => {
+    if (left > 0) { out[i] += 1; left -= 1; }
+  });
+  return out;
+}
+
+/**
  * barChart(container, { items, valueLabel, summary, caption, nameHeader })
  *  items[]    = { label, sub?, value } in the order to show; sub = small mono text under the label (a path)
  *  valueLabel = unit word shown after each value ('visits', 'page views')
@@ -272,27 +288,26 @@ export function lineChart(container, { series, xLabels, xTitles, yLabel = '', su
  * a text summary, plus a numbers table (Name, <valueLabel>, Share). Returns the list element.
  */
 export function barChart(container, { items, valueLabel = 'visits', summary, caption, nameHeader = 'Item' }) {
-  const total = items.reduce((t, i) => t + i.value, 0);
   const max = Math.max(1, ...items.map((i) => i.value));
-  const share = (v) => Math.round((v / (total || 1)) * 100);
+  const pcts = sharePercents(items.map((i) => i.value));
   const ul = h('ul', 'an-bars');
   ul.setAttribute('role', 'img');
   ul.setAttribute('aria-label', summary);
-  items.forEach((i) => {
+  items.forEach((i, idx) => {
     const li = h('li', 'an-bar');
     const nm = h('div', 'nm', i.label);
     if (i.sub) nm.appendChild(h('small', null, i.sub));
     const tr = h('div', 'tr');
     const fl = h('div', `fl${i.value === 0 ? ' zero' : ''}`);
     fl.style.width = i.value === 0 ? '0' : `max(4px, calc((100% - 150px) * ${(i.value / max).toFixed(4)}))`;
-    tr.append(fl, h('div', 'vl', i.value === 0 ? '0' : `${formatNumber(i.value)} ${valueLabel} - ${share(i.value)}%`));
+    tr.append(fl, h('div', 'vl', i.value === 0 ? '0' : `${formatNumber(i.value)} ${valueLabel} - ${pcts[idx]}%`));
     li.append(nm, tr);
     ul.appendChild(li);
   });
   container.appendChild(ul);
   numberTable(container, {
     columns: [nameHeader, valueLabel.replace(/^./, (c) => c.toUpperCase()), 'Share'],
-    rows: items.map((i) => [i.sub ? `${i.label} (${i.sub})` : i.label, i.value, `${share(i.value)}%`]),
+    rows: items.map((i, idx) => [i.sub ? `${i.label} (${i.sub})` : i.label, i.value, `${pcts[idx]}%`]),
     caption: caption || summary,
   });
   return ul;

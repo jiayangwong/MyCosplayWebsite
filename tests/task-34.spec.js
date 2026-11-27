@@ -34,6 +34,34 @@ test.describe('Sources', () => {
     await expect(tp.locator('h3').first()).toHaveText('Where visits came from');
   });
 
+  test('percent rounding adds up to 100 for visits 1 / 1 / 1 / 1 / 4 (largest remainder)', async ({ page, analytics }) => {
+    const f = analytics.fixture('sources', 30);
+    f.data.groups = f.data.groups.map((g, i) => ({ ...g, visits: [1, 1, 1, 1, 4][i] }));
+    analytics.setFixture('sources', 30, f);
+    await open(page, 'sources');
+    const tp = page.locator('#an-tp-sources');
+    const rows = await bars(tp);
+    const pcts = rows.map((r) => Number(/(\d+)%$/.exec(r.value)[1]));
+    expect(pcts.reduce((a, b) => a + b, 0)).toBe(100);
+    expect(pcts[4]).toBe(50);
+    const table = (await tableRows(tp)).map((r) => Number(/(\d+)%$/.exec(r[2])[1]));
+    expect(table).toEqual(pcts);
+  });
+
+  test('sharePercents: sums to exactly 100, zeros stay 0', async ({ page }) => {
+    await page.goto('admin/index.html');
+    const r = await page.evaluate(async () => {
+      const { sharePercents } = await import('/js/admin/charts.js');
+      return [sharePercents([1, 1, 1, 1, 4]), sharePercents([1, 1, 1]), sharePercents([0, 0, 0]), sharePercents([5, 0, 3, 2]), sharePercents([])];
+    });
+    expect(r[0].reduce((a, b) => a + b, 0)).toBe(100);
+    expect(r[0][4]).toBe(50);
+    expect(r[1].reduce((a, b) => a + b, 0)).toBe(100);
+    expect(r[2]).toEqual([0, 0, 0]);
+    expect(r[3]).toEqual([50, 0, 30, 20]);
+    expect(r[4]).toEqual([]);
+  });
+
   test('the order is fixed even when the Worker sends the groups in another order, and missing groups show 0', async ({ page, analytics }) => {
     const f = analytics.fixture('sources', 30);
     f.data.groups = [f.data.groups[3], f.data.groups[0]]; // only Direct and Instagram, shuffled
