@@ -1520,7 +1520,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Cache: second identical request (within 10 min) makes no new GraphQL call; a request with a wrong passcode is 401 even when the answer is cached.
   - Repo secrets scan of `worker/` and `.gitignore` entries.
 - Status: built, waiting for review (branch `task-31-worker`, 2026-11-27). Cloudflare facts: what was confirmed and what was not is written in worker/README.md ("What was checked"); the rum dataset and field names are still UNCONFIRMED and `worker/scripts/check-schema.mjs` checks them against the user's real account.
-- Review: pending
+- Review: changes requested (2026-11-27, 1 must-fix: placeholder PASSCODE accepted; schema facts still unverified, need the user's Cloudflare account, see docs/reviews.md)
 - QA: pending
 
 ### TASK-32: Admin Analytics panel - tab bar, passcode, fake Worker, states, range switch
