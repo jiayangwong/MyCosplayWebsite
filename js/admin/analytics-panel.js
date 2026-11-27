@@ -3,13 +3,15 @@
 // came from the Worker is set with textContent, never innerHTML. Nothing is fetched until the panel is open.
 import {
   TABS, MESSAGES, analyticsFetch, hasPasscode, isConfigured, readOptOut, rangeLine, savePasscode,
-  forgetPasscode, writeOptOut,
+  forgetPasscode, writeOptOut, dayLabel, fullDayLabel,
 } from './analytics-client.js';
+import { lineChart, formatNumber } from './charts.js';
 
 const $ = (id) => document.getElementById(id);
 
-/** Tab renderers (added by TASK-33 to TASK-35): tab -> (mount, answer, ctx). */
+/** Tab renderers: tab -> (mount, answer, ctx). Each draws only its own blocks; the range line is added before. */
 export const RENDERERS = {};
+const charts = []; // live charts of the shown tab (their resize observers are released on the next paint)
 
 const S = {
   tab: 'overview',
@@ -167,7 +169,16 @@ function setBusy(mount, busy) {
   else mount.removeAttribute('aria-busy');
 }
 
+/** '27 Oct - 25 Nov 2026 (Malaysia time)'; the Overview adds what it compares with (or says there is nothing). */
+export function rangeSentence(tab, answer) {
+  const base = rangeLine(answer.from, answer.to);
+  if (tab !== 'overview') return base;
+  if (!answer.data || !answer.data.previous) return `${base}. Previous period not available.`;
+  return `${base}, compared with the ${answer.days} days before`;
+}
+
 function paint() {
+  charts.splice(0).forEach((c) => c.destroy());
   const tab = S.tab;
   const mount = mountOf(tab);
   const key = keyOf();
@@ -180,7 +191,7 @@ function paint() {
     if (isEmpty(tab, answer.data)) {
       mount.appendChild(stateBox('info', 'status', ['No visits in this period yet.']));
     } else {
-      mount.appendChild(el('p', 'an-range-line mono', rangeLine(answer.from, answer.to)));
+      mount.appendChild(el('p', 'an-range-line mono', rangeSentence(tab, answer)));
       const render = RENDERERS[tab];
       if (render) render(mount, answer, { days: S.days });
     }
@@ -198,6 +209,76 @@ function paint() {
   updateChip();
   document.documentElement.dataset.analyticsView = answer ? 'data' : error ? 'error' : S.loadingKey === key ? 'loading' : 'idle';
 }
+
+// ---------------------------------------------------------------- Overview (TASK-33)
+/** Whole-number percent change, or null when there is nothing to compare with (previous missing or 0). */
+export function percentChange(cur, prev) {
+  if (!prev) return null;
+  return Math.round(((cur - prev) / prev) * 100);
+}
+
+function arrowIcon(kind) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '12');
+  svg.setAttribute('height', '12');
+  svg.setAttribute('viewBox', '0 0 12 12');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const shape = kind === 'na' ? document.createElementNS(NS, 'rect') : document.createElementNS(NS, 'polygon');
+  if (kind === 'na') ['x:1', 'y:5', 'width:10', 'height:2'].forEach((a) => shape.setAttribute(...a.split(':')));
+  else shape.setAttribute('points', { up: '6,1 11,10 1,10', down: '1,2 11,2 6,11', flat: '2,1 11,6 2,11' }[kind]);
+  svg.appendChild(shape);
+  return svg;
+}
+
+/** One tile: exactly the label, the total and the change line. */
+function tile(label, cur, prev, days) {
+  const pct = percentChange(cur, prev);
+  let word = 'n/a';
+  let kind = 'na';
+  if (pct !== null) {
+    kind = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
+    word = `${pct > 0 ? '+' : ''}${pct}% vs previous ${days} days`;
+  }
+  const t = el('div', 'an-tile');
+  t.setAttribute('role', 'group');
+  t.setAttribute('aria-label', `${label}, ${formatNumber(cur)}, ${pct === null ? 'no earlier numbers to compare with' : word}`);
+  const chg = el('div', 'chg');
+  chg.append(arrowIcon(kind), el('span', null, word));
+  t.append(el('div', 'lab', label), el('div', 'val', formatNumber(cur)), chg);
+  return t;
+}
+
+function renderOverview(mount, answer) {
+  const d = answer.data;
+  const days = answer.days;
+  const wrap = el('div', 'an-ov');
+  const tiles = el('div', 'an-tiles');
+  tiles.append(
+    tile('Visits', d.totals.visits, d.previous && d.previous.visits, days),
+    tile('Page views', d.totals.pageViews, d.previous && d.previous.pageViews, days),
+  );
+  const block = el('div', 'an-block');
+  block.appendChild(el('h3', 'panel-subtitle', 'Visits and page views per day'));
+  wrap.append(tiles, block);
+  mount.appendChild(wrap);
+  const daily = d.daily;
+  const best = daily.reduce((b, x) => (x.visits > b.visits ? x : b), daily[0]);
+  const summary = `Visits and page views per day, last ${days} days (Malaysia time). ${formatNumber(d.totals.visits)} visits and ${formatNumber(d.totals.pageViews)} page views in total, busiest day ${dayLabel(best.date)} with ${formatNumber(best.visits)} visits.`;
+  const series = [
+    { name: 'Visits', values: daily.map((x) => x.visits), color: 'var(--color-ink)', marker: 'circle' },
+    { name: 'Page views', values: daily.map((x) => x.pageViews), color: 'var(--color-purple-deep)', marker: 'square' },
+  ];
+  charts.push(lineChart(block, {
+    series,
+    xLabels: daily.map((x) => dayLabel(x.date)),
+    xTitles: daily.map((x) => fullDayLabel(x.date)),
+    yLabel: 'visits and page views per day',
+    summary,
+  }));
+}
+RENDERERS.overview = renderOverview;
 
 // ---------------------------------------------------------------- loading
 function load(tab, days, { force = false } = {}) {

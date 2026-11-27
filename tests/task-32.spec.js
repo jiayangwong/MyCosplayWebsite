@@ -226,7 +226,7 @@ test.describe('range switch', () => {
     await expect(chip(page)).toHaveText('Last 7 days');
     await expect(page.locator('#an-range input[value="7"]')).toBeChecked();
     await expect(view(page)).toHaveAttribute('data-analytics-view', 'data');
-    await expect(page.locator('#an-tp-overview .an-range-line')).toHaveText('20 Nov - 26 Nov 2026 (Malaysia time)');
+    await expect(page.locator('#an-tp-overview .an-range-line')).toContainText('20 Nov - 26 Nov 2026 (Malaysia time)');
   });
 });
 
@@ -257,7 +257,7 @@ test.describe('text', () => {
     await page.route('https://api.github.com/**', (route) => route.fulfill({ status: 501, body: '{}' }));
     await gotoAdmin(page);
     await openAnalytics(page);
-    await expect(page.locator('#an-tp-overview .an-range-line')).toHaveText('28 Oct - 26 Nov 2026 (Malaysia time)');
+    await expect(page.locator('#an-tp-overview .an-range-line')).toContainText('28 Oct - 26 Nov 2026 (Malaysia time)');
     await ctx.close();
   });
 });

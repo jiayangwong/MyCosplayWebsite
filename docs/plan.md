@@ -1587,7 +1587,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - GMT+8 labels: with the browser time zone set to `America/Los_Angeles` (Playwright `timezoneId`) the first and last x labels and table rows still equal the fixture's `from` / `to` dates (for example `27 Oct` and `25 Nov`); the range line and axis title say "Malaysia time"; no "UTC" text.
   - Reduced motion: no CSS transition / animation on chart elements.
   - All-zero fixture -> empty state, no `svg`.
-- Status: todo
+- Status: built, waiting for review (branch `task-33-chart-kit`, chained on `task-32-analytics-panel`, 2026-11-27)
 - Review: pending
 - QA: pending
 

@@ -134,6 +134,14 @@ export function dayLabel(iso) {
   return p && p.m >= 1 && p.m <= 12 ? `${p.d} ${MON[p.m - 1]}` : String(iso);
 }
 
+/** '2026-10-27' -> 'Tue 27 Oct' (weekday by UTC arithmetic on the plain date, never the browser time zone). */
+export function fullDayLabel(iso) {
+  const p = parseDay(iso);
+  if (!p) return String(iso);
+  const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(Date.UTC(p.y, p.m - 1, p.d)).getUTCDay()];
+  return `${dow} ${dayLabel(iso)}`;
+}
+
 /** '27 Oct - 25 Nov 2026 (Malaysia time)' (both years when they differ). */
 export function rangeLine(from, to) {
   const a = parseDay(from);
