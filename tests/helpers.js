@@ -52,6 +52,14 @@ async function openFold(page, panelId) {
   await expect(page.locator(`#${await btn.getAttribute('aria-controls')}`)).toBeVisible();
 }
 
+/** TASK-36: opens the admin Backup menu (Import / Export / Discard) if it is closed. Safe to call twice.
+ *  The menu closes after every Export / Import / Discard, so call it before every click on Export or Discard. */
+async function openBackup(page) {
+  const menu = page.locator('#backup-menu');
+  if (!(await menu.evaluate((el) => el.open))) await page.locator('#backup-menu > summary').click();
+  await expect(page.locator('#export-events')).toBeVisible();
+}
+
 /** TASK-24: pages the Events list until the row of event `id` is shown (starts at page 1). */
 async function showEvent(page, id) {
   const row = page.locator(`.event-row[data-id="${id}"]`);
@@ -67,4 +75,4 @@ async function showEvent(page, id) {
   await expect(row).toHaveCount(1);
 }
 
-module.exports = { openFold, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };
+module.exports = { openFold, openBackup, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };

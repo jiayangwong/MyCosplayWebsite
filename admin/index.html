@@ -39,11 +39,16 @@
     <p class="source-banner" id="source-banner" role="status"></p>
 
     <div class="toolbar" role="toolbar" aria-label="Event file actions">
-      <button type="button" class="btn btn-primary btn-sm" id="new-event">New event</button>
-      <label class="btn btn-secondary btn-sm file-button" for="import-file">Import events.json</label>
-      <input type="file" id="import-file" accept=".json,application/json" class="visually-hidden">
-      <button type="button" class="btn btn-accent btn-sm" id="export-events">Export events.json</button>
-      <button type="button" class="btn btn-secondary btn-sm" id="discard-draft">Discard draft</button>
+      <button type="button" class="btn btn-accent btn-sm" id="new-event">New event</button>
+      <details class="backup-menu" id="backup-menu">
+        <summary class="btn btn-secondary btn-sm backup-summary">Backup <i aria-hidden="true">&#9662;</i></summary>
+        <div class="backup-items">
+          <label class="btn btn-secondary btn-sm file-button" for="import-file">Import events.json</label>
+          <input type="file" id="import-file" accept=".json,application/json" class="visually-hidden">
+          <button type="button" class="btn btn-secondary btn-sm" id="export-events">Export events.json</button>
+          <button type="button" class="btn btn-secondary btn-sm is-danger" id="discard-draft">Discard draft</button>
+        </div>
+      </details>
     </div>
     <p class="field-error" id="import-error" role="alert" hidden></p>
 
@@ -210,7 +215,7 @@
       </section>
     <section class="panel pub-panel fold" id="publish-panel" aria-labelledby="pub-title">
       <div class="fold-head"><h2 id="pub-title" class="panel-title">Publish</h2><button type="button" class="fold-btn" aria-expanded="false" aria-controls="pub-body" aria-labelledby="pub-title pub-chip"><span class="fold-chip" id="pub-chip">Nothing pending</span><i aria-hidden="true">&#9662;</i></button></div>
-      <button type="button" class="btn btn-accent pub-go" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
+      <button type="button" class="btn btn-secondary pub-go" id="publish-btn" disabled aria-describedby="publish-hint">Publish to GitHub</button>
       <p class="panel-hint mono" id="publish-hint" role="status">Add a GitHub token to publish</p>
       <div class="fold-body" id="pub-body" hidden>
         <p class="panel-hint">One press makes one commit on GitHub. Nothing goes live unless every step works.</p>
@@ -254,7 +259,7 @@
           <p class="msg-next">Nothing was changed on GitHub. To go on:</p>
           <ol class="msg-next msg-steps">
             <li>Export backup.</li>
-            <li>Discard draft (this loads the newest events.json from GitHub).</li>
+            <li>Discard draft (in the Backup menu; this loads the newest events.json from GitHub).</li>
             <li>Import your backup, or redo your edits, and check the other change is still there.</li>
             <li>Publish.</li>
           </ol>
@@ -445,6 +450,8 @@
   </main>
 
   <script type="module" src="../js/admin/folds.js"></script>
+  <script type="module" src="../js/admin/primary.js"></script>
+  <script type="module" src="../js/admin/backup-menu.js"></script>
   <script type="module" src="../js/admin/manager.js"></script>
   <script type="module" src="../js/admin/watermark.js"></script>
   <script type="module" src="../js/admin/github-panel.js"></script>

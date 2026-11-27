@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { test, expect, BRANCH, FAKE_TOKEN, saveFakeToken, openFold } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, saveFakeToken, openFold, openBackup } = require('./github-mock');
 
 const TOKEN_KEY = 'puzzkezz.github.token';
 const REPO_PATH = '/repos/jiayangwong/MyCosplayWebsite';
@@ -160,6 +160,7 @@ test('the token never reaches the draft or an exported events.json', async ({ pa
   const others = await page.evaluate((k) => Object.keys(localStorage).filter((key) => key !== k).map((key) => localStorage.getItem(key)), TOKEN_KEY);
   expect(others.length).toBeGreaterThan(0);
   for (const value of others) expect(value).not.toContain(FAKE_TOKEN);
+  await openBackup(page);
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
   const text = fs.readFileSync(await download.path(), 'utf8');
   expect(text).toContain('Token Test Con');

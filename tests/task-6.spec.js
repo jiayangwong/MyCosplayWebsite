@@ -1,7 +1,7 @@
 // TASK-6: admin event manager.
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
-const { mockEvents, openFold, SAMPLE_EVENTS } = require('./helpers');
+const { mockEvents, openFold, openBackup, SAMPLE_EVENTS } = require('./helpers');
 
 test.beforeEach(async ({ page }) => {
   page.on('dialog', (d) => d.accept());
@@ -67,6 +67,7 @@ test('editing a sample removes the sample flag; move buttons only for same date;
 });
 
 test('export downloads a sorted events.json', async ({ page }) => {
+  await openBackup(page);
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
   expect(download.suggestedFilename()).toBe('events.json');
   const data = JSON.parse(fs.readFileSync(await download.path(), 'utf8'));
@@ -82,6 +83,7 @@ test('import replaces the draft; a bad file is rejected without changes', async 
   const good = { version: 1, events: [{ id: '2023-12-01-cf', date: '2023-12-01', short: 'CF', name: 'Comic Fiesta' }] };
   await page.setInputFiles('#import-file', { name: 'good.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(good)) });
   await expect(page.locator('.event-row')).toHaveCount(1);
+  await openBackup(page);
   await page.click('#discard-draft');
   await expect(page.locator('#event-count')).toHaveText('8 events'); // TASK-24: the list is paged, so the chip counts
   await expect(page.locator('#source-banner')).toContainText('published');

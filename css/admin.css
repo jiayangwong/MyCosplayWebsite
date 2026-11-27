@@ -20,6 +20,9 @@
 }
 
 .admin { padding-bottom: var(--space-16); }
+/* TASK-36: one gap between the toolbar, the grid and every panel (24px phone, 32px from 900px). */
+.admin { --admin-gap: var(--space-6); }
+@media (min-width: 900px) { .admin { --admin-gap: var(--space-8); } }
 
 .help-box {
   display: grid;
@@ -42,10 +45,23 @@
   font-size: 0.8125rem;
 }
 
-.toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-6); }
+.toolbar { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-2); margin-bottom: var(--admin-gap); }
+/* Backup menu (TASK-36): a plain disclosure, not an ARIA menu. */
+.backup-summary { cursor: pointer; list-style: none; gap: var(--space-2); }
+.backup-summary::-webkit-details-marker { display: none; }
+.backup-summary i { font-style: normal; transition: transform 0.2s; }
+.backup-menu[open] .backup-summary i { transform: rotate(180deg); }
+.backup-summary:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.backup-items { position: absolute; z-index: 20; top: calc(100% + var(--space-1)); left: 0; display: grid; gap: var(--space-2); width: min(280px, 100%); padding: var(--space-3); background: var(--color-surface); border: var(--outline); border-radius: var(--radius-card); }
+.backup-items .btn { display: flex; width: 100%; min-height: var(--tap-min, 44px); justify-content: flex-start; }
+@media (min-width: 600px) {
+  .backup-menu { position: relative; }
+  .backup-items { top: calc(100% + var(--space-1)); }
+}
+@media (prefers-reduced-motion: reduce) { .backup-summary i { transition: none; } }
 .file-button:has(+ #import-file:focus-visible) { outline: var(--focus-ring); outline-offset: 2px; }
 
-.admin-grid { display: grid; gap: var(--space-6); align-items: start; margin-bottom: var(--space-6); }
+.admin-grid { display: grid; gap: var(--admin-gap); align-items: start; margin-bottom: var(--admin-gap); }
 
 @media (min-width: 1000px) {
   .admin-grid { grid-template-columns: minmax(320px, 0.9fr) 1.1fr; }
@@ -266,7 +282,7 @@
 .sp-now-row [hidden], .sp-card[hidden] { display: none; }
 
 /* GitHub + Publish panels (TASK-11, style guide v2). Status is never colour alone: icon + text. */
-.gh-panel, .pub-panel { max-width: 720px; margin-bottom: var(--space-6); }
+.gh-panel, .pub-panel { max-width: 720px; }
 .gh-help { margin: var(--space-3) 0 var(--space-4); font-size: 0.875rem; }
 .gh-help summary { cursor: pointer; font-weight: 700; display: list-item; padding: var(--space-3) 0; }
 .gh-help ol { margin: 0; padding-left: var(--space-6); display: grid; gap: var(--space-1); }
@@ -388,7 +404,7 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 
 /* Layout from the approved storyboard: GitHub + Events on the left, Publish + Event form on the right.
    GitHub and Publish fold; the Publish button and its hint always stay visible. */
-.adm-side { display: grid; gap: var(--space-6); align-content: start; min-width: 0; }
+.adm-side { display: grid; gap: var(--admin-gap); align-content: start; min-width: 0; }
 /* TASK-23: DOM order is GitHub, Events, Event form, Publish. Under 1000px the two wrappers vanish so the one
    column follows the DOM (and Tab) order. From 1000px: left = GitHub + Events, right = Publish over Event form. */
 @media (max-width: 999px) {
@@ -415,7 +431,7 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 @media (prefers-reduced-motion: reduce) { .fold-btn i { transition: none; } }
 
 /* Moments panel (TASK-21): same list rows and form fields as the event manager */
-.moments-panel { margin-bottom: var(--space-6); }
+.moments-panel { margin-bottom: var(--admin-gap); }
 .moments-grid { display: grid; gap: var(--space-6); align-items: start; }
 @media (min-width: 1000px) { .moments-grid { grid-template-columns: minmax(320px, 0.9fr) 1.1fr; } }
 .mo-form-head { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; justify-content: space-between; margin: var(--space-4) 0 var(--space-3); }

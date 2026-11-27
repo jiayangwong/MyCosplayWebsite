@@ -1,7 +1,7 @@
 // TASK-24: every admin panel folds (only the Events list is open on load) and the Events list is paged (5 / 10).
 const path = require('path');
 const { test, expect, FakeRepo, saveFakeToken } = require('./github-mock');
-const { mockEvents, mockMoments, noHorizontalScroll, openFold, showEvent } = require('./helpers');
+const { mockEvents, mockMoments, noHorizontalScroll, openFold, openBackup, showEvent } = require('./helpers');
 
 test.describe.configure({ timeout: 60000 });
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -361,6 +361,7 @@ test.describe('paging', () => {
     await expect(page.locator('#event-count')).toHaveText('25 events');
     await expect(page.locator('#event-page')).toHaveText('Page 1 of 3');
     await page.click('#event-next');
+    await openBackup(page);
     await page.click('#discard-draft');
     await expect(page.locator('#event-count')).toHaveText('21 events');
     await expect(page.locator('#event-page')).toHaveText('Page 1 of 3');
@@ -385,6 +386,7 @@ test.describe('paging', () => {
   test('paging is display only: Export text is the same on every page', async ({ page }) => {
     await load(page, many(21));
     const exportText = async () => {
+      await openBackup(page);
       const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
       return require('fs').readFileSync(await dl.path(), 'utf8');
     };
