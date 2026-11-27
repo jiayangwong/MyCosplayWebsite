@@ -317,7 +317,7 @@ const isPlaceholder = (v) => typeof v !== 'string' || !v.trim() || /^your[-_ ]/i
 /** null when the Worker is configured, otherwise a short reason for the log (never shown to the browser). */
 export function configProblem(env) {
   for (const k of ['CF_API_TOKEN', 'ACCOUNT_ID', 'SITE_TAG']) if (isPlaceholder(env?.[k])) return `missing ${k}`;
-  if (typeof env.PASSCODE !== 'string' || env.PASSCODE.length < MIN_PASSCODE) return 'weak PASSCODE';
+  if (isPlaceholder(env.PASSCODE) || env.PASSCODE.length < MIN_PASSCODE) return 'weak PASSCODE';
   if (isPlaceholder(env.ALLOWED_ORIGIN) || !/^https?:\/\/[^/\s]+$/.test(env.ALLOWED_ORIGIN)) return 'bad ALLOWED_ORIGIN';
   return null;
 }
