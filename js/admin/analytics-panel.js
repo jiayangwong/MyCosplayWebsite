@@ -5,7 +5,8 @@ import {
   TABS, MESSAGES, analyticsFetch, hasPasscode, isConfigured, readOptOut, rangeLine, savePasscode,
   forgetPasscode, writeOptOut, dayLabel, fullDayLabel, malaysiaClock,
 } from './analytics-client.js';
-import { lineChart, barChart, formatNumber } from './charts.js';
+import { lineChart, barChart, stackedBar, patternSwatch, numberTable, formatNumber } from './charts.js';
+import { rateVital, formatMs, formatCls, isFewSamples, thresholdText, RATINGS } from './vitals.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -422,6 +423,172 @@ function renderPages(mount, answer) {
   });
 }
 RENDERERS.pages = renderPages;
+
+// ---------------------------------------------------------------- Audience and Performance (TASK-35)
+/** Series fills for devices: Phone pink + dots, PC purple + hatch, Tablet grey, Other white + cross-hatch. */
+const DEVICE = {
+  mobile: { label: 'Phone', fill: 'var(--color-pink)', pattern: 'dots' },
+  desktop: { label: 'PC', fill: 'var(--color-purple)', pattern: 'hatch' },
+  tablet: { label: 'Tablet', fill: 'var(--ph-grey)', pattern: null },
+  other: { label: 'Other', fill: 'var(--color-surface)', pattern: 'cross' },
+};
+
+/** Largest first, the "Other" row last. */
+function topWithOther(list, nameKey) {
+  const rows = (list || []).map((x) => ({ label: String(x[nameKey]), value: Number(x.visits) || 0 }));
+  return [...rows.filter((r) => r.label !== 'Other').sort((a, b) => b.value - a.value), ...rows.filter((r) => r.label === 'Other')];
+}
+
+function renderAudience(mount, answer) {
+  const d = answer.data;
+  const byType = new Map((d.devices || []).map((x) => [x.type, Number(x.visits) || 0]));
+  const kinds = ['mobile', 'desktop', 'tablet', 'other'].filter((k) => k !== 'other' || byType.get('other') > 0);
+  const items = kinds.map((k) => ({ ...DEVICE[k], value: byType.get(k) || 0 }));
+  const total = items.reduce((t, i) => t + i.value, 0);
+  const pct = (v) => Math.round((v / (total || 1)) * 100);
+  const b = block(mount, 'Phone, PC and tablet');
+  charts.push(stackedBar(b, {
+    items,
+    nameHeader: 'Device',
+    summary: `Visits by device, last ${answer.days} days (Malaysia time). ${items.map((i) => `${i.label} ${pct(i.value)} percent`).join(', ')}.`,
+    caption: `Visits by device, last ${answer.days} days (Malaysia time)`,
+  }));
+  const cols = el('div', 'an-cols');
+  mount.appendChild(cols);
+  const countries = topWithOther(d.countries, 'name');
+  barChart(block(cols, 'Countries'), {
+    items: countries,
+    valueLabel: 'visits',
+    nameHeader: 'Country',
+    summary: `Countries, last ${answer.days} days (Malaysia time). ${countries.map((c) => `${c.label} ${formatNumber(c.value)}`).join(', ')}.`,
+    caption: `Visits by country, last ${answer.days} days (Malaysia time)`,
+  });
+  const browsers = topWithOther(d.browsers, 'name');
+  barChart(block(cols, 'Browsers'), {
+    items: browsers,
+    valueLabel: 'visits',
+    nameHeader: 'Browser',
+    summary: `Browsers, last ${answer.days} days (Malaysia time). ${browsers.map((c) => `${c.label} ${formatNumber(c.value)}`).join(', ')}.`,
+    caption: `Visits by browser, last ${answer.days} days (Malaysia time)`,
+  });
+}
+RENDERERS.audience = renderAudience;
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const RATE_ICON = {
+  good: [['circle', { cx: 7, cy: 7, r: 5.5 }], ['path', { d: 'M4 7.2l2 2 4-4' }]],
+  mid: [['path', { d: 'M7 1.5L13 12.5H1Z', 'stroke-linejoin': 'round' }], ['path', { d: 'M7 5.5v3M7 10v.5' }]],
+  poor: [['rect', { x: 1.5, y: 1.5, width: 11, height: 11 }], ['path', { d: 'M4.5 4.5l5 5M9.5 4.5l-5 5' }]],
+  na: [['path', { d: 'M3 7h8' }]],
+};
+
+function iconSvg(shapes, size = 14) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.setAttribute('viewBox', '0 0 14 14');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  shapes.forEach(([tag, attrs]) => {
+    const e = document.createElementNS(SVG_NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));
+    e.setAttribute('style', 'fill: none; stroke: currentColor; stroke-width: 1.5px');
+    svg.appendChild(e);
+  });
+  return svg;
+}
+
+/** Rating chip: icon + word + colour, so it never relies on colour alone. */
+export function ratingChip(rating) {
+  const c = el('span', `an-rate ${rating}`);
+  c.appendChild(iconSvg(RATE_ICON[rating]));
+  c.appendChild(document.createTextNode(RATINGS[rating]));
+  return c;
+}
+
+const VITAL_ROWS = [
+  { name: 'Page load', short: 'median', key: 'pageLoadP50Ms', kind: null },
+  { name: 'Loading', short: 'LCP', key: 'lcpP75Ms', kind: 'lcp' },
+  { name: 'Reacting to taps', short: 'INP', key: 'inpP75Ms', kind: 'inp' },
+  { name: 'Layout jumping', short: 'CLS', key: 'clsP75', kind: 'cls' },
+];
+
+function deviceColumn(label, kind, p) {
+  const col = el('div', 'an-vcol');
+  const h4 = el('h4', 'an-vhead');
+  h4.appendChild(patternSwatch(DEVICE[kind]));
+  h4.appendChild(document.createTextNode(label));
+  col.appendChild(h4);
+  const samples = Number(p.samples) || 0;
+  col.appendChild(el('p', 'an-samp', `from ${formatNumber(samples)} page loads`));
+  if (isFewSamples(samples)) col.appendChild(el('p', 'an-samp an-few', 'Few samples, may be unreliable'));
+  const table = [];
+  VITAL_ROWS.forEach((r) => {
+    const v = p[r.key] === undefined ? null : p[r.key];
+    const text = r.kind === 'cls' ? formatCls(v) : formatMs(v);
+    const rating = r.kind ? rateVital(r.kind, v) : null;
+    const row = el('div', 'an-vrow');
+    const nm = el('div', 'nm', `${r.name} `);
+    nm.appendChild(el('small', null, `(${r.short})`));
+    row.append(nm, el('div', `vv${text === 'n/a' ? ' na' : ''}`, text));
+    const rc = el('div', 'rc');
+    if (rating) rc.appendChild(ratingChip(rating));
+    row.appendChild(rc);
+    if (text === 'n/a') row.appendChild(el('div', 'th', 'Not enough data'));
+    else if (r.kind) row.appendChild(el('div', 'th', thresholdText(r.kind)));
+    col.appendChild(row);
+    table.push([`${label} - ${r.name} (${r.short})`, text, rating ? RATINGS[rating] : '-']);
+  });
+  return { col, table };
+}
+
+const VITAL_TITLE = { lcp: 'Loading (LCP)', inp: 'Reacting to taps (INP)', cls: 'Layout jumping (CLS)' };
+const RATING_FILL = [
+  { key: 'good', label: 'Good', fill: 'var(--color-purple)', pattern: null },
+  { key: 'needsImprovement', label: 'Needs improvement', fill: 'var(--color-pink)', pattern: 'dots' },
+  { key: 'poor', label: 'Poor', fill: 'var(--color-surface)', pattern: 'cross' },
+];
+
+function renderPerformance(mount, answer) {
+  const d = answer.data;
+  const wrap = el('div', 'an-block');
+  const cols = el('div', 'an-vcols');
+  const tableRows = [];
+  [['mobile', 'Phone'], ['desktop', 'PC']].forEach(([key, label]) => {
+    const { col, table } = deviceColumn(label, key, (d.byDevice && d.byDevice[key]) || {});
+    cols.appendChild(col);
+    tableRows.push(...table);
+  });
+  wrap.appendChild(cols);
+  mount.appendChild(wrap);
+  numberTable(wrap, {
+    columns: ['Measure', 'Value', 'Rating'],
+    rows: tableRows,
+    caption: `Core Web Vitals by device, last ${answer.days} days (Malaysia time). Page load is the median, the vitals are the 75th percentile.`,
+  });
+  const shares = block(mount, 'Share of page loads by rating');
+  ['lcp', 'inp', 'cls'].forEach((k) => {
+    const v = (d.vitals && d.vitals[k]) || {};
+    const items = RATING_FILL.map((r) => ({ label: r.label, fill: r.fill, pattern: r.pattern, value: Number(v[r.key]) || 0 }));
+    const total = items.reduce((t, i) => t + i.value, 0);
+    const sub = el('div', 'an-vshare');
+    sub.appendChild(el('h4', 'an-vhead', VITAL_TITLE[k]));
+    shares.appendChild(sub);
+    if (!total) {
+      sub.appendChild(el('p', 'an-note', 'Not enough data'));
+      return;
+    }
+    charts.push(stackedBar(sub, {
+      items,
+      big: false,
+      valueLabel: 'page loads',
+      nameHeader: 'Rating',
+      summary: `${VITAL_TITLE[k]}, share of page loads by rating, last ${answer.days} days (Malaysia time). ${items.map((i) => `${i.label} ${Math.round((i.value / total) * 100)} percent`).join(', ')}.`,
+      caption: `${VITAL_TITLE[k]}: page loads by rating, last ${answer.days} days (Malaysia time)`,
+    }));
+  });
+}
+RENDERERS.performance = renderPerformance;
 
 // ---------------------------------------------------------------- loading
 function load(tab, days, { force = false } = {}) {

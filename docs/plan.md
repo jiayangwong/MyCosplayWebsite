@@ -1620,7 +1620,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Tables under each chart; tokens only; no horizontal scroll at 360px.
 - Files: `js/admin/analytics-panel.js` (2 renderers), `js/admin/charts.js` (stacked bar, if not already there), `css/admin.css`, `tests/task-35.spec.js`, `tests/fixtures/analytics/audience-*.json`, `performance-*.json`.
 - **Automated tests (`tests/task-35.spec.js`, desktop + phone, fake Worker):** device names and percent; top-N + Other; rating boundaries (2500 ms LCP = Good, 2501 = Needs improvement, 4001 = Poor; same for INP and CLS); `null` -> "n/a"; few-samples note at 19 and not at 20; columns side by side at 1280, stacked at 360; tables present.
-- Status: todo
+- Status: built, waiting for review (branch `task-35-audience-performance`, chained on `task-34-sources-pages`, 2026-11-27)
 - Review: pending
 - QA: pending
 

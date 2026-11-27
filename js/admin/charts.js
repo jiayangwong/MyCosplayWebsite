@@ -298,4 +298,98 @@ export function barChart(container, { items, valueLabel = 'visits', summary, cap
   return ul;
 }
 
+// ---------------------------------------------------------------- stacked 100% bar (TASK-35)
+/** Pattern fills: the series colours are told apart by pattern as well, never by colour alone. */
+function addPatterns(svg, id) {
+  const defs = sv('defs', {}, svg);
+  const mk = (name) => sv('pattern', { id: `${id}-${name}`, width: 6, height: 6, patternUnits: 'userSpaceOnUse' }, defs);
+  const ink = 'stroke: var(--color-ink); stroke-width: 1px; fill: none';
+  const dots = mk('dots');
+  sv('circle', { cx: 3, cy: 3, r: 1, style: 'fill: var(--color-ink)' }, dots);
+  const hatch = mk('hatch');
+  sv('path', { d: 'M-1 7 L7 -1 M-1 1 L1 -1 M5 7 L7 5', style: ink }, hatch);
+  const cross = mk('cross');
+  sv('path', { d: 'M-1 7 L7 -1 M-1 1 L1 -1 M5 7 L7 5 M-1 -1 L7 7', style: ink }, cross);
+}
+
+function swatch(item, id) {
+  const svg = sv('svg', { width: 24, height: 16, viewBox: '0 0 24 16', 'aria-hidden': 'true', focusable: 'false' });
+  addPatterns(svg, id);
+  sv('rect', { x: 1, y: 1, width: 22, height: 14, style: `fill: ${item.fill}; stroke: var(--color-ink); stroke-width: 2px` }, svg);
+  if (item.pattern) sv('rect', { x: 2, y: 2, width: 20, height: 12, style: `fill: url(#${id}-${item.pattern})` }, svg);
+  return svg;
+}
+
+/**
+ * stackedBar(container, { items, summary, caption, valueLabel, nameHeader })
+ *  items[] = { label, value, fill (CSS value), pattern: 'dots' | 'hatch' | 'cross' | null }
+ * One 32px bar (2px ink outline, 2px ink separators, a pattern per segment), a list under it with swatch, name, big
+ * percent and the count, and the numbers table. Returns { destroy }.
+ */
+export function stackedBar(container, { items, summary, caption, valueLabel = 'visits', nameHeader = 'Item', big = true }) {
+  const total = items.reduce((t, i) => t + i.value, 0);
+  const pct = (v) => Math.round((v / (total || 1)) * 100);
+  const holder = h('div', 'an-stack');
+  container.appendChild(holder);
+  uid += 1;
+  const id = `an-sb-${uid}`;
+  let lastWidth = 0;
+  function draw() {
+    const W = Math.floor(holder.clientWidth);
+    if (W < 60) return;
+    lastWidth = W;
+    holder.textContent = '';
+    const H = 36;
+    const svg = sv('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-labelledby': `${id}-t` }, holder);
+    sv('title', { id: `${id}-t` }, svg).textContent = summary;
+    const g0 = sv('g', { 'aria-hidden': 'true' }, svg);
+    addPatterns(g0, id);
+    const clip = sv('clipPath', { id: `${id}-clip` }, g0);
+    sv('rect', { x: 1, y: 2, width: W - 2, height: 32, rx: 6 }, clip);
+    const g = sv('g', { 'clip-path': `url(#${id}-clip)` }, g0);
+    const shown = items.filter((i) => i.value > 0);
+    const inner = W - 2;
+    let x = 1;
+    shown.forEach((i, k) => {
+      const w = Math.max(4, (i.value / (total || 1)) * inner);
+      sv('rect', { x, y: 2, width: w, height: 32, style: `fill: ${i.fill}` }, g);
+      if (i.pattern) sv('rect', { x, y: 2, width: w, height: 32, style: `fill: url(#${id}-${i.pattern})` }, g);
+      x += w;
+      if (k < shown.length - 1) sv('rect', { x: x - 1, y: 2, width: 2, height: 32, style: 'fill: var(--color-ink)' }, g);
+    });
+    sv('rect', { x: 1, y: 2, width: W - 2, height: 32, rx: 6, style: 'fill: none; stroke: var(--color-ink); stroke-width: 2px' }, g0);
+  }
+  draw();
+  const ul = h('ul', 'an-split');
+  items.forEach((i, k) => {
+    const li = h('li');
+    li.appendChild(swatch(i, `${id}-s${k}`));
+    li.appendChild(h('span', 'nm', i.label));
+    li.appendChild(h('span', big ? 'big' : 'sm', `${pct(i.value)}%`));
+    li.appendChild(h('span', 'sm', `${formatNumber(i.value)} ${valueLabel}`));
+    ul.appendChild(li);
+  });
+  container.appendChild(ul);
+  numberTable(container, {
+    columns: [nameHeader, valueLabel.replace(/^./, (c) => c.toUpperCase()), 'Share'],
+    rows: items.map((i) => [i.label, i.value, `${pct(i.value)}%`]),
+    caption: caption || summary,
+  });
+  let ro = null;
+  if (typeof ResizeObserver !== 'undefined') {
+    ro = new ResizeObserver(() => {
+      const w = Math.floor(holder.clientWidth);
+      if (w !== lastWidth && w >= 60) draw();
+    });
+    ro.observe(holder);
+  }
+  return { destroy() { if (ro) ro.disconnect(); } };
+}
+
+/** A 24 x 16 swatch with the same pattern and outline as a stacked-bar segment: { fill, pattern }. */
+export function patternSwatch(item) {
+  uid += 1;
+  return swatch(item, `an-sw-${uid}`);
+}
+
 export { dayLabel, fullDayLabel };
