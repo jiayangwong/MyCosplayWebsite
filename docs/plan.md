@@ -1470,7 +1470,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - `analytics.siteHost` equals the trimmed content of `CNAME`.
   - CSP present on the 7 public pages; the existing public-page specs still pass (proves nothing broke).
 - Existing specs likely to change: none expected; run the full suite (all public-page specs exercise the new CSP).
-- Status: built, waiting for review (branch `task-30-beacon`, 2026-11-27)
+- Status: waiting for re-review (branch `task-30-beacon`, must-fix addressed 2026-11-27; open question 54)
 - Review: changes requested (2026-11-27, 1 must-fix, see docs/reviews.md)
 - QA: pending
 
@@ -1646,3 +1646,6 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
 51. **Days:** ~~accept UTC days (08:00-08:00 Malaysia time)~~. **ANSWERED 2026-11-27 by the user: "i need GMT+8 days".** Every day runs 00:00-00:00 Malaysia time (UTC+08:00, fixed, no daylight saving). The Worker queries hourly data and regroups it into Malaysia days (G17); 7 / 30 / 90 days and the previous period are counted in Malaysia days. Cost: more rows per query and possibly more Cloudflare calls (cached 10 minutes); if hourly data cannot cover 90 days, the 90-day switch is turned off (question 47).
 52. **Cloudflare menu names:** the setup guide uses the last-known names; Cloudflare reorganised its Analytics menus in October 2026, so some names may differ. When you do the setup, tell us any name that is different and the README will be fixed. OK?
 53. **Who does the setup:** you need to do steps that need your Cloudflare login (account, add site, API token, `wrangler login`, secrets, deploy). Do you want to run `wrangler` yourself (needs Node on your PC), or create the Worker in the Cloudflare dashboard by pasting the code (no Node needed)? **Recommendation: wrangler**, but the README can cover both.
+
+### Open question for TASK-30 (2026-11-27, from the programmer) - OPEN, needs the user / planner
+54. **Beacon script type:** TASK-30's first acceptance criterion and G1 say `<script defer ...>`. The built loader uses `type="module"`. **Request: approve amending TASK-30 and G1 to "type=module (deferred by default)".** Source: https://developers.cloudflare.com/web-analytics/faq/ (page "Last updated Jul 14, 2026", checked 2026-11-27) shows the manual snippet as `<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js?token=$SITE_TOKEN"></script>`, says manual-embed users need to add `type="module"` (dashboard instructions include it) and shows no `defer`. Not covered by that page: our loader passes the token in `data-cf-beacon` (the page shows that form as the tag-manager variant), and it says nothing about how `data-cf-beacon` behaves in a module script, or about CORS. So that the real beacon records visits still has to be confirmed on the live site after the user's token is in. The criterion and G1 stay unchanged until the user approves.
