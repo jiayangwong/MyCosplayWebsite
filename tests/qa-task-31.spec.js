@@ -207,3 +207,54 @@ test('BUG-21: the 10 s timeout also covers a Cloudflare answer whose body stalls
     server.close();
   }
 });
+
+// ---------- QA re-test of the fixes in 58d511a ----------
+test('BUG-19: bad config gives CORS to the allowed origin only, and never calls Cloudflare', async () => {
+  const quiet = async (env, opts) => {
+    const res = await run('tab=overview&days=7', opts, env);
+    return [res.status, res.headers.get('Access-Control-Allow-Origin'), res.headers.get('Vary')];
+  };
+  for (const key of ['CF_API_TOKEN', 'ACCOUNT_ID', 'SITE_TAG', 'PASSCODE']) {
+    const env = { ...ENV, [key]: '' };
+    expect(await quiet(env, {}), key).toEqual([503, ORIGIN, 'Origin']);
+    expect(await quiet(env, { auth: null }), key).toEqual([503, ORIGIN, 'Origin']);
+    expect(await quiet(env, { method: 'OPTIONS', auth: null }), key).toEqual([204, ORIGIN, 'Origin']);
+    for (const origin of ['https://evil.example', `${ORIGIN}.evil.example`, null]) {
+      for (const method of ['GET', 'OPTIONS']) expect(await quiet(env, { origin, method }), `${key} ${origin} ${method}`).toEqual([503, null, null]);
+    }
+  }
+  for (const bad of [undefined, '', '*', `${ORIGIN}/`, '<your origin>']) {
+    for (const method of ['GET', 'OPTIONS']) {
+      expect(await quiet({ ...ENV, ALLOWED_ORIGIN: bad }, { origin: bad || ORIGIN, method }), `${bad} ${method}`).toEqual([503, null, null]);
+    }
+  }
+  expect(await (await run('tab=overview&days=7', {}, { ...ENV, PASSCODE: 'short' })).json()).toEqual({ error: 'not-configured' });
+});
+
+test('BUG-20: non-array rows (also only in the previous period) are 502 and never cached; empty arrays stay 200', async () => {
+  const puts = [];
+  globalThis.caches = { default: { async match() {}, async put(req) { puts.push(req.url); } } };
+  for (const value of [null, {}, 'x', 0]) {
+    globalThis.fetch = async (url, init) => (JSON.parse(init.body).query.startsWith('query Settings') ? settings(GENEROUS) : ok(Object.fromEntries(ALIASES.map((a) => [a, value]))));
+    for (const tab of ['overview', 'sources', 'pages', 'audience', 'performance']) {
+      const res = await run(`tab=${tab}&days=7`);
+      expect([res.status, await res.json()], `${tab} ${JSON.stringify(value)}`).toEqual([502, { error: 'upstream' }]);
+    }
+  }
+  globalThis.fetch = async (url, init) => {
+    const { query, variables } = JSON.parse(init.body);
+    if (query.startsWith('query Settings')) return settings(GENEROUS);
+    return ok(variables.end === '2026-11-27T16:00:00Z' ? { hours: [] } : {}); // the previous period lacks the alias
+  };
+  expect((await run('tab=overview&days=7')).status).toBe(502);
+  expect(puts).toEqual([]);
+  globalThis.fetch = everyHour(GENEROUS);
+  expect((await run('tab=sources&days=7')).status).toBe(200);
+  expect(puts).toHaveLength(1);
+});
+
+// A guard only: this runs in Node and does NOT show that the Workers runtime accepts the module (BUG-22 stays open).
+test('BUG-22 guard: the entry module exports no plain numbers or strings', () => {
+  for (const [name, value] of Object.entries(W)) expect(['function', 'object'], name).toContain(typeof value);
+  expect(typeof W.default.fetch).toBe('function');
+});

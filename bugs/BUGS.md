@@ -139,9 +139,10 @@
 - Steps to reproduce: 1. Call the Worker with a valid ALLOWED_ORIGIN, the matching Origin header and a PASSCODE shorter than 24 characters (GET or OPTIONS). 2. Look at the response headers (test: tests/qa-task-31.spec.js, "BUG-19").
 - Expected: for the allowed origin, `Access-Control-Allow-Origin: <that origin>` and `Vary: Origin` (TASK-31 CORS criterion), and a preflight that passes, so the browser can read `503 {"error":"not-configured"}`. When ALLOWED_ORIGIN itself is missing or malformed, no CORS headers is correct.
 - Actual: 503 without any CORS header (worker/src/index.js, `if (bad)` in `handle`, runs before the origin check). In a browser the admin would only see a network error. Also noted by the reviewer (round 1, nice-to-have).
-- Status: fixed
+- Status: verified
 - Cause: `handle` returned the 503 for any config problem before looking at the origin, and without passing the origin to `json()`.
 - Fix: worker/src/index.js `handle`: when ALLOWED_ORIGIN itself is valid and the Origin header matches it, the 503 `not-configured` now carries `Access-Control-Allow-Origin` + `Vary: Origin`, and an OPTIONS preflight from that origin gets the normal 204 preflight (so the browser goes on to read the 503). A missing / malformed ALLOWED_ORIGIN or another origin still gets 503 with no CORS headers. test.fail mark removed in tests/qa-task-31.spec.js.
+- QA re-test (2026-11-27): verified in Node (stubbed Cloudflare). Each missing setting or short PASSCODE: allowed origin gets 503 with CORS + Vary and a 204 preflight; other / no origin and a missing or malformed ALLOWED_ORIGIN get 503 with no CORS headers. Not checked in a real browser against a deployed Worker.
 
 ## BUG-20: Worker answers 200 with all zeros (and caches it) when Cloudflare's answer lacks the expected rows
 - Found by: QA
@@ -150,9 +151,10 @@
 - Steps to reproduce: 1. Stub the data query to answer `{"data":{"viewer":{"accounts":[{"somethingElse":1}]}},"errors":null}`. 2. Request any tab (test: tests/qa-task-31.spec.js, "BUG-20").
 - Expected: `502 upstream` ("unexpected shape -> 502 upstream", TASK-31 Errors criterion).
 - Actual: 200 with zero / empty data for every tab, then cached for 10 minutes. `list(v)` in worker/src/index.js turns a missing or non-array dataset into `[]`.
-- Status: fixed
+- Status: verified
 - Cause: `list(v)` turned a missing or non-array alias in Cloudflare's answer into `[]`, so the tab shaped (and cached) all zeros.
 - Fix: worker/src/index.js: `list(v)` now throws `UpstreamError('bad-shape')` when the alias is missing or not an array, which `handle` answers as 502 `upstream` (not cached). test.fail mark removed in tests/qa-task-31.spec.js.
+- QA re-test (2026-11-27): verified in Node (stubbed Cloudflare). A missing or non-array dataset (also only in the previous period) is 502 upstream on every tab and is not cached; empty arrays are still 200.
 
 ## BUG-21: Worker's 10 s timeout stops at the response headers; a stalled body hangs the request
 - Found by: QA
@@ -161,9 +163,10 @@
 - Steps to reproduce: 1. Point the Worker's fetch at a server that sends the status and headers, part of the body, then nothing. 2. Set UPSTREAM_TIMEOUT_MS=100 and request a tab (test: tests/qa-task-31.spec.js, "BUG-21"; reproduced with Node's fetch against a local server).
 - Expected: `502 upstream` after the timeout.
 - Actual: no answer (still waiting after 3 s). `clearTimeout(timer)` runs as soon as `fetch` resolves, before `await res.json()` in `graphql()`.
-- Status: fixed
+- Status: verified
 - Cause: `graphql()` cleared the abort timer in the `finally` of the `fetch` call, i.e. once the headers arrived, before `await res.json()`.
 - Fix: worker/src/index.js `graphql()`: the whole function body (fetch, status checks, `res.json()`, shape checks) is inside one try / finally, so the timer is cleared only after the body is read; a stalled body is aborted and gives `bad-json` -> 502 `upstream`. test.fail mark removed in tests/qa-task-31.spec.js.
+- QA re-test (2026-11-27): verified with Node's real fetch against a local server whose body stalls: 502 after the timeout. Not checked in the Workers runtime.
 
 ## BUG-22: Entry module exports plain numbers / strings, which the Workers runtime may refuse (NOT reproduced)
 - Found by: QA (from reading the code; the Workers runtime was not run, so this is unconfirmed)
@@ -172,6 +175,7 @@
 - Steps to reproduce (not yet done): 1. Run worker/src/index.js in the real Workers runtime (`wrangler dev` or `wrangler deploy`). 2. Watch for a startup error such as "Incorrect type for map entry ... is not of type 'function or ExportedHandler'".
 - Expected: the Worker starts.
 - Actual: unknown. `TZ_OFFSET_MIN` (number), `TZ_LABEL` and `NOT_FOUND_PATH` (strings) are named exports of the Worker's main module; from QA's knowledge of workerd, every named export of the main module must be a function, class or handler object. The Node tests cannot show this. No test and no script imports these three, so dropping the `export` keyword is a safe change either way; it still needs one real-runtime check.
-- Status: fixed
+- Status: open
 - Cause: (unconfirmed) `TZ_OFFSET_MIN`, `TZ_LABEL` and `NOT_FOUND_PATH` were exported from the main module as a number and strings, which workerd may refuse.
 - Fix: worker/src/index.js: dropped the `export` keyword from those three constants (nothing imported them). Safe change only: NOT reproduced and NOT checked in the real Workers runtime (no workerd / wrangler in this environment; installing one was not allowed). Still needed: one real-runtime check (`wrangler dev` or a deploy) that the Worker starts. The other named exports are functions or plain objects (`EXPECTED_FIELDS`, `QUERIES`); that check should confirm those are accepted too.
+- QA re-test (2026-11-27): NOT verified, so set back to open. This is not a failed fix: the three `export` keywords are gone, and in Node every export of the entry module is a function or object (guard test in tests/qa-task-31.spec.js; all other TASK-31 tests pass). Node cannot show what the Workers runtime accepts, and neither the problem nor the fix has been run there (workerd / wrangler not installed; install not permitted). No further code change is requested. To close: start the Worker once with `wrangler dev` or `wrangler deploy` on a machine where that is allowed (for example the user's, during setup) and confirm it starts.
