@@ -1775,7 +1775,7 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
 - **Automated tests (`tests/task-37.spec.js`, `desktop` 1280x800 and `phone` Pixel 7 projects, plus 360, 899 and 900px cases; fake Worker from `tests/analytics-mock.js`):** one test per criterion (a)-(e) above, with the exact widths, texts, counts and `timezoneId` named there; the `previousDaily` Worker tests live in `tests/task-31.spec.js` (TASK-31 amendment).
 - **Existing tests to update in this task (expectations only):** `tests/task-32.spec.js` (passcode save / short / forget / reload and opt-out tests open `#an-settings` first, or check that it auto-opened; the footer-text test reads `#an-about` (open it, or check text on the hidden element); Refresh is found by role and name "Refresh", which matches both the text and the icon button), `tests/task-33.spec.js` (Overview tiles and the range line as amended; the "honest-limit line" check moves to `#an-about`), `tests/task-24.spec.js` / `tests/task-23.spec.js` only if TASK-32 did not already add the Analytics panel to their lists. A shared helper `openAnalyticsSettings(page)` in `tests/helpers.js` (opens the panel fold and `#an-settings` if closed).
 - Status: built, waiting for review (branch `task-37-analytics-layout`, chained on `task-33-chart-kit`, 2026-11-27)
-- Review: pending
+- Review: changes made, re-review pending (2026-11-28 must-fix round, see docs/reviews.md)
 - QA: pending
 
 ### Build order for IDEA-18 (with IDEA-17), proposed 2026-11-27
