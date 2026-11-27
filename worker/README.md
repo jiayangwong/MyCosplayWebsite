@@ -9,7 +9,8 @@ Cloudflare token never leaves the Worker.
 - **Days are Malaysia days (GMT+8), midnight to midnight**, ending yesterday in Malaysia time. Cloudflare itself groups by UTC
   day, so the Worker asks for hourly rows and regroups them into GMT+8 days itself (`hoursToLocalDays` in `src/index.js`).
   GMT+8 never changes (no daylight saving), so it is a fixed +8 hours.
-- Answers are cached for 10 minutes, so opening the panel often causes few Cloudflare calls.
+- Answers are cached for 10 minutes, so opening the panel often causes few Cloudflare calls. **Unverified:** the Cache API may
+  do nothing on a `*.workers.dev` address; if so, every panel open calls Cloudflare again.
 - No npm packages, no build step. Tests: `npx playwright test tests/task-31.spec.js` (Node only; nothing reaches Cloudflare).
 
 ## What was checked (2026-11-27) and what was not
@@ -118,4 +119,4 @@ Local try-out on your own computer: copy `.dev.vars.example` to `.dev.vars` (git
 `400 bad-request` (unknown tab, days not 7 / 30 / 90, any other parameter), `401 passcode`, `403 origin`, `404 not-found`, `405 method`,
 `429 busy` (+ `retryAfter` seconds), `502 upstream` (Cloudflare error or unexpected answer; for a range Cloudflare does not keep:
 `{ "error": "upstream", "code": "range-unavailable" }`), `503 not-configured` (a secret or variable is missing, or the passcode is
-shorter than 24 characters). The logs contain only a short code, never the token, passcode or Cloudflare's error text.
+shorter than 24 characters or still the example placeholder). The logs contain only a short code, never the token, passcode or Cloudflare's error text.
