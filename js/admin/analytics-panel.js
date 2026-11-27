@@ -39,7 +39,7 @@ function minutes(seconds) {
 
 /** Turns a client result into { kind, text, next, retry, role } for the state box. */
 export function explain(res) {
-  if (!res) return { kind: 'network', text: 'Could not load the numbers. Try again.', next: 'Nothing was changed.', retry: true };
+  if (!res) return { kind: 'network', text: 'Could not load the numbers. Check your connection, the Worker address and ALLOWED_ORIGIN.', next: 'Nothing was changed. See worker/README.md.', retry: true };
   const code = res.body && res.body.error;
   if (res.status === 401) return { kind: 'passcode', text: 'Passcode is wrong. Paste the current one.', next: 'It is kept in this browser until you press Forget passcode.', retry: true };
   if (res.status === 429) return { kind: 'busy', text: `Cloudflare is busy. Try again in ${minutes(res.body && res.body.retryAfter)}.`, next: 'Your passcode is fine.', retry: true };
