@@ -171,7 +171,11 @@ test('the token never reaches the draft or an exported events.json', async ({ pa
 test('CSP allows only self + api.github.com for fetch, referrer is off', async ({ page }) => {
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
   const connect = csp.split(';').map((d) => d.trim()).find((d) => d.startsWith('connect-src'));
-  expect(connect).toBe("connect-src 'self' https://api.github.com");
+  // The only extra host is the Worker origin from js/admin/analytics-config.js (single source of truth).
+  const cfg = fs.readFileSync(path.join(__dirname, '..', 'js', 'admin', 'analytics-config.js'), 'utf8');
+  const workerUrl = (/workerUrl:\s*'([^']*)'/.exec(cfg) || [])[1];
+  expect(workerUrl, 'workerUrl is set in analytics-config.js').toMatch(/^https:\/\/[^/]+$/);
+  expect(connect).toBe(`connect-src 'self' https://api.github.com ${workerUrl}`);
   const directives = csp.split(';').map((d) => d.trim()).filter(Boolean);
   for (const d of ["object-src 'none'", "base-uri 'none'", "form-action 'self'"]) expect(directives).toContain(d);
   // Nothing else may widen what the page can connect to.
