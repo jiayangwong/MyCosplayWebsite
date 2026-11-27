@@ -27,7 +27,7 @@ PLAN APPROVED: 2026-11-18
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
-- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11 + BUG-4) and TASK-17 (question 22) were approved by the user on 2026-11-19.** **TASK-25 (IDEA-15) and TASK-26 to TASK-29 (IDEA-16) were approved by the user on 2026-11-26 ("all approved").** **Section 12 (IDEA-17, TASK-30 to TASK-35) was approved by the user on 2026-11-27, with days in GMT+8 (question 51 changed); TASK-32 to TASK-35 still wait for the chart rules and the storyboard approval.** **Section 13 (IDEA-18, TASK-36 and TASK-37, amendments to TASK-32 / TASK-33) is waiting for user approval (2026-11-27). User answered 2026-11-27: Approved all, use 900px (questions 54-60 answered; plan text updated; approval marker not written yet).** TASK-38 (config only): built. Review: changes made, re-review pending (task-11 CSP expectation now includes the Worker origin from analytics-config.js).
+- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11 + BUG-4) and TASK-17 (question 22) were approved by the user on 2026-11-19.** **TASK-25 (IDEA-15) and TASK-26 to TASK-29 (IDEA-16) were approved by the user on 2026-11-26 ("all approved").** **Section 12 (IDEA-17, TASK-30 to TASK-35) was approved by the user on 2026-11-27, with days in GMT+8 (question 51 changed); TASK-32 to TASK-35 still wait for the chart rules and the storyboard approval.** **Section 13 (IDEA-18, TASK-36 and TASK-37, amendments to TASK-32 / TASK-33) is waiting for user approval (2026-11-27). User answered 2026-11-27: Approved all, use 900px (questions 54-60 answered; plan text updated; approval marker not written yet).** TASK-38 (config only): built. Review: changes made, re-review pending (task-11 CSP expectation now includes the Worker origin from analytics-config.js). QA TASK-38: passed 2026-11-28 (config + CSP, no request to any other host).
 
 ### Branch note (this job only)
 The integration branch is **`site-v1`**. It takes the place of `main`, because the real `main` is checked out somewhere else. Each task branch (for example `task-3-home-hall`) is created from `site-v1` and merged back into `site-v1`. Wherever CLAUDE.md says "main", read `site-v1`.
@@ -1527,7 +1527,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Repo secrets scan of `worker/` and `.gitignore` entries.
 - Status: waiting for re-review (branch `task-31-worker`, 2026-11-27; the review's must-fix is fixed). Cloudflare facts: what was confirmed and what was not is written in worker/README.md ("What was checked"); the rum dataset and field names are still UNCONFIRMED and `worker/scripts/check-schema.mjs` checks them against the user's real account. **Amendment `previousDaily` (question 54, 2026-11-27): built on this branch, waiting for review** (worker/src/index.js `shapeOverview`, worker/README.md, tests/task-31.spec.js). Merged with the QA fixes for BUG-19..22 (2026-11-27).
 - Review: approved 2026-11-27 (round 2; code only. Cloudflare schema facts still UNVERIFIED and need the user's account: `worker/scripts/check-schema.mjs` must say OK on every line before the Worker is called working or TASK-32 is switched on, see docs/reviews.md)
-- QA: failed - see BUG-22 (re-test 2026-11-27 of 58d511a: BUG-19, BUG-20, BUG-21 verified; BUG-22 open only because its fix has not been run in the Workers runtime; tests/task-31.spec.js and tests/qa-task-31.spec.js 118 passed, Node with a stubbed Cloudflare). Not "passed": see the blocked part below.
+- QA: failed - see BUG-22 (re-test 2026-11-27 of 58d511a: BUG-19, BUG-20, BUG-21 verified; BUG-22 open only because its fix has not been run in the Workers runtime; tests/task-31.spec.js and tests/qa-task-31.spec.js 118 passed, Node with a stubbed Cloudflare). Not "passed": see the blocked part below. Amendment previousDaily re-checked 2026-11-28: passed (tests/task-31.spec.js, fake-Worker compare tests); TASK-31 stays failed only for BUG-22.
 - QA blocked part: NOT passed and cannot be tested without the user's Cloudflare account: the live schema check (dataset and field names, `datetimeHour`, datetime filters), hourly retention, query span and row limits, and a real deploy / run of the Worker (which also closes or reopens the BUG-22 question). The other criteria passed with a stubbed Cloudflare in Node (tests/task-31.spec.js, tests/qa-task-31.spec.js).
 
 ### TASK-32: Admin Analytics panel - tab bar, passcode, fake Worker, states, range switch
@@ -1564,7 +1564,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
 - Existing specs likely to change: any test that counts fold panels or checks the order of panels / the fold chips (`task-18`, `task-23`, `task-24`, `qa-task-23`), and any check of the exact admin CSP string (`task-11`). Expectations only; the programmer searches tests/ for `fold-btn`, `.fold`, `Content-Security-Policy`, `connect-src`. Known from reading (2026-11-27): `tests/task-24.spec.js` `PANELS` lists 6 panels and checks "only Events open" and no horizontal scroll with all open / all collapsed -> add `['an-panel', <body id>, <chip id>]` (collapsed on load); `tests/task-23.spec.js` "one column (phone)" order test compares GitHub, Events, form, Publish, Moments, uploader positions -> still passes with Analytics last, after the uploader (add `#an-panel` at the end of the list); `tests/task-23.spec.js` / `tests/task-18.spec.js` desktop "Moments below the form" -> still passes. Any test that assumes the Media uploader is the last panel must be updated to Analytics (expectations only).
 - Status: built, waiting for review (branch `task-32-analytics-panel`, chained on `task-36-admin-shell`, 2026-11-27; Worker URL empty = "Not set up")
 - Review: approved 2026-11-28
-- QA: pending
+- QA: passed 2026-11-28
 
 ### TASK-33: Chart kit (plain SVG + table fallback) and the Overview tab
 - Linked idea(s): IDEA-17 (with IDEA-18 layout)
@@ -1590,7 +1590,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - All-zero fixture -> empty state, no `svg`.
 - Status: built, waiting for review (branch `task-33-chart-kit`, chained on `task-32-analytics-panel`, 2026-11-27)
 - Review: approved 2026-11-28
-- QA: pending
+- QA: passed 2026-11-28
 
 ### TASK-34: Sources and Pages tabs
 - Linked idea(s): IDEA-17
@@ -1606,7 +1606,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
 - **Automated tests (`tests/task-34.spec.js`, desktop + phone, fake Worker):** group order and numbers, percent rounding adds up to 100 within 1, other-hosts list, Instagram note; pages labels and paths, 404 row only when non-zero; tables; a 60-character host name stays inside the panel at 360px; host text with `<b>` shows as literal text.
 - Status: built, waiting for review (branch `task-34-sources-pages`, chained on `task-37-analytics-layout`, 2026-11-27)
 - Review: approved 2026-11-28
-- QA: pending
+- QA: passed 2026-11-28
 
 ### TASK-35: Audience and Performance tabs
 - Linked idea(s): IDEA-17 (with IDEA-16: phone vs PC)
@@ -1623,7 +1623,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
 - **Automated tests (`tests/task-35.spec.js`, desktop + phone, fake Worker):** device names and percent; top-N + Other; rating boundaries (2500 ms LCP = Good, 2501 = Needs improvement, 4001 = Poor; same for INP and CLS); `null` -> "n/a"; few-samples note at 19 and not at 20; columns side by side at 1280, stacked at 360; tables present.
 - Status: built, waiting for review (branch `task-35-audience-performance`, chained on `task-34-sources-pages`, 2026-11-27)
 - Review: approved 2026-11-28
-- QA: pending
+- QA: failed - see BUG-23 (minor: "1 page loads"); all acceptance criteria otherwise passed 2026-11-28
 
 ### Build order for IDEA-17 (approved by the user 2026-11-27)
 1. **TASK-31** (Worker) and **TASK-30** (beacon) in parallel, **approved to build now**; no admin UI, no storyboard needed. The programmer checks the "NOT confirmed" Cloudflare facts first, including the hourly dimension and its limits (G17).
@@ -1747,7 +1747,7 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
   - **Not read by the planner, the programmer must search them:** every file in `tests/` (including `task-7`, `task-10`, `task-13`, `task-14`, `task-15`, `task-16`, `task-22`, `task-27`, `qa-task-23`, `qa-task-24`, `qa-idea-12-admin`, `qa-bug-9-10` and any newer spec) for `export-events`, `discard-draft`, `import-file`, `Export events.json`, `Discard draft`, `Import events.json`, `.toolbar`, `file-button`, `btn-accent`, `btn-primary` and `new-event`; apply the same rules (Export / Discard clicks or key presses -> `openBackup` first; class checks on `#new-event` / `#publish-btn` / `#export-events` -> the H5 rule). Expectations only, never weakened. Then the full suite passes in both projects.
 - Status: built, waiting for review (branch `task-36-admin-shell`, based on `task-31-worker` because that branch carries the approved docs; 2026-11-27)
 - Review: approved 2026-11-28
-- QA: pending
+- QA: passed 2026-11-28
 
 ### TASK-37: Analytics panel layout - placement, controls row, Settings and About, compare switch, tile column
 - Linked idea(s): IDEA-18 (with IDEA-17)
@@ -1776,7 +1776,7 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
 - **Existing tests to update in this task (expectations only):** `tests/task-32.spec.js` (passcode save / short / forget / reload and opt-out tests open `#an-settings` first, or check that it auto-opened; the footer-text test reads `#an-about` (open it, or check text on the hidden element); Refresh is found by role and name "Refresh", which matches both the text and the icon button), `tests/task-33.spec.js` (Overview tiles and the range line as amended; the "honest-limit line" check moves to `#an-about`), `tests/task-24.spec.js` / `tests/task-23.spec.js` only if TASK-32 did not already add the Analytics panel to their lists. A shared helper `openAnalyticsSettings(page)` in `tests/helpers.js` (opens the panel fold and `#an-settings` if closed).
 - Status: built, waiting for review (branch `task-37-analytics-layout`, chained on `task-33-chart-kit`, 2026-11-27)
 - Review: approved 2026-11-28
-- QA: pending
+- QA: passed 2026-11-28
 
 ### Build order for IDEA-18 (with IDEA-17), proposed 2026-11-27
 0. **`previousDaily` on TASK-31** (question 54 = yes): a small follow-up on branch `task-31-worker`, before the Worker is reviewed / deployed.
