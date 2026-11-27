@@ -543,3 +543,37 @@ Diff `600cb16` (config only) plus the merge of task-35. Analytics specs 32-37 + 
 - Checked: `js/admin/analytics-config.js` `workerUrl` = `https://puzzkezz-analytics.jiayang-wong1999.workers.dev`, and the admin CSP `connect-src 'self' https://api.github.com <that origin>` matches it exactly (no wildcard, static test added). The "Not set up" tests now route an empty config. `preview_urls = false` is in wrangler.toml.example + README. No secret is committed (no passcode, token or account ID). No beacon on /admin/.
 - [nice-to-have] tests/task-32.spec.js:390-395 - the TASK-38 test hard-codes the URL twice. The existing "repo CSP equals workerUrl" test already covers agreement, so this test can be dropped or reduced to "workerUrl is a non-empty https origin".
 - For the user (not a code issue): the Worker subdomain contains your name and will be public in the repo (accepted under question 49). Also, as the TASK-31 round-2 review said, run `worker/scripts/check-schema.mjs` with your token and see OK on every line before relying on the numbers. With TASK-38 merged, the panel is switched on.
+
+## Review TASK-36 - 2026-11-28 (round 2)
+Result: APPROVED
+Fix commit 496197b. Round-1 must-fix resolved: css/admin.css:59 gives `.backup-items` from 600px `width: max-content; min-width: 220px; max-width: calc(100vw - 2 * var(--space-4))`. js/admin/backup-menu.js:16-18 closes the menu on `focusout` to outside it (no focus move). New tests (tests/task-36.spec.js:249-270, 700 / 1280px width + items inside and on one line, Tab out closes) were checked in a throwaway worktree with the fix reverted: all three fail, and they pass with it.
+
+## Review TASK-32 - 2026-11-28 (round 2)
+Result: APPROVED
+Fix commit ed3d2ee. Round-1 must-fix resolved: tests/analytics-mock.js now aborts a forced 403 and its preflight (`route.abort('failed')`), which is what the browser sees from the real Worker (no CORS headers). js/admin/analytics-panel.js:46 network / CORS-failure text names ALLOWED_ORIGIN, keeps Try again and points to worker/README.md. The readable-403 branch is unchanged. tests/task-32.spec.js:331 fails with the old mock (checked in a throwaway worktree) and passes with the fix.
+- [nice-to-have] js/admin/analytics-panel.js:46 - the first line is now "Could not load the numbers. Check your connection, the Worker address and ALLOWED_ORIGIN." The plan (TASK-32 States) and style guide still say network = "Could not load the numbers. Try again." Either keep that first line and move the hint to the second line, or ask the planner to amend the criterion text (the plan's separate 403 text can never show with the real Worker).
+- [nice-to-have] tests/task-32.spec.js - the readable-403 branch of `explain()` now has no test. A small pure test of `explain({ status: 403, body: { error: 'origin' } })` would keep it covered.
+
+## Review TASK-37 - 2026-11-28 (round 2)
+Result: APPROVED
+Fix commit 563ba6f. Round-1 must-fix resolved: css/admin.css:657-661 puts the tools row under the tabs between 900 and 1023px, right-aligned. From 1024px it is one row as in the storyboard. tests/task-37.spec.js:86-103 checks at 900 / 940 / 985 / 1023 / 1024 / 1280px that `#an-tabs` scrollWidth <= clientWidth and every tab is inside the strip. With the media block disabled, 900 and 940 fail (985 and up fit anyway, matching the round-1 measurement).
+
+## Review TASK-34 - 2026-11-28 (round 2)
+Result: APPROVED
+Fix commit 1c1f68c. Round-1 must-fix resolved: js/admin/charts.js:271 `sharePercents()` (largest remainder, sum exactly 100, all zeros -> 0) is the one helper, used by `barChart` (charts.js:292) and `stackedBar` (charts.js:346). New tests (tests/task-34.spec.js:37 Sources 1/1/1/1/4, :51 pure helper) fail when the helper is swapped back to per-item rounding, and pass with it.
+
+## Review TASK-35 - 2026-11-28 (round 2)
+Result: APPROVED
+Fix commit 3fe3b00 (+ a600552, test helper restored after the merge). Round-1 must-fix resolved: js/admin/analytics-panel.js:542-548 adds the second line "Few samples (n). Treat as a guess." with an aria-hidden info icon (currentColor, `.an-samp` flex row). The Audience summary (analytics-panel.js:466) and the Performance summaries (:610) use `sharePercents`. tests/task-35.spec.js:48 (devices 1/1/1 add up to 100) and :194 (19 -> both lines with "(19)" and the icon, 20 -> neither) fail with the fix reverted and pass with it.
+- [nice-to-have] js/admin/analytics-panel.js:610 - an IIFE inside the template literal, and its `(i, k)` shadows the outer `k`. Work out `const sh = sharePercents(...)` before the `stackedBar` call.
+- [nice-to-have] tests/task-35.spec.js:233 - the Performance stacked-bar check still expects per-item `Math.round` (`pct`). It passes only because the fixture adds up. Check the sum is 100 and each share is within 1 instead.
+
+## Full suite - 2026-11-28 (round 2, branch task-38-worker-url at a600552)
+`npx playwright test -c /tmp/pwcfg/pw.config.js` (playwright.config.js unchanged): 1148 tests, **1102 passed, 4 failed, 42 skipped** (12.1 min).
+- tests/task-11.spec.js:171 "CSP allows only self + api.github.com" (desktop + phone) - **fails alone too**. A real regression from TASK-38 (600cb16): admin/index.html:8 `connect-src` now also names the Worker origin, and this test still expects exactly `connect-src 'self' https://api.github.com`. The CSP before TASK-38 (3fe3b00) passes. See the TASK-38 addendum below.
+- tests/task-13.spec.js:125 and :192 (phone only) - a `toBeVisible` timeout under full-suite load. **Both pass alone** (desktop + phone). Flaky under load, not linked to these fixes.
+
+## Review TASK-38 - 2026-11-28 (addendum, found by the full suite)
+Result: CHANGES REQUESTED
+This is new, not a re-raise: the round-1 approval ran only the analytics specs.
+- [must-fix] tests/task-11.spec.js:174 - the exact-CSP check was not updated when TASK-38 put the Worker origin into admin/index.html:8 `connect-src`, so the full suite fails (desktop + phone). The plan (TASK-32, "Existing specs likely to change") says to update this expectation. Fix (expectation only, not weaker): expect `connect-src 'self' https://api.github.com <ANALYTICS.workerUrl origin>`, read from js/admin/analytics-config.js the same way the task-32 "repo CSP equals workerUrl" test does. Keep the "nothing else widens connect-src" and the example.com blocked checks.
