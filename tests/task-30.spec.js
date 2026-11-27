@@ -51,12 +51,12 @@ test('repo scan: each of the 7 public pages loads analytics.js once, has no inli
   }
 });
 
-test('siteHost equals CNAME and the token is still a placeholder', async ({ page }) => {
+test('siteHost equals CNAME and the beacon token is a 32-character hex id', async ({ page }) => {
   const cname = fs.readFileSync(path.join(ROOT, 'CNAME'), 'utf8').trim();
   await page.goto('index.html');
   const cfg = await page.evaluate(async () => (await import('/js/site-config.js')).SITE.analytics);
   expect(cfg.siteHost).toBe(cname);
-  expect(typeof cfg.beaconToken).toBe('string');
+  expect(cfg.beaconToken).toMatch(/^[0-9a-f]{32}$/);
 });
 
 // ---- Browser checks ----
