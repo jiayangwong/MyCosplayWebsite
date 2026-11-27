@@ -1521,7 +1521,8 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Repo secrets scan of `worker/` and `.gitignore` entries.
 - Status: waiting for re-review (branch `task-31-worker`, 2026-11-27; the review's must-fix is fixed). Cloudflare facts: what was confirmed and what was not is written in worker/README.md ("What was checked"); the rum dataset and field names are still UNCONFIRMED and `worker/scripts/check-schema.mjs` checks them against the user's real account.
 - Review: approved 2026-11-27 (round 2; code only. Cloudflare schema facts still UNVERIFIED and need the user's account: `worker/scripts/check-schema.mjs` must say OK on every line before the Worker is called working or TASK-32 is switched on, see docs/reviews.md)
-- QA: pending
+- QA: failed - see BUG-19, BUG-20, BUG-21, BUG-22 (2026-11-27; BUG-22 is unconfirmed: found by reading the code, not run in the Workers runtime)
+- QA blocked part: NOT passed and cannot be tested without the user's Cloudflare account: the live schema check (dataset and field names, `datetimeHour`, datetime filters), hourly retention, query span and row limits, and a real deploy / run of the Worker. The other criteria passed with a stubbed Cloudflare in Node (tests/task-31.spec.js, tests/qa-task-31.spec.js), apart from the bugs above.
 
 ### TASK-32: Admin Analytics panel - tab bar, passcode, fake Worker, states, range switch
 - Linked idea(s): IDEA-17 (with IDEA-8 token pattern, IDEA-14 folds)

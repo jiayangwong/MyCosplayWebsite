@@ -132,3 +132,38 @@
 - Actual: 18 failures (9 tests x desktop + phone): task-14 lines 133, 151, 245, 432; task-16 lines 484, 505, 515, 553; task-8 line 34 (About `.portrait` is a photo now, no "Portrait" aria-label). They assumed `portrait: null` in the real data/site.json.
 - Status: open (minor, does not block the release; for the bugfixer)
 
+## BUG-19: Worker "not-configured" answers have no CORS headers, so the admin cannot read them
+- Found by: QA
+- Task: TASK-31
+- Severity: minor
+- Steps to reproduce: 1. Call the Worker with a valid ALLOWED_ORIGIN, the matching Origin header and a PASSCODE shorter than 24 characters (GET or OPTIONS). 2. Look at the response headers (test: tests/qa-task-31.spec.js, "BUG-19").
+- Expected: for the allowed origin, `Access-Control-Allow-Origin: <that origin>` and `Vary: Origin` (TASK-31 CORS criterion), and a preflight that passes, so the browser can read `503 {"error":"not-configured"}`. When ALLOWED_ORIGIN itself is missing or malformed, no CORS headers is correct.
+- Actual: 503 without any CORS header (worker/src/index.js, `if (bad)` in `handle`, runs before the origin check). In a browser the admin would only see a network error. Also noted by the reviewer (round 1, nice-to-have).
+- Status: open
+
+## BUG-20: Worker answers 200 with all zeros (and caches it) when Cloudflare's answer lacks the expected rows
+- Found by: QA
+- Task: TASK-31
+- Severity: minor
+- Steps to reproduce: 1. Stub the data query to answer `{"data":{"viewer":{"accounts":[{"somethingElse":1}]}},"errors":null}`. 2. Request any tab (test: tests/qa-task-31.spec.js, "BUG-20").
+- Expected: `502 upstream` ("unexpected shape -> 502 upstream", TASK-31 Errors criterion).
+- Actual: 200 with zero / empty data for every tab, then cached for 10 minutes. `list(v)` in worker/src/index.js turns a missing or non-array dataset into `[]`.
+- Status: open
+
+## BUG-21: Worker's 10 s timeout stops at the response headers; a stalled body hangs the request
+- Found by: QA
+- Task: TASK-31
+- Severity: minor
+- Steps to reproduce: 1. Point the Worker's fetch at a server that sends the status and headers, part of the body, then nothing. 2. Set UPSTREAM_TIMEOUT_MS=100 and request a tab (test: tests/qa-task-31.spec.js, "BUG-21"; reproduced with Node's fetch against a local server).
+- Expected: `502 upstream` after the timeout.
+- Actual: no answer (still waiting after 3 s). `clearTimeout(timer)` runs as soon as `fetch` resolves, before `await res.json()` in `graphql()`.
+- Status: open
+
+## BUG-22: Entry module exports plain numbers / strings, which the Workers runtime may refuse (NOT reproduced)
+- Found by: QA (from reading the code; the Workers runtime was not run, so this is unconfirmed)
+- Task: TASK-31
+- Severity: critical if confirmed (the Worker would not start or deploy)
+- Steps to reproduce (not yet done): 1. Run worker/src/index.js in the real Workers runtime (`wrangler dev` or `wrangler deploy`). 2. Watch for a startup error such as "Incorrect type for map entry ... is not of type 'function or ExportedHandler'".
+- Expected: the Worker starts.
+- Actual: unknown. `TZ_OFFSET_MIN` (number), `TZ_LABEL` and `NOT_FOUND_PATH` (strings) are named exports of the Worker's main module; from QA's knowledge of workerd, every named export of the main module must be a function, class or handler object. The Node tests cannot show this. No test and no script imports these three, so dropping the `export` keyword is a safe change either way; it still needs one real-runtime check.
+- Status: open
