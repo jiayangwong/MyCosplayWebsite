@@ -1603,7 +1603,7 @@ Errors (JSON `{ "error": "<code>" }`, no other detail): `400 bad-request` (unkno
   - Both tabs: tables under the charts with exact numbers; empty state when every value is 0; long host names wrap and never overflow at 360px.
 - Files: `js/admin/analytics-panel.js` (2 renderers), `css/admin.css`, `tests/task-34.spec.js`, `tests/fixtures/analytics/sources-*.json`, `pages-*.json`.
 - **Automated tests (`tests/task-34.spec.js`, desktop + phone, fake Worker):** group order and numbers, percent rounding adds up to 100 within 1, other-hosts list, Instagram note; pages labels and paths, 404 row only when non-zero; tables; a 60-character host name stays inside the panel at 360px; host text with `<b>` shows as literal text.
-- Status: todo
+- Status: built, waiting for review (branch `task-34-sources-pages`, chained on `task-37-analytics-layout`, 2026-11-27)
 - Review: pending
 - QA: pending
 

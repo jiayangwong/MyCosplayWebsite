@@ -5,7 +5,7 @@ import {
   TABS, MESSAGES, analyticsFetch, hasPasscode, isConfigured, readOptOut, rangeLine, savePasscode,
   forgetPasscode, writeOptOut, dayLabel, fullDayLabel, malaysiaClock,
 } from './analytics-client.js';
-import { lineChart, formatNumber } from './charts.js';
+import { lineChart, barChart, formatNumber } from './charts.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -346,6 +346,82 @@ function drawOverview(mount, answer, compare, prevDaily) {
   }));
 }
 RENDERERS.overview = renderOverview;
+
+// ---------------------------------------------------------------- Sources and Pages (TASK-34)
+const SOURCE_ORDER = ['instagram', 'facebook', 'google', 'direct', 'other'];
+const SOURCE_LABEL = { instagram: 'Instagram', facebook: 'Facebook', google: 'Google', direct: 'Direct / unknown', other: 'Other' };
+
+/** One titled block (h3 + content). */
+function block(mount, title) {
+  const b = el('div', 'an-block');
+  b.appendChild(el('h3', 'panel-subtitle', title));
+  mount.appendChild(b);
+  return b;
+}
+
+function renderSources(mount, answer) {
+  const d = answer.data;
+  const byKey = new Map((d.groups || []).map((g) => [g.key, g]));
+  const items = SOURCE_ORDER.map((k) => {
+    const g = byKey.get(k);
+    return { label: (g && g.label) || SOURCE_LABEL[k], value: g ? Number(g.visits) || 0 : 0 };
+  });
+  const total = items.reduce((t, i) => t + i.value, 0);
+  const sentence = items.map((i) => `${i.label} ${formatNumber(i.value)}`).join(', ');
+  const b = block(mount, 'Where visits came from');
+  barChart(b, {
+    items,
+    valueLabel: 'visits',
+    nameHeader: 'Source',
+    summary: `Where visits came from, last ${answer.days} days (Malaysia time). ${formatNumber(total)} visits in total: ${sentence}.`,
+    caption: `Visits by source, last ${answer.days} days (Malaysia time)`,
+  });
+  const hosts = el('div', 'an-block');
+  hosts.appendChild(el('h3', 'panel-subtitle', 'Other sites'));
+  const list = Array.isArray(d.otherHosts) ? d.otherHosts.slice(0, 5) : [];
+  if (list.length) {
+    const ul = el('ul', 'an-hosts');
+    list.forEach((h) => ul.appendChild(el('li', null, `${h.host} - ${formatNumber(Number(h.visits) || 0)} ${Number(h.visits) === 1 ? 'visit' : 'visits'}`)));
+    hosts.appendChild(ul);
+  } else {
+    hosts.appendChild(el('p', 'an-note', 'No other sites in this period.'));
+  }
+  mount.appendChild(hosts);
+  mount.appendChild(el('p', 'an-note an-ig-note', 'Visits from inside the Instagram app often show as Direct / unknown.'));
+}
+RENDERERS.sources = renderSources;
+
+function pageItems(list, key) {
+  return (list || []).map((p) => ({ label: p.label, sub: typeof p.path === 'string' && p.path.startsWith('/') ? p.path : undefined, value: Number(p[key]) || 0 }));
+}
+
+function renderPages(mount, answer) {
+  const d = answer.data;
+  const cols = el('div', 'an-cols');
+  mount.appendChild(cols);
+  // "Not found (404)" only when it has page views; it always comes last.
+  const pv = pageItems(d.pages, 'pageViews');
+  const notFound = pv.filter((p) => p.label === 'Not found (404)');
+  const rows = [...pv.filter((p) => p.label !== 'Not found (404)'), ...notFound.filter((p) => p.value > 0)];
+  const a = block(cols, 'Page views per page');
+  barChart(a, {
+    items: rows,
+    valueLabel: 'page views',
+    nameHeader: 'Page',
+    summary: `Page views per page, last ${answer.days} days (Malaysia time). ${rows.map((r) => `${r.label} ${formatNumber(r.value)}`).join(', ')}.`,
+    caption: `Page views per page, last ${answer.days} days (Malaysia time)`,
+  });
+  const entries = pageItems(d.entries, 'visits');
+  const b = block(cols, 'Where visits start');
+  barChart(b, {
+    items: entries,
+    valueLabel: 'visits',
+    nameHeader: 'Page',
+    summary: `Where visits start (the first page of a visit), last ${answer.days} days (Malaysia time). ${entries.map((r) => `${r.label} ${formatNumber(r.value)}`).join(', ')}.`,
+    caption: `Where visits start, last ${answer.days} days (Malaysia time)`,
+  });
+}
+RENDERERS.pages = renderPages;
 
 // ---------------------------------------------------------------- loading
 function load(tab, days, { force = false } = {}) {

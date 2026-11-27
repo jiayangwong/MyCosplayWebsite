@@ -620,7 +620,8 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 .an-bar .tr { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); border-left: 2px solid var(--color-ink); }
 .an-bar .fl { flex: none; height: 16px; box-sizing: border-box; background: var(--color-purple); border: 2px solid var(--color-ink); border-left: 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 .an-bar .fl.zero { width: 0; border: 0; }
-.an-bar .vl { font: 700 0.75rem var(--font-mono); white-space: nowrap; }
+.an-bar .vl { min-width: 0; font: 700 0.75rem var(--font-mono); overflow-wrap: anywhere; }
+.an-bar .tr { min-width: 0; }
 
 /* ===== TASK-37: Analytics layout (900px = phone / PC): controls row, Settings, About, Compare switch, tile column ===== */
 .an-ctl { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
@@ -676,3 +677,9 @@ dialog.confirm .panel-hint { margin: 0 0 var(--space-3); }
 .an-switch input:disabled + .trk::before { background: var(--color-line); }
 .an-switch input:disabled ~ span { color: var(--color-muted); }
 @media (prefers-reduced-motion: reduce) { .an-switch .trk::before { transition: none; } }
+
+/* ===== TASK-34: Sources and Pages ===== */
+.an-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); min-width: 0; }
+@media (min-width: 900px) { .an-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.an-hosts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-1); font: 400 0.8125rem var(--font-mono); }
+.an-hosts li { overflow-wrap: anywhere; }

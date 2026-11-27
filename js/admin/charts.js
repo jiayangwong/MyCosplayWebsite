@@ -284,7 +284,7 @@ export function barChart(container, { items, valueLabel = 'visits', summary, cap
     if (i.sub) nm.appendChild(h('small', null, i.sub));
     const tr = h('div', 'tr');
     const fl = h('div', `fl${i.value === 0 ? ' zero' : ''}`);
-    fl.style.width = i.value === 0 ? '0' : `max(4px, calc((100% - 132px) * ${(i.value / max).toFixed(4)}))`;
+    fl.style.width = i.value === 0 ? '0' : `max(4px, calc((100% - 150px) * ${(i.value / max).toFixed(4)}))`;
     tr.append(fl, h('div', 'vl', i.value === 0 ? '0' : `${formatNumber(i.value)} ${valueLabel} - ${share(i.value)}%`));
     li.append(nm, tr);
     ul.appendChild(li);
