@@ -321,7 +321,8 @@ test.describe('states', () => {
     analytics.override(null);
     analytics.failNetwork = true;
     await page.click('#an-tp-overview button:has-text("Try again")');
-    await expect(box).toContainText('Could not load the numbers. Check your connection, the Worker address and ALLOWED_ORIGIN.');
+    await expect(box).toContainText('Could not load the numbers. Try again.');
+    await expect(box).toContainText('If it keeps failing, check the Worker address and ALLOWED_ORIGIN.');
     analytics.failNetwork = false;
     await page.click('#an-tp-overview button:has-text("Try again")');
     await expect(view(page)).toHaveAttribute('data-analytics-view', 'data');
@@ -334,8 +335,16 @@ test.describe('states', () => {
     await gotoAdmin(page);
     await openAnalytics(page);
     // The real Worker's 403 has no CORS headers, so the browser only sees a network error: the hint is in that text.
-    await expect(page.locator('#an-tp-overview [role="alert"]')).toContainText('Could not load the numbers. Check your connection, the Worker address and ALLOWED_ORIGIN.');
+    await expect(page.locator('#an-tp-overview [role="alert"]')).toContainText('If it keeps failing, check the Worker address and ALLOWED_ORIGIN.');
     await expect(page.locator('#an-tp-overview button:has-text("Try again")')).toBeVisible();
+  });
+
+  test('explain(): a readable 403 names ALLOWED_ORIGIN, no retry', async ({ page }) => {
+    await page.goto('/admin/');
+    const r = await page.evaluate(async () => (await import('/js/admin/analytics-panel.js')).explain({ status: 403, body: { error: 'origin' } }));
+    expect(r.kind).toBe('origin');
+    expect(r.text).toContain('ALLOWED_ORIGIN');
+    expect(r.retry).toBe(false);
   });
 
   test('range-unavailable for 90 days turns 90 off with a note and shows 30 days', async ({ page, analytics }) => {
