@@ -148,6 +148,15 @@ test.describe('passcode', () => {
     }
     expect((await call(req('tab=overview&days=7', { auth: 'y'.repeat(24) }), { ...ENV, PASSCODE: 'y'.repeat(24) })).status).toBe(200);
   });
+  test('the placeholder PASSCODE from .dev.vars.example makes the request 503', async () => {
+    const example = fs.readFileSync(path.join(ROOT, 'worker', '.dev.vars.example'), 'utf8');
+    const placeholder = /^PASSCODE="(.*)"$/m.exec(example)[1];
+    expect(placeholder.length).toBeGreaterThanOrEqual(24); // long enough that only the placeholder check rejects it
+    const res = await call(req('tab=overview&days=7', { auth: placeholder }), { ...ENV, PASSCODE: placeholder });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: 'not-configured' });
+    expect(calls.length).toBe(0);
+  });
   test('constantTimeEqual compares by content, not length, and with the Node fallback loop', async () => {
     expect(await W.constantTimeEqual('abc', 'abc')).toBe(true);
     expect(await W.constantTimeEqual('abc', 'abd')).toBe(false);
