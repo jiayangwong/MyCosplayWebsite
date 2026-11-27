@@ -246,6 +246,29 @@ test.describe('TASK-36 Backup menu', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   });
 
+  for (const w of [700, 1280]) {
+    test(`${w}px: menu is at least 220px wide, items stay inside and on one line`, async ({ page, github }) => {
+      await load(page, github);
+      await page.setViewportSize({ width: w, height: 800 });
+      await openBackup(page);
+      const menu = await box(page, '.backup-items');
+      expect(menu.width).toBeGreaterThanOrEqual(219.5);
+      for (const sel of ['#export-events', 'label[for="import-file"]', '#discard-draft']) {
+        const b = await box(page, sel);
+        expect(b.right).toBeLessThanOrEqual(menu.right + 0.5);
+        expect(b.height).toBeLessThan(60);
+      }
+    });
+  }
+
+  test('Tab out of the open Backup menu closes it', async ({ page, github }) => {
+    await load(page, github);
+    await openBackup(page);
+    await page.locator('#discard-draft').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#backup-menu')).not.toHaveJSProperty('open', true);
+  });
+
   test('stale box step 2 points at the Backup menu', async ({ page, github }) => {
     await load(page, github);
     await expect(page.locator('#pub-stale')).toContainText('Discard draft (in the Backup menu; this loads the newest events.json from GitHub).');
