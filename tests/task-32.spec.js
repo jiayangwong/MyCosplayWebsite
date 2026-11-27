@@ -387,6 +387,13 @@ test.describe('security', () => {
     }
   });
 
+  test('the real Worker origin is set in the config and the admin CSP (TASK-38)', async () => {
+    const cfg = fs.readFileSync(path.join(ROOT, 'js', 'admin', 'analytics-config.js'), 'utf8');
+    const html = fs.readFileSync(path.join(ROOT, 'admin', 'index.html'), 'utf8');
+    expect(/workerUrl:\s*'([^']*)'/.exec(cfg)[1]).toBe('https://puzzkezz-analytics.jiayang-wong1999.workers.dev');
+    expect(html).toContain("connect-src 'self' https://api.github.com https://puzzkezz-analytics.jiayang-wong1999.workers.dev;");
+  });
+
   test('the passcode is sent only by analytics-client.js, only to the stats path', async () => {
     const dir = path.join(ROOT, 'js', 'admin');
     const sending = fs.readdirSync(dir).filter((f) => f.endsWith('.js') && /Authorization/.test(fs.readFileSync(path.join(dir, f), 'utf8')));

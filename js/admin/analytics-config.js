@@ -5,5 +5,5 @@
 // When you fill it in, add the SAME origin to connect-src in the Content-Security-Policy meta tag of
 // admin/index.html (a test checks that the two agree). This is the only place the Worker URL is written.
 export const ANALYTICS = Object.freeze({
-  workerUrl: '',
+  workerUrl: 'https://puzzkezz-analytics.jiayang-wong1999.workers.dev',
 });

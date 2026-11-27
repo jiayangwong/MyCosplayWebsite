@@ -86,7 +86,14 @@ class FakeWorker {
       if (/(^|\.)(api\.cloudflare\.com|cloudflareinsights\.com)$/.test(host)) this.forbidden.push(r.url());
     });
     await page.route(/https:\/\/(api\.cloudflare\.com|[^/]*cloudflareinsights\.com)\//, (route) => route.abort());
-    if (!this.configured) return;
+    if (!this.configured) {
+      // The repo config now holds the real Worker origin (TASK-38): serve an empty one for the "Not set up" case.
+      await page.route('**/js/admin/analytics-config.js', (route) => route.fulfill({
+        contentType: 'text/javascript',
+        body: "export const ANALYTICS = Object.freeze({ workerUrl: '' });\n",
+      }));
+      return;
+    }
     await page.route('**/js/admin/analytics-config.js', (route) => route.fulfill({
       contentType: 'text/javascript',
       body: `export const ANALYTICS = Object.freeze({ workerUrl: ${JSON.stringify(this.url)} });\n`,

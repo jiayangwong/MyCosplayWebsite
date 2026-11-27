@@ -4,6 +4,8 @@ name = "puzzkezz-analytics"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
 workers_dev = true
+# Turns off the per-version preview URLs (Cloudflare warns about them); the Worker stays on workers.dev only.
+preview_urls = false
 
 [vars]
 ACCOUNT_ID = "your-account-id"

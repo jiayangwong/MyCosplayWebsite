@@ -95,6 +95,7 @@ If a menu looks different from the names below, type **Web Analytics** in the da
    npx wrangler deploy
    ```
    Note the Worker URL it prints (`https://puzzkezz-analytics.<your-subdomain>.workers.dev`).
+   Existing deployments: add the line `preview_urls = false` (under `workers_dev = true`) to your own `wrangler.toml` and run `npx wrangler deploy` again.
    If the Worker was ever deployed before the Overview `previousDaily` field existed (needed for the Compare switch), run `npx wrangler deploy` again.
 9. **Tell the programmer the Worker URL.** It goes into `js/admin/analytics-config.js` and the admin CSP (TASK-32). Then paste
    the passcode in `/admin/` -> Analytics.
