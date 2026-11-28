@@ -328,6 +328,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Status: done (built 2026-11-17 by the main session on site-v1)
 - Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
+- QA note (2026-11-28): tests/task-4.spec.js:94 (desktop) was seen failing once under load by the bugfixer; QA could not repeat it; BUG-26 (minor, open).
 
 ### TASK-5: Events page - grouped by year, event cards, click-to-load embeds
 - Linked idea(s): IDEA-6, IDEA-7
@@ -476,6 +477,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Status: done (merged into site-v1 on 2026-11-19 as 5442abf; review approved round 2, QA passed)
 - Review: approved 2026-11-18 (round 2, commit eff0502; see docs/reviews.md)
 - QA: passed 2026-11-18 (94 passed + 2 skips full suite PC + phone; exploratory: loading/failed/full states, swipe, Esc + focus return, rapid navigation, admin + import validation, no console errors besides expected 404)
+- QA note (2026-11-28): tests/task-10.spec.js:202 (phone) fails now and then, cause not known; BUG-26 (minor, open).
 
 ### TASK-11: GitHub connection panel in `/admin/` (token save / test / forget)
 - Linked idea(s): IDEA-8
@@ -589,6 +591,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Status: done (merged into site-v1 on 2026-11-19; review approved round 3, QA passed)
 - Review: approved 2026-11-19
 - QA: passed 2026-11-19
+- QA note (2026-11-28): tests/task-13.spec.js:682 (desktop) failed once in a full run, cause not known; BUG-26 (minor, open).
 
 ### TASK-16: Publish never commits a broken photo link (events and site photos); "Remove from publish" puts back the published photo - APPROVED 2026-11-19
 - Linked idea(s): IDEA-11 (with IDEA-8, IDEA-9, IDEA-10); fixes BUG-4
@@ -1748,7 +1751,7 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
 - Status: built, waiting for review (branch `task-36-admin-shell`, based on `task-31-worker` because that branch carries the approved docs; 2026-11-27)
 - Review: approved 2026-11-28
 - QA: passed 2026-11-28
-- QA note (2026-11-28): BUG-25 (minor, open) found afterwards in the Backup menu's delayed focus; see bugs/BUGS.md.
+- QA note (2026-11-28): BUG-25 (minor, Backup menu's delayed focus) fixed in 517be08 on branch task-38-worker-url and verified by QA on 2026-11-28 (GMT+8); full suite 1157 passed, 42 skipped, 1 failed (intermittent task-10 test, BUG-26, minor, open); see bugs/BUGS.md.
 
 ### TASK-37: Analytics panel layout - placement, controls row, Settings and About, compare switch, tile column
 - Linked idea(s): IDEA-18 (with IDEA-17)
