@@ -7,6 +7,14 @@ const { test, expect, FAKE_PASSCODE, PASSCODE_KEY, OPTOUT_KEY, seedPasscode, got
 const SHOTS = '/tmp/qa-shots';
 fs.mkdirSync(SHOTS, { recursive: true });
 const WIDTHS = [390, 768, 900, 1024, 1280];
+
+// Google Fonts are unreachable in tests (playwright.config.js blocks both hosts), which prints "Failed to load
+// resource" and broke the zero-console-errors checks. Answer only those two hosts with an empty body; every other
+// console error, including a CSP violation, still fails.
+const GOOGLE_FONTS = /^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
+test.beforeEach(async ({ page }) => {
+  await page.route(GOOGLE_FONTS, (r) => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+});
 const view = (page) => page.locator('html');
 const shot = (page, name, w) => page.locator('#an-panel').screenshot({ path: `${SHOTS}/${name}-${w}.png` }).catch(() => {});
 const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
