@@ -1,0 +1,13 @@
+# Copy this file to wrangler.toml (which is gitignored) and fill in the three values.
+# NEVER put CF_API_TOKEN or PASSCODE in this file: set them with `wrangler secret put` (see README.md).
+name = "puzzkezz-analytics"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+# Turns off the per-version preview URLs (Cloudflare warns about them); the Worker stays on workers.dev only.
+preview_urls = false
+
+[vars]
+ACCOUNT_ID = "your-account-id"
+SITE_TAG = "your-site-tag"
+ALLOWED_ORIGIN = "https://puzzkezz-testing.loc.cc"

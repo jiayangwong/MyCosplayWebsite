@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="../style.css"><meta name="robots" content="noindex, nofollow"></head>
 <body class="admin">
-<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: ADMIN - Event manager (not in nav)</span> <span>TASK-6, TASK-7, TASK-11, TASK-12, TASK-13, TASK-23, TASK-24</span> <span>On load only Events is open; all other panels start collapsed (chips visible)</span> <a href="../index.html">Back to site</a></div>
+<div class="sb-banner" role="note"><b>STORYBOARD - not final</b> <span>Screen: ADMIN - Event manager (not in nav)</span> <span><b>NEW: IDEA-17 Analytics tabs (TASK-32 to TASK-35, not final)</b></span> <span>Also TASK-6, 7, 11, 12, 13, 23, 24</span> <a href="../index.html">Back to site</a></div>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap hdr">
 <a class="logo" href="../index.html">PUZZ KEZZ</a>
@@ -17,10 +17,13 @@
 <ul><li><a href="../index.html"><span><b>HOME</b><small>Walk the hall</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../gallery.html"><span><b>GALLERY</b><small>Cosplay photos</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../reels.html"><span><b>REELS</b><small>さしすせそ · sa shi su se so</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../events.html"><span><b>EVENTS</b><small>Meet me at the con</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../about.html"><span><b>ABOUT</b><small>Who is Puzz</small></span><i aria-hidden="true">&rarr;</i></a></li><li><a href="../contact.html"><span><b>CONTACT</b><small>Collabs & bookings</small></span><i aria-hidden="true">&rarr;</i></a></li></ul>
 <p class="menu-soc mono">INSTAGRAM &middot; TIKTOK &middot; YOUTUBE &middot; FACEBOOK<br>[social links from site-config]</p></dialog>
 <main id="main">
-<section class="wrap pg"><h1>EVENT MANAGER</h1>
+<section class="wrap pg adm-stack"><h1>EVENT MANAGER</h1>
 <p class="help"><b>Help.</b> Changes are only on this browser until you export events.json, replace data/events.json in the repo, and push.</p>
 <p class="mono">Source in use: [draft from localStorage / data/events.json]</p>
-<div class="bar"><button class="btn btn-accent" type="button">New event</button><button class="btn btn-secondary" type="button">Import events.json</button><button class="btn btn-primary" type="button">Export events.json</button><button class="btn btn-secondary" type="button">Discard draft</button></div>
+<div class="adm-actions" id="adm-actions"><button class="btn btn-accent" type="button" id="newBtn">New event</button>
+<details class="backup-menu" id="backup"><summary class="btn btn-secondary">Backup <i aria-hidden="true">&#9662;</i></summary>
+<div class="bk-pop"><input type="file" id="bk-file" accept="application/json,.json" hidden><button type="button" class="bk-item" id="bk-import">Import events.json</button><button type="button" class="bk-item" id="bk-export">Export events.json</button><button type="button" class="bk-item is-danger" id="bk-discard"><span aria-hidden="true">!</span> Discard draft</button></div></details>
+<span class="mono small" id="bk-note" role="status"></span></div>
 <div class="adm-grid"><div class="adm-side adm-left"><section class="panel fold" id="gh-panel" aria-labelledby="gh-title"><div class="fold-head"><h2 id="gh-title">GitHub</h2><button class="fold-btn" type="button" aria-expanded="false" aria-controls="ghBody" aria-labelledby="gh-title ghChip"><span class="fold-chip st" id="ghChip">Not connected</span><i aria-hidden="true">&#9662;</i></button></div>
 <div class="fold-body" id="ghBody" hidden>
 <p class="muted">The token stays in this browser only.</p>
@@ -59,7 +62,7 @@
 <div class="bar"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-secondary" type="button">Cancel</button></div></form>
 </div></section>
 <section class="panel fold pub-first" id="publish-panel" aria-labelledby="pub-title"><div class="fold-head"><h2 id="pub-title">Publish</h2><button class="fold-btn" type="button" aria-expanded="false" aria-controls="pubBody" aria-labelledby="pub-title pubChip"><span class="fold-chip st" id="pubChip">6 pending</span><i aria-hidden="true">&#9662;</i></button></div>
-<button class="btn btn-accent" type="button" id="pubBtn">Publish to GitHub</button>
+<button class="btn btn-secondary" type="button" id="pubBtn">Publish to GitHub</button>
 <p class="mono muted small" id="pubWhy">Needs a saved token (see above).</p>
 <div class="fold-body" id="pubBody" hidden>
 <ul class="pend" aria-label="Pending changes"><li><b>+</b> media/events/2026-03-14-cf/sample-1.webp</li><li><b>+</b> media/events/2026-03-14-cf/sample-1-full.webp</li><li><b>~</b> data/events.json</li><li><b>-</b> media/events/2025-08-09-omt/old-cover.webp</li><li><b>-</b> media/events/2025-08-09-omt/old-cover-full.webp</li><li><b>-</b> media/events/2025-05-03-amg/old-cover.webp</li></ul>
@@ -73,13 +76,15 @@
 <section class="panel fold wrap-mom" id="moments-panel" aria-labelledby="mo-title"><div class="fold-head"><h2 id="mo-title">Moments</h2><button class="fold-btn" type="button" aria-expanded="false" aria-controls="mo-body" aria-labelledby="mo-title mo-count"><span class="fold-chip st" id="mo-count">4 moments</span><i aria-hidden="true">&#9662;</i></button></div>
 <div class="fold-body" id="mo-body" hidden><ol class="adm-list"><li class="adm-row"><span class="mono">12 Apr 2026</span><b>MOM</b><span>Backstage at Comic Fiesta (long moment title to show the full-width name) <span class="sample">Sample</span></span><span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up" disabled>&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down">&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">2 Feb 2026</span><b>MOM</b><span>Fitting day <span class="sample">Sample</span></span><span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up">&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down">&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">6 Dec 2025</span><b>MOM</b><span>Photo walk <span class="sample">Sample</span></span><span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up">&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down">&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li><li class="adm-row"><span class="mono">9 Aug 2025</span><b>MOM</b><span>Prop build <span class="sample">Sample</span></span><span class="acts"><button class="btn btn-secondary" type="button">Edit</button><button class="btn btn-secondary" type="button" aria-label="Move up">&uarr;</button><button class="btn btn-secondary" type="button" aria-label="Move down" disabled>&darr;</button><button class="btn btn-secondary" type="button">Delete</button></span></li></ol>
 <p class="mono small">Moments list is not paged (C11).</p></div></section>
+<dialog class="confirm" id="dcf" aria-labelledby="dcfh"><h3 id="dcfh">Discard the draft?</h3><p class="muted">Your unsaved changes on this browser are deleted. data/events.json is not changed. (Storyboard: nothing is deleted.)</p><div class="acts"><button class="btn btn-secondary" type="button" id="dcfNo" autofocus>Cancel</button><button class="btn btn-secondary is-danger" type="button" id="dcfYes">Discard draft</button></div></dialog>
 <dialog class="confirm" id="rmc" aria-labelledby="rmch"><h3 id="rmch">Remove sample-1.jpg?</h3><p class="muted">It is attached to CF 2026 and will be taken out of the publish.</p><div class="acts"><button class="btn btn-secondary" type="button" id="rmNo" autofocus>Cancel</button><button class="btn btn-primary" type="button" id="rmYes">Remove</button></div></dialog>
 <dialog class="confirm" id="cfm" aria-labelledby="cfmh"><h3 id="cfmh">These 3 old files will be removed</h3><p class="muted">Old versions stay in the GitHub history.</p>
 <ul><li>&minus; media/events/2025-08-09-omt/old-cover.webp</li><li>&minus; media/events/2025-08-09-omt/old-cover-full.webp</li><li>&minus; media/events/2025-05-03-amg/old-cover.webp</li></ul>
 <div class="acts"><button class="btn btn-secondary" type="button" id="cfmNo" autofocus>Cancel</button><button class="btn btn-primary" type="button" id="cfmYes">Remove and publish</button></div></dialog>
 <div class="sb-switch" role="group" aria-label="Storyboard: show state"><span>Storyboard: show state</span>
 <label>GitHub <select id="swGh"><option value="none">Not connected</option><option value="testing">Testing</option><option value="ok">Connected</option><option value="err">Error</option></select></label>
-<label>Publish <select id="swPub"><option value="idle">Idle</option><option value="confirm">Confirm dialog</option><option value="busy">Publishing</option><option value="ok">Success</option><option value="err">Error</option><option value="stale">Stale ref</option></select></label></div>
+<label>Publish <select id="swPub"><option value="idle">Idle</option><option value="confirm">Confirm dialog</option><option value="busy">Publishing</option><option value="ok">Success</option><option value="err">Error</option><option value="stale">Stale ref</option></select></label>
+<label>Changes <select id="swPend"><option value="6">6 pending</option><option value="0">Nothing pending</option></select></label></div>
 
 <section class="panel fold" id="wm-panel" aria-labelledby="wm-title"><div class="fold-head"><h2 id="wm-title">Media uploader</h2><button class="fold-btn" type="button" aria-expanded="false" aria-controls="wm-body" aria-labelledby="wm-title wm-chip"><span class="fold-chip st" id="wm-chip">3 photos</span><i aria-hidden="true">&#9662;</i></button></div>
 <div class="fold-body" id="wm-body" hidden>
@@ -91,12 +96,44 @@
 <div id="cards">
 <div class="pcard" data-pending="1" data-fn="sample-1.jpg"><button class="pc-x" type="button" aria-label="Remove sample-1.jpg"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq pink" data-wm="2400x2400" role="img" aria-label="Master thumbnail with tiled watermark"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>2400 x 2400 - 1.8 MB</figcaption></figure>
 <figure><div class="ph ph-sq pink" data-wm="1200x1200" role="img" aria-label="Display thumbnail with tiled watermark"><span>[DISPLAY thumb]</span></div><figcaption class="mono"><span class="chip d">DISPLAY</span><br>1200 x 1200 - 180 KB</figcaption></figure></div>
-<p class="fn">sample-1.jpg <span class="mono">&#10003; Ready</span></p><p class="mono muted small">media/events/2026-03-14-cf/sample-1-full.webp<br>media/events/2026-03-14-cf/sample-1.webp</p><p><button class="btn btn-secondary" type="button">Download</button> <button class="btn btn-accent" type="button" data-attach aria-describedby="attach-msg">Attach to selected event</button></p><p class="mono small err" id="attach-msg" role="status" hidden>&#9888; This event already has 3 photos</p></div>
+<p class="fn">sample-1.jpg <span class="mono">&#10003; Ready</span></p><p class="mono muted small">media/events/2026-03-14-cf/sample-1-full.webp<br>media/events/2026-03-14-cf/sample-1.webp</p><p><button class="btn btn-secondary" type="button">Download</button> <button class="btn btn-secondary" type="button" data-attach aria-describedby="attach-msg">Attach to selected event</button></p><p class="mono small err" id="attach-msg" role="status" hidden>&#9888; This event already has 3 photos</p></div>
 <div class="pcard"><button class="pc-x" type="button" aria-label="Remove sample-2.jpg"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq lilac" role="img" aria-label="Processing"><span>[processing...]</span></div></figure></div><p class="fn">sample-2.jpg</p><p class="mono" role="status">Processing...</p><div class="ibar"></div></div>
 <div class="pcard is-err" data-nophoto="1"><button class="pc-x" type="button" aria-label="Remove notes.heic"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq" role="img" aria-label="No thumbnail, file failed"><span>[no thumbnail]</span></div></figure></div><p class="fn">notes.heic</p><p class="err" role="alert">&#9888; Could not read this file. Is it a JPG, PNG or WebP?</p></div>
 <div class="pcard is-err"><button class="pc-x" type="button" aria-label="Remove sample-3.png"><span aria-hidden="true">&times;</span></button><div class="pair"><figure><div class="ph ph-sq sky" data-wm="2400x2400" role="img" aria-label="Master thumbnail"><span>[MASTER thumb]</span></div><figcaption class="mono"><span class="chip m">MASTER</span><br>6000 x 6000 - 26.4 MB</figcaption></figure>
 <figure><div class="ph ph-sq sky" data-wm="1200x1200" role="img" aria-label="Display thumbnail"><span>[DISPLAY thumb]</span></div><figcaption class="mono"><span class="chip d">DISPLAY</span><br>1200 x 1200 - 452 KB</figcaption></figure></div><p class="fn">sample-3.png</p><p class="err" role="alert">&#9888; This photo is too big to publish (over 25 MB). Please use a smaller original.</p></div>
 <p><button class="btn btn-primary" type="button">Download all</button></p></div></div>
+</div></section>
+<section class="panel fold" id="an-panel" aria-labelledby="an-title"><div class="fold-head"><h2 id="an-title">Analytics</h2><button class="fold-btn" type="button" aria-expanded="false" aria-controls="an-body" aria-labelledby="an-title an-chip"><span class="fold-chip st" id="an-chip" data-s="ok">Last 30 days</span><i aria-hidden="true">&#9662;</i></button></div>
+<div class="fold-body an-body" id="an-body" hidden>
+<svg class="an-pat" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+<pattern id="an-p-dots" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#1D1A24"/></pattern>
+<pattern id="an-p-hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M-1 7 L7 -1 M-1 1 L1 -1 M5 7 L7 5" stroke="#1D1A24" stroke-width="1" fill="none"/></pattern>
+<pattern id="an-p-cross" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M-1 7 L7 -1 M-1 1 L1 -1 M5 7 L7 5 M-1 -1 L7 7" stroke="#1D1A24" stroke-width="1" fill="none"/></pattern></defs></svg>
+<svg class="an-pat" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+<pattern id="an-p-dots" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#1D1A24"/></pattern>
+<pattern id="an-p-hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M-1 7 L7 -1 M-1 1 L1 -1 M5 7 L7 5" stroke="#1D1A24" stroke-width="1" fill="none"/></pattern>
+<pattern id="an-p-cross" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M-1 7 L7 -1 M-1 1 L1 -1 M5 7 L7 5 M-1 -1 L7 7" stroke="#1D1A24" stroke-width="1" fill="none"/></pattern></defs></svg>
+<div class="an-sb" role="group" aria-label="Storyboard only: preview a state"><b>STORYBOARD ONLY - preview a state (not part of the real page)</b><div id="an-sb"></div></div>
+<div class="an-vh" id="an-live" aria-live="polite"></div>
+<div class="an-msg" id="an-notset" hidden></div>
+<div class="msg none" id="an-npmsg" role="status" hidden><span class="ic" aria-hidden="true">&ndash;</span><p>No passcode saved. Paste one in Settings below.</p></div>
+<div class="an-ctl" id="an-tools" hidden>
+<div class="an-grp"><fieldset><legend>Last 7 / 30 / 90 days (Malaysia time)</legend><div class="an-range" id="an-range"></div></fieldset><button class="btn btn-secondary an-refresh" type="button" id="an-refresh" aria-label="Refresh"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M16 10a6 6 0 1 1-2-4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14.5 1.5v4.5H10" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="rt">Refresh</span></button><span class="an-upd" id="an-upd" role="status">Updated 14:05 Malaysia time</span></div>
+<div class="an-tabs" id="an-tabs" role="tablist" aria-label="Analytics views" hidden></div>
+</div>
+<div id="an-r90" hidden></div>
+<div class="an-tp" id="an-tp" role="tabpanel" hidden></div>
+<details class="an-set" id="an-settings"><summary>Settings</summary><div class="an-set-in">
+<div class="an-pc" id="an-pc" hidden>
+<label class="field">Passcode<input type="password" id="an-pass" autocomplete="off" placeholder="paste passcode (storyboard: nothing is stored)"></label>
+<p class="muted mono small">Stays in this browser only. Paste the long passcode you made for the Worker.</p>
+<div class="bar"><button class="btn btn-primary" type="button" id="an-save">Save</button><button class="btn btn-secondary" type="button" id="an-test0">Test</button><button class="btn btn-secondary is-danger" type="button" disabled>Forget passcode</button></div>
+</div>
+<div class="an-prow" id="an-prow" hidden></div>
+<div><label class="an-opt" id="an-opt-l"><input type="checkbox" id="an-opt" aria-describedby="an-opt-h">Don't count my visits on this browser</label>
+<p class="an-note an-help" id="an-opt-h">Only this browser. The Instagram app browser keeps its own setting.</p></div>
+</div></details>
+<details class="an-about" id="an-about"><summary><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 4.5v1" stroke="currentColor" stroke-width="1.5"/></svg>About these numbers</summary><div class="an-foot"><p>Page loads only (no clicks).</p><p>Numbers are sampled by Cloudflare and approximate.</p><p>Days are Malaysia time (GMT+8), midnight to midnight. Updated about every 10 minutes.</p><p>STORYBOARD: every number in this panel is made-up sample data.</p></div></details>
 </div></section>
 </main>
 <footer class="site-footer"><div class="truss" aria-hidden="true"></div><div class="wrap">
@@ -123,8 +160,17 @@
     var saved = s === 'ok' || s === 'err' || s === 'testing';
     var ts = $('tokSaved'); ts.hidden = !saved; ts.textContent = 'Token saved (ends in ...' + (last || 'x7Kq') + ')';
     $('ghForget').disabled = !saved; $('ghTest').disabled = !saved; $('ghSave').disabled = false;
-    $('pubBtn').disabled = s !== 'ok' || $('pubBtn').dataset.busy === '1';
-    $('pubWhy').hidden = s === 'ok';
+    $('pubBtn').disabled = s !== 'ok' || pend === 0 || $('pubBtn').dataset.busy === '1';
+    syncPrimary();
+  }
+  var pend = 6;
+  function setPend(n) { pend = n; $('pubChip').textContent = n ? n + ' pending' : 'Nothing pending'; $('swPend').value = String(n); syncPrimary(); }
+  function syncPrimary() {
+    var pb = $('pubBtn'), nb = $('newBtn'), on = pend > 0 && !pb.disabled;
+    pb.classList.toggle('btn-accent', on); pb.classList.toggle('btn-secondary', !on);
+    nb.classList.toggle('btn-accent', !on); nb.classList.toggle('btn-secondary', on);
+    var w = $('pubWhy'); w.hidden = ghState === 'ok' && pend > 0;
+    w.textContent = ghState !== 'ok' ? 'Needs a saved token (see above).' : 'Nothing to publish.';
   }
   function pubMsg(k) { document.querySelectorAll('[data-pub]').forEach(function (m) { m.hidden = m.getAttribute('data-pub') !== k; }); }
   function pub(s) {
@@ -134,18 +180,40 @@
     if ($('cfm').open) $('cfm').close();
     if (s === 'busy') {
       if (ghState !== 'ok') gh('ok');
-      fold('pubBody', true); b.dataset.busy = '1'; b.disabled = true; b.textContent = 'Publishing...'; $('pprog').hidden = false;
+      fold('pubBody', true); b.dataset.busy = '1'; b.disabled = true; b.textContent = 'Publishing...'; $('pprog').hidden = false; syncPrimary();
       var n = 0; (function tick() { n++; var pc = n * 20; $('pfill').style.width = pc + '%'; $('pprog').querySelector('[role=progressbar]').setAttribute('aria-valuenow', pc); $('ptxt').textContent = 'Uploading ' + n + ' of 5 files';
         if (n < 5) timer = setTimeout(tick, 600); else timer = setTimeout(function () { pub('ok'); }, 600); })();
       return;
     }
-    if (s === 'ok' || s === 'err' || s === 'stale') { if (ghState !== 'ok') gh('ok'); pubMsg(s); fold('pubBody', true); }
+    if (s === 'ok' || s === 'err' || s === 'stale') { if (ghState !== 'ok') gh('ok'); if (s === 'ok') setPend(0); pubMsg(s); fold('pubBody', true); }
     gh(ghState);
   }
   $('ghSave').addEventListener('click', function () { var v = $('tok').value; gh('ok', v.length >= 4 ? v.slice(-4) : 'x7Kq'); $('tok').value = ''; });
   $('ghTest').addEventListener('click', function () { gh('testing'); timer = setTimeout(function () { gh('ok'); }, 1200); });
   $('ghForget').addEventListener('click', function () { gh('none'); });
   $('pubBtn').addEventListener('click', function () { pub('confirm'); });
+  $('swPend').addEventListener('change', function (e) { setPend(+e.target.value); gh(ghState); });
+  /* Backup menu (native details) */
+  var bk = $('backup'), bkSum = bk.querySelector('summary');
+  function bkClose(focus) { bk.open = false; if (focus) bkSum.focus(); }
+  function bkItems() { return [].slice.call(bk.querySelectorAll('.bk-item')); }
+  bk.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && bk.open) { e.preventDefault(); bkClose(true); return; }
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && bk.open) {
+      var it = bkItems(), i = it.indexOf(document.activeElement); e.preventDefault();
+      i = e.key === 'ArrowDown' ? (i + 1) % it.length : (i <= 0 ? it.length - 1 : i - 1); it[i].focus();
+    }
+  });
+  bk.addEventListener('focusout', function (e) { if (bk.open && e.relatedTarget && !bk.contains(e.relatedTarget)) bk.open = false; });
+  document.addEventListener('click', function (e) { if (bk.open && !bk.contains(e.target)) bk.open = false; });
+  function bkNote(t) { $('bk-note').textContent = t; clearTimeout(bkNote.t); bkNote.t = setTimeout(function () { $('bk-note').textContent = ''; }, 3000); }
+  $('bk-import').addEventListener('click', function () { bkClose(true); $('bk-file').click(); });
+  $('bk-file').addEventListener('change', function (e) { if (e.target.files[0]) bkNote('Storyboard: ' + e.target.files[0].name + ' not read, nothing changed.'); e.target.value = ''; });
+  $('bk-export').addEventListener('click', function () { bkClose(true); bkNote('Storyboard: events.json would download now.'); });
+  $('bk-discard').addEventListener('click', function () { bkClose(false); $('dcf').showModal(); });
+  $('dcfNo').addEventListener('click', function () { $('dcf').close(); bkSum.focus(); });
+  $('dcfYes').addEventListener('click', function () { $('dcf').close(); bkSum.focus(); bkNote('Storyboard: draft not deleted.'); });
+  $('dcf').addEventListener('cancel', function () { setTimeout(function () { bkSum.focus(); }, 0); });
   $('cfmNo').addEventListener('click', function () { pub('idle'); });
   $('cfm').addEventListener('cancel', function () { $('swPub').value = 'idle'; });
   $('cfmYes').addEventListener('click', function () { pub('busy'); });
@@ -159,7 +227,7 @@
     if (c.dataset.pending === '1') { rmCard = c; $('rmc').showModal(); } else { c.remove(); wmChip(); }
   }); });
   $('rmNo').addEventListener('click', function () { $('rmc').close(); });
-  $('rmYes').addEventListener('click', function () { $('rmc').close(); if (rmCard) rmCard.remove(); wmChip(); $('pubChip').textContent = '3 pending'; });
+  $('rmYes').addEventListener('click', function () { $('rmc').close(); if (rmCard) rmCard.remove(); wmChip(); setPend(3); gh(ghState); });
 
   /* TASK-24: Events list paging (dummy data: 21 events) */
   var SAMPLE = [['CF','Comic Fiesta'],['AMG','Amg [Full Name Placeholder]'],['OMT','Omatsuri'],['CF','Comic Fiesta'],['AMG','Amg [Full Name Placeholder]'],['OMT','Omatsuri'],['CF','Comic Fiesta']];
@@ -199,7 +267,7 @@
     if (b.hasAttribute('data-del')) { var gone = EV[(page - 1) * size + [].indexOf.call($('event-list').children, b.closest('li'))]; if (gone === sel) sel = EV[0] === gone ? EV[1] : EV[0]; EV.splice((page - 1) * size + [].indexOf.call($('event-list').children, b.closest('li')), 1); renderEvents(); }
   });
   function openForm(chip) { fold('form-body', true); $('form-chip').textContent = chip; var d = document.querySelector('#form-body input[type=date]'); if (d) d.focus(); }
-  document.querySelector('.bar .btn-accent').addEventListener('click', function () { openForm('New'); });
+  $('newBtn').addEventListener('click', function () { openForm('New'); });
   document.querySelector('#form-body .bar .btn-secondary').addEventListener('click', function () { $('form-chip').textContent = 'New'; });
   function wmChip() { var n = document.querySelectorAll('#cards .pcard:not([data-nophoto])').length; $('wm-chip').textContent = plural(n, 'photo', 'photos', 'No photos'); }
   function moChip() { var n = document.querySelectorAll('#mo-body .adm-row').length; $('mo-count').textContent = plural(n, 'moment', 'moments', 'No moments'); }
@@ -232,9 +300,10 @@
     if (!sel || sel.ph.length >= 3) return;
     sel.ph.push('new' + (++phN) + '.jpg'); renderEvents(); renderSlots(); fold('form-body', true);
   }); });
-  renderEvents(); renderSlots(); wmChip(); moChip();
+  renderEvents(); renderSlots(); wmChip(); moChip(); gh(ghState);
 })();
 </script>
 <script src="../app.js"></script>
 <script src="../wm.js"></script>
+<script src="../analytics-sb.js"></script>
 </body></html>

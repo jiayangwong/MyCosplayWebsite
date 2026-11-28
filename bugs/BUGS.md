@@ -132,3 +132,104 @@
 - Actual: 18 failures (9 tests x desktop + phone): task-14 lines 133, 151, 245, 432; task-16 lines 484, 505, 515, 553; task-8 line 34 (About `.portrait` is a photo now, no "Portrait" aria-label). They assumed `portrait: null` in the real data/site.json.
 - Status: open (minor, does not block the release; for the bugfixer)
 
+## BUG-19: Worker "not-configured" answers have no CORS headers, so the admin cannot read them
+- Found by: QA
+- Task: TASK-31
+- Severity: minor
+- Steps to reproduce: 1. Call the Worker with a valid ALLOWED_ORIGIN, the matching Origin header and a PASSCODE shorter than 24 characters (GET or OPTIONS). 2. Look at the response headers (test: tests/qa-task-31.spec.js, "BUG-19").
+- Expected: for the allowed origin, `Access-Control-Allow-Origin: <that origin>` and `Vary: Origin` (TASK-31 CORS criterion), and a preflight that passes, so the browser can read `503 {"error":"not-configured"}`. When ALLOWED_ORIGIN itself is missing or malformed, no CORS headers is correct.
+- Actual: 503 without any CORS header (worker/src/index.js, `if (bad)` in `handle`, runs before the origin check). In a browser the admin would only see a network error. Also noted by the reviewer (round 1, nice-to-have).
+- Status: verified
+- Cause: `handle` returned the 503 for any config problem before looking at the origin, and without passing the origin to `json()`.
+- Fix: worker/src/index.js `handle`: when ALLOWED_ORIGIN itself is valid and the Origin header matches it, the 503 `not-configured` now carries `Access-Control-Allow-Origin` + `Vary: Origin`, and an OPTIONS preflight from that origin gets the normal 204 preflight (so the browser goes on to read the 503). A missing / malformed ALLOWED_ORIGIN or another origin still gets 503 with no CORS headers. test.fail mark removed in tests/qa-task-31.spec.js.
+- QA re-test (2026-11-27): verified in Node (stubbed Cloudflare). Each missing setting or short PASSCODE: allowed origin gets 503 with CORS + Vary and a 204 preflight; other / no origin and a missing or malformed ALLOWED_ORIGIN get 503 with no CORS headers. Not checked in a real browser against a deployed Worker.
+
+## BUG-20: Worker answers 200 with all zeros (and caches it) when Cloudflare's answer lacks the expected rows
+- Found by: QA
+- Task: TASK-31
+- Severity: minor
+- Steps to reproduce: 1. Stub the data query to answer `{"data":{"viewer":{"accounts":[{"somethingElse":1}]}},"errors":null}`. 2. Request any tab (test: tests/qa-task-31.spec.js, "BUG-20").
+- Expected: `502 upstream` ("unexpected shape -> 502 upstream", TASK-31 Errors criterion).
+- Actual: 200 with zero / empty data for every tab, then cached for 10 minutes. `list(v)` in worker/src/index.js turns a missing or non-array dataset into `[]`.
+- Status: verified
+- Cause: `list(v)` turned a missing or non-array alias in Cloudflare's answer into `[]`, so the tab shaped (and cached) all zeros.
+- Fix: worker/src/index.js: `list(v)` now throws `UpstreamError('bad-shape')` when the alias is missing or not an array, which `handle` answers as 502 `upstream` (not cached). test.fail mark removed in tests/qa-task-31.spec.js.
+- QA re-test (2026-11-27): verified in Node (stubbed Cloudflare). A missing or non-array dataset (also only in the previous period) is 502 upstream on every tab and is not cached; empty arrays are still 200.
+
+## BUG-21: Worker's 10 s timeout stops at the response headers; a stalled body hangs the request
+- Found by: QA
+- Task: TASK-31
+- Severity: minor
+- Steps to reproduce: 1. Point the Worker's fetch at a server that sends the status and headers, part of the body, then nothing. 2. Set UPSTREAM_TIMEOUT_MS=100 and request a tab (test: tests/qa-task-31.spec.js, "BUG-21"; reproduced with Node's fetch against a local server).
+- Expected: `502 upstream` after the timeout.
+- Actual: no answer (still waiting after 3 s). `clearTimeout(timer)` runs as soon as `fetch` resolves, before `await res.json()` in `graphql()`.
+- Status: verified
+- Cause: `graphql()` cleared the abort timer in the `finally` of the `fetch` call, i.e. once the headers arrived, before `await res.json()`.
+- Fix: worker/src/index.js `graphql()`: the whole function body (fetch, status checks, `res.json()`, shape checks) is inside one try / finally, so the timer is cleared only after the body is read; a stalled body is aborted and gives `bad-json` -> 502 `upstream`. test.fail mark removed in tests/qa-task-31.spec.js.
+- QA re-test (2026-11-27): verified with Node's real fetch against a local server whose body stalls: 502 after the timeout. Not checked in the Workers runtime.
+
+## BUG-22: Entry module exports plain numbers / strings, which the Workers runtime may refuse (NOT reproduced)
+- Found by: QA (from reading the code; the Workers runtime was not run, so this is unconfirmed)
+- Task: TASK-31
+- Severity: critical if confirmed (the Worker would not start or deploy)
+- Steps to reproduce (not yet done): 1. Run worker/src/index.js in the real Workers runtime (`wrangler dev` or `wrangler deploy`). 2. Watch for a startup error such as "Incorrect type for map entry ... is not of type 'function or ExportedHandler'".
+- Expected: the Worker starts.
+- Actual: unknown. `TZ_OFFSET_MIN` (number), `TZ_LABEL` and `NOT_FOUND_PATH` (strings) are named exports of the Worker's main module; from QA's knowledge of workerd, every named export of the main module must be a function, class or handler object. The Node tests cannot show this. No test and no script imports these three, so dropping the `export` keyword is a safe change either way; it still needs one real-runtime check.
+- Status: verified (real runtime) - evidence provided by the user (see the last line); QA to confirm the final TASK-31 QA status.
+- Cause: (unconfirmed) `TZ_OFFSET_MIN`, `TZ_LABEL` and `NOT_FOUND_PATH` were exported from the main module as a number and strings, which workerd may refuse.
+- Fix: worker/src/index.js: dropped the `export` keyword from those three constants (nothing imported them). Safe change only: NOT reproduced and NOT checked in the real Workers runtime (no workerd / wrangler in this environment; installing one was not allowed). Still needed: one real-runtime check (`wrangler dev` or a deploy) that the Worker starts. The other named exports are functions or plain objects (`EXPECTED_FIELDS`, `QUERIES`); that check should confirm those are accepted too.
+- QA re-test (2026-11-27): NOT verified, so set back to open. This is not a failed fix: the three `export` keywords are gone, and in Node every export of the entry module is a function or object (guard test in tests/qa-task-31.spec.js; all other TASK-31 tests pass). Node cannot show what the Workers runtime accepts, and neither the problem nor the fix has been run there (workerd / wrangler not installed; install not permitted). No further code change is requested. To close: start the Worker once with `wrangler dev` or `wrangler deploy` on a machine where that is allowed (for example the user's, during setup) and confirm it starts.
+- Real-runtime evidence (from the user, 2026-11-27/28): `wrangler deploy` of the Worker from this code (with the QA fixes) succeeded on the real Cloudflare Workers platform (Version ID b1c93d0e-bc07-4f03-9835-d15c8a54f480), and the live Worker answered `/v1/stats?tab=overview&days=7` with the expected JSON (Malaysia-day dates, `previousDaily` included). So the Worker starts and the remaining named exports are accepted.
+
+## BUG-23: Performance tab says "1 page loads" (and "from 1 page loads") for a count of 1
+- Found by: QA
+- Task: TASK-35
+- Severity: minor
+- Steps to reproduce: 1. Open the fake-Worker admin, Analytics, Performance tab. 2. Use a fixture with a rating bucket of 1 (the default performance fixture, CLS Poor = 1) or `samples: 1`.
+- Expected: "1 page load".
+- Actual: "1 page loads" (js/admin/analytics-panel.js:541 and the bar valueLabel 'page loads' at :608 never singularise).
+- Status: verified
+- Cause: count texts were built as number + a fixed plural word ('page loads', and the same for 'visits' / 'page views' in bar values, stacked-bar counts and chart summaries), so a count of 1 was never singular.
+- Fix: one helper `countWord(n, plural)` in js/admin/charts.js (visit/visits, page view/page views, page load/page loads, sample/samples) used by barChart values, stackedBar counts, and in js/admin/analytics-panel.js by the "from N page loads" line, the Overview and Sources chart summaries and the Other sites list. Table headers stay plural ("Visits", "Page views", "Page loads"); tile labels and tooltips print "Visits 1" / "Page views 1" style labels, unchanged per docs/style-guide.md; the few-samples line "Few samples (n)" has no count word, unchanged. Regression test tests/bug-23.spec.js (0 / 1 / 2 for each word, Performance, Sources, Pages; fails without the fix).
+- QA re-test (2026-11-28): verified. Real admin page with the fake Worker at 390 and 1280px, counts 0 / 1 / 2 on Overview, Sources, Pages, Performance: "1 visit", "1 page view", "1 page load", "from 1 page load"; 0 and 2 stay plural; no "1 visits" style text anywhere. tests/qa-bug-23-shots.spec.js + tests/bug-23.spec.js pass; screenshots /tmp/qa-shots/bug23-*.png.
+
+## BUG-24: Older specs fail on the blocked Google Fonts console error (test-only)
+- Found by: QA (first reported by the reviewer, 2026-11-28)
+- Task: TASK-19, TASK-23, TASK-24, IDEA-12 specs (found during TASK-38 QA; not caused by TASK-38)
+- Severity: minor (tests only, no product fault seen; it does keep the full suite red, which blocks "earlier tests still passing")
+- Steps to reproduce: 1. Run the full suite with playwright.config.js (it blocks fonts.googleapis.com / fonts.gstatic.com). 2. Look at tests/task-19.spec.js:253, tests/task-23.spec.js:203, tests/task-24.spec.js:231, tests/qa-task-24.spec.js (lines 24, 47, 59 at three widths) and tests/qa-idea-12.spec.js:158.
+- Expected: they pass; the fonts block made by the test setup is not counted as a page error.
+- Actual: 26 failures (desktop + phone: 2 + 2 + 2 + 18 + 2). Each requires zero console errors and gets "Failed to load resource" for the fonts stylesheet: net::ERR_TUNNEL_CONNECTION_FAILED here (sandbox proxy, which refuses fonts.googleapis.com with 403); net::ERR_NAME_NOT_RESOLVED with the proxy variables removed (the repo's own --host-resolver-rules block). qa-idea-12 filters only /fonts\.g|ERR_NAME_NOT_RESOLVED/ against the message text, which has no URL, so the tunnel error gets through (the reviewer saw it pass without a proxy).
+- Evidence it is test-only: on all 7 public pages, 404.html and /admin/ the fonts stylesheet was the only console error; with the two fonts hosts answered by an empty stub there was none. Temporary copies of the five specs with that stub: the 26 selected tests passed. The same tests fail on site-v1: 6 of 6 at 4b88fb5 (the task-19, task-23 and qa-idea-12 ones present there) and 26 of 26 at origin/site-v1 6b1574a.
+- Suggested fix: the stub now in tests/qa-task-38.spec.js (page.route for https://fonts.(googleapis|gstatic).com/ only, empty 200), in each spec or once in a shared fixture. Do not filter all "Failed to load resource" lines.
+- Status: verified
+- Cause: the five specs count every console error, and the Google Fonts stylesheet request (blocked by playwright.config.js, refused by the sandbox proxy) always logs "Failed to load resource"; only qa-task-38 stubbed those hosts.
+- Fix: new shared helper `stubGoogleFonts(page)` in tests/helpers.js (page.route for ^https://fonts.(googleapis|gstatic).com/ only, empty 200 text/css), called in one top-level test.beforeEach in tests/task-19.spec.js, tests/task-23.spec.js, tests/task-24.spec.js, tests/qa-task-24.spec.js and tests/qa-idea-12.spec.js. No assertion, skip or filter changed; no product code changed. Run of the five specs (desktop + phone): 203 passed, 7 skipped (existing project-only skips), 0 failed; before the fix 177 passed, 7 skipped, 26 failed. Check with a throwaway spec: with the stub on, a failed script from another host and a stylesheet from a lookalike host (fonts.googleapis.com.evil.example) are still logged as console errors.
+- QA re-test (2026-11-28 GMT+8, at 35a12bc): verified. The diff since ba8b00f touches only tests/helpers.js, the five specs (import + one beforeEach each), docs/changelog.md and this log: no assertion, skip or filter changed, no product code. Throwaway spec outside the repo, desktop + phone, with the stub on: the two fonts hosts log nothing; console errors are still logged for another host, a lookalike host, a fonts URL in another host's query string, a local 404, console.error and a CSP block of the fonts stylesheet. (An uncaught page error is a `pageerror` event, not a console message; the stub does not affect it.) Full suite: 1198 tests, 1154 passed, 42 skipped, 2 failed; none of the 26 BUG-24 failures remain. The 2 failures are outside the five specs, see BUG-25.
+
+## BUG-25: Two admin publish tests fail now and then; after Import, focus is pulled back to Backup 50 ms later
+- Found by: QA
+- Task: TASK-36
+- Severity: minor (intermittent test failures; no realistic effect on a person using the page was seen)
+- Steps to reproduce: 1. Run tests/task-16.spec.js:418 (desktop) many times in parallel (`--repeat-each=15 --workers=4`, together with tests/task-13.spec.js:682) or in the full suite. 2. For the focus behaviour alone: on /admin/, import an events.json and move focus to another control within 50 ms of the import ending.
+- Expected: focus stays where it was put; pressing Enter on "Publish to GitHub" starts the publish.
+- Actual: js/admin/backup-menu.js handles `backup:done` with `setTimeout(() => summary.focus(), 50)`, whatever has focus by then. task-16:418 failed 2 times (once in the full run, once in 15 parallel repeats): `#pub-err` still hidden after 15 s. The page snapshot of the second failure shows focus on "Backup", the Backup menu open and Publish never started, which fits the Enter key landing on Backup after the delayed focus. A throwaway probe (desktop + phone) confirmed that focus moved elsewhere right after `backup:done` is taken back to the Backup summary, and Enter then opens the menu. It passed 10 of 10 re-runs alone.
+- Also seen, cause NOT known: tests/task-13.spec.js:682 (desktop, path ".../old.webp/") failed once in the full run with the same symptom (`#pub-err` hidden after 15 s). That test does not import a file and clicks Publish with the mouse, so the explanation above may not cover it. It passed in 10 of 10 re-runs alone and in all 15 parallel repeats.
+- Status: verified (focus steal and task-16:418 only; task-13:682 is not covered by this fix and is tracked in BUG-26)
+- Cause: the `backup:done` handler in js/admin/backup-menu.js always focused the Backup summary 50 ms later, even if focus had moved outside the menu by then (task-16:418 imports, then `press('Enter')` on Publish focuses it first; the delayed focus could land between the focus and the key).
+- Fix: js/admin/backup-menu.js - the delayed focus now runs only if focus is still nowhere (body / none) or inside the Backup menu; otherwise it is left where it is. The menu still closes at once, and Export / Import / Discard still focus the summary when nothing else took focus (TASK-36 tests unchanged and passing). Regression test in tests/task-36.spec.js "BUG-25: focus moved elsewhere right after Import / Export stays there" (moves focus to New event inside the `backup:done` event, checks it 300 ms later; fails without the fix on desktop and phone, received the summary). Stress run task-16:418 + task-13:682, `--repeat-each=8 --workers=4`: 304 of 304 passed.
+- task-13:682: not linked. That test never imports, exports or discards, so `backup:done` never fires there and this fix cannot change it. It passed in the stress run above, but it was already rare (1 failure in the full run), so that is not proof. Cause still unknown; if it fails again, log it as its own bug with the trace.
+- QA re-test (2026-11-28 GMT+8, at 517be08): verified. The diff changes only the delayed focus in js/admin/backup-menu.js plus the test, changelog and this log. The regression test fails on desktop and phone with the 517be08~1 version of backup-menu.js (received the summary, expected new-event) and passes 10 of 10 per project with the fix; tests/task-36.spec.js 44 passed, 2 skipped. Throwaway probe, desktop + phone (click / tap and keyboard, 3 runs each): after Export, Import (good and bad file) and Discard (cancel and accept) the menu closes and focus is on the Backup summary; focus moved to New event inside `backup:done` stays there and Enter opens the form, not the menu; Esc focuses the summary; an outside click closes the menu; no console errors (Google Fonts stubbed), no horizontal scroll, also at 375px. Stress run task-13:682 + task-16:418, `--repeat-each=5 --workers=4`: 190 passed. Full suite: 1200 tests, 1157 passed, 42 skipped, 1 failed (task-10:202 phone, not caused by this fix, see BUG-26).
+
+## BUG-26: Intermittent test failures under repeated or full-suite runs, causes not known (task-10:202, task-4:94, task-13:682)
+- Found by: QA
+- Task: TASK-10 (also tests of TASK-4 and TASK-13)
+- Severity: minor (rare; each passes when run again; no effect on a person using the page has been shown)
+- Steps to reproduce: 1. Run the full suite, or `npx playwright test tests/task-10.spec.js:202 --project=phone --repeat-each=40 --workers=4`.
+- Expected: the tests pass every time.
+- Actual:
+  - tests/task-10.spec.js:202 (phone), seen by QA at 517be08: failed once in the full suite and once in 40 phone repeats. Line 218: `#err-photoFull` still hidden 5 s after clicking "Save event". Page snapshot (both failures checked for the Save button state): the Full-size path is filled in, "Save event" has focus, no error is shown; in the full-run snapshot the event count is still 8. This looks as if the click did not submit the form, but that is NOT confirmed. It passed 10 of 10 per project in an earlier repeat run, and a throwaway probe of the same steps with event logging passed 150 of 150 on phone, so the cause was not captured. No Backup action happens before line 218, so BUG-25's `backup:done` code is not involved.
+  - tests/task-4.spec.js:94 (desktop): reported by the bugfixer as one failure under load. QA did not see it: passed in the full suite and 40 of 40 desktop repeats.
+  - tests/task-13.spec.js:682 (desktop): one failure in an earlier full run (see BUG-25: `#pub-err` hidden after 15 s). Passed in the full suite and in the repeat runs since.
+- Status: open
+

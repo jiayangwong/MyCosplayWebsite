@@ -1,0 +1,3 @@
+# Copy to .dev.vars (gitignored) only for `wrangler dev` on your own computer.
+CF_API_TOKEN="your-api-token"
+PASSCODE="your-passcode-24-or-more-random-characters"

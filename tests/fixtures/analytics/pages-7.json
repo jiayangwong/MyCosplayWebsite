@@ -1,0 +1,81 @@
+{
+  "v": 1,
+  "tab": "pages",
+  "days": 7,
+  "from": "2026-11-20",
+  "to": "2026-11-26",
+  "tz": "+08:00",
+  "sampled": true,
+  "generatedAt": "2026-11-26T12:00:00Z",
+  "data": {
+    "pages": [
+      {
+        "path": "/",
+        "label": "Home",
+        "pageViews": 53
+      },
+      {
+        "path": "/gallery.html",
+        "label": "Gallery",
+        "pageViews": 23
+      },
+      {
+        "path": "/reels.html",
+        "label": "Reels",
+        "pageViews": 38
+      },
+      {
+        "path": "/events.html",
+        "label": "Events",
+        "pageViews": 16
+      },
+      {
+        "path": "/about.html",
+        "label": "About",
+        "pageViews": 9
+      },
+      {
+        "path": "/contact.html",
+        "label": "Contact",
+        "pageViews": 3
+      },
+      {
+        "path": "other",
+        "label": "Not found (404)",
+        "pageViews": 1
+      }
+    ],
+    "entries": [
+      {
+        "path": "/",
+        "label": "Home",
+        "visits": 24
+      },
+      {
+        "path": "/reels.html",
+        "label": "Reels",
+        "visits": 15
+      },
+      {
+        "path": "/gallery.html",
+        "label": "Gallery",
+        "visits": 6
+      },
+      {
+        "path": "/events.html",
+        "label": "Events",
+        "visits": 4
+      },
+      {
+        "path": "/about.html",
+        "label": "About",
+        "visits": 2
+      },
+      {
+        "path": "/contact.html",
+        "label": "Contact",
+        "visits": 1
+      }
+    ]
+  }
+}

@@ -600,3 +600,58 @@ The user approved the PC part ("pc web approved") and changed the phone part. Us
 - Phone: the D1, D2, D3 tabs are the meter (story-style segments that fill in 1.5 s each) and the photo flips by itself; no separate meter bar, no pause button.
 - Pressing a tab stops the animation on that photo for good; it plays again only after the page is reloaded.
 - Assumed: plays D1, D2, D3 once and stops on D3 (no loop, like stories; total 4.5 s). To confirm with the user.
+
+## IDEA-17: Cloudflare Web Analytics graphs in /admin/ (tabs, via a small Worker)
+- Date: 2026-11-27
+- Status: ready-for-planning
+- Summary: Count visits on the public pages with Cloudflare Web Analytics (free, cookie-less) and show the numbers as graphs inside /admin/, split into five tabs. A small free Cloudflare Worker fetches the data so no secret token is ever in the repo or the browser.
+- Details:
+  - User's words (verbatim): "I want Cloudflare Web Analytics in my project. Apply the Cloudflare Web Analytics graphs into the admin page, separated by tabs." After the site was analysed and graphs suggested, the user answered "yes, with worker" (the Worker approach is approved).
+  - Purpose: see whether the site grows and whether the Instagram bio link brings people, because the user wants more reel views. The phone vs PC split matters because the Hall uses a PC pile design and a phone story-tabs design (IDEA-16).
+  - DECIDED by the user:
+    1. Tracking: Cloudflare Web Analytics on the PUBLIC pages only: index, gallery, reels, events, about, contact (and 404). NOT on /admin/, so the user's own visits are not counted.
+    2. Display: graphs inside /admin/, in a tab bar above the existing collapsible panels.
+    3. Data path: a small free Cloudflare Worker holds a read-only Cloudflare API token as a secret, queries the Cloudflare GraphQL Analytics API (datasets rumPageloadEventsAdaptiveGroups, rumPerformanceEventsAdaptiveGroups, rumWebVitalsEventsAdaptiveGroups) and returns only the numbers. The token must never be in the repo or in browser code.
+    4. Protection: the Worker is protected by a passcode. The user pastes it into the admin page once; it stays only in that browser's localStorage (same pattern as the GitHub token in js/admin/github-token.js).
+    5. Five tabs the user accepted:
+       - Overview: visitors and page views per day, 7 / 30 / 90-day switch, totals vs the previous period.
+       - Sources: referrers bar chart (Instagram, Facebook, Google, direct).
+       - Pages: page views per page, entry pages.
+       - Audience: countries, phone vs PC vs tablet, browser.
+       - Performance: page load speed and Core Web Vitals, split by phone and PC.
+  - Known constraints / notes for the planner:
+    - Free Web Analytics counts page loads only. NO custom event or click tracking: reel clicks go to Instagram, and gallery photo opens and the bangai polaroid cannot be counted. Reels page visits plus Instagram as referrer are the closest signals. Click counting would be a separate future idea.
+    - Cloudflare samples analytics data, so the numbers are approximate (the admin page should say so).
+    - The site is static (no build step) on GitHub Pages with a custom domain in CNAME. admin/index.html has a CSP `connect-src 'self' https://api.github.com ...` that needs the Worker URL added. Public pages have no CSP meta tag today. robots.txt already disallows /admin/.
+    - The Worker lives outside the static site: it needs its own folder in the repo (code only, no secrets).
+    - Setup steps the user must do (to be written for them): Cloudflare account; add the site in Web Analytics and copy the beacon token and site tag; create an API token with read-only analytics permission; deploy the Worker; set the secrets and the passcode.
+    - The admin already has collapsible panels (all collapsed except Events on load, IDEA-14). The admin has an existing Playwright test setup with tests/github-mock.js (fake GitHub), so tests need a fake Worker too.
+  - OPEN QUESTIONS for the planner (not answered here):
+    1. Chart style / library: plain SVG or canvas? No external CDN is preferred, because of the admin CSP and the site having no build step.
+    2. Do the tabs sit above ALL existing panels, or only above a new Analytics panel?
+    3. Worker passcode handling (how it is sent, stored, rotated, and what happens on a wrong passcode or rate limit).
+    4. Date range limits of the free tier (is a 90-day view available?).
+    5. Exact Cloudflare dashboard menu names for the setup steps.
+- References: user message 2026-11-27; related: IDEA-8 (token pattern, js/admin/github-token.js), IDEA-14 (collapsible admin panels), IDEA-16 (PC pile vs phone D1-D3 tabs)
+- Priority (user's view): nice-to-have (assumed, the user did not say)
+
+## IDEA-18: Admin layout polish (six changes kept from the admin design review)
+- Date: 2026-11-27
+- Status: planned (was ready-for-planning 2026-11-27; docs/plan.md section 13, TASK-36 and TASK-37, written 2026-11-27, **waiting for user approval**)
+- Summary: After reviewing the admin page design, the user kept six layout changes for /admin/ (verbatim: "Keep these 1-6 suggestions").
+- Details (the six changes the user kept):
+  1. The Analytics panel moves BELOW the two-column grid (GitHub / Events on the left, Publish / Event form on the right). Still collapsed on load. (Changes IDEA-17's "above the existing panels".)
+  2. Analytics controls. PC: the five tabs on the left; the 7 / 30 / 90 range switch, Refresh and "Updated HH:MM Malaysia time" on the right of the same row. Phone: range switch and an icon Refresh (labelled "Refresh") on one row, "Updated ..." under them, tabs below.
+  3. The passcode block and the "don't count my visits" checkbox go into one collapsed "Settings" disclosure; the four footer notes go into one collapsed "About these numbers" disclosure. Settings opens by itself in the "not set up" and "no passcode" states.
+  4. Overview: a "Compare with previous period" switch, OFF by default (off: 2 lines and 2 legend items; on: dashed previous-period lines and extra legend items; the numbers table follows). Tiles keep the change line; the "Show the numbers" under the tiles and the tile helper text are removed. PC: tiles in a left column (about 240px) and the chart on the right; phone: order unchanged. The range line says "compared with the 30 days before".
+  5. One spacing value for the gaps between panels and grid rows / columns across the whole admin page (24px phone, 32px PC); grid items aligned to the top; the Publish button 12px under its header.
+  6. One pink primary button per screen: NEW EVENT is pink while nothing is pending; PUBLISH TO GITHUB (enabled) is pink when changes are pending, and NEW EVENT becomes secondary. IMPORT, EXPORT and DISCARD DRAFT move into one "Backup" menu (44px, Esc closes it, focus goes back to its button; Discard draft keeps its danger style and its confirmation).
+- NOT chosen by the user (stay as they are):
+  - Merging the GitHub token and the analytics passcode into one "Connections" panel: the user has not decided (open question 59 in the plan).
+  - Review item 7 (Help box) and item 8 (Instagram button in the admin header): not kept; both stay as they are today.
+- Planner notes (details and assumptions H1-H16 are in docs/plan.md section 13):
+  - Change 4 needs the previous period's numbers per day. The Worker (TASK-31) returns only the previous totals today, so a small addition (`previousDaily`) is proposed (plan question 54).
+  - Change 6 moves Import / Export / Discard into the Backup menu; several existing admin tests click those buttons and get a shared `openBackup` helper (list in TASK-36).
+  - Open questions 54-60 are in the plan.
+- References: user message 2026-11-27 ("Keep these 1-6 suggestions"); related: IDEA-7, IDEA-8, IDEA-13, IDEA-14, IDEA-17
+- Priority (user's view): must-have (assumed: the user asked to keep all six)

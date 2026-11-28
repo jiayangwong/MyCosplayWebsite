@@ -3,3 +3,9 @@ test-results/
 playwright-report/
 .DS_Store
 Thumbs.db
+
+# Cloudflare Worker (TASK-31): real config and secrets never go in the repo
+worker/wrangler.toml
+worker/.dev.vars
+worker/.wrangler/
+worker/node_modules/

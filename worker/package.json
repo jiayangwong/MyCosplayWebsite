@@ -1,0 +1,10 @@
+{
+  "name": "puzz-kezz-analytics-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker that serves Web Analytics numbers (GMT+8 days) to the /admin/ Analytics panel. No dependencies.",
+  "scripts": {
+    "check-schema": "node scripts/check-schema.mjs"
+  }
+}

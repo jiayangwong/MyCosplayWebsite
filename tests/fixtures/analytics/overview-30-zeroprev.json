@@ -1,0 +1,324 @@
+{
+  "v": 1,
+  "tab": "overview",
+  "days": 30,
+  "from": "2026-10-28",
+  "to": "2026-11-26",
+  "tz": "+08:00",
+  "sampled": true,
+  "generatedAt": "2026-11-26T12:00:00Z",
+  "data": {
+    "daily": [
+      {
+        "date": "2026-10-28",
+        "visits": 4,
+        "pageViews": 12
+      },
+      {
+        "date": "2026-10-29",
+        "visits": 7,
+        "pageViews": 22
+      },
+      {
+        "date": "2026-10-30",
+        "visits": 10,
+        "pageViews": 32
+      },
+      {
+        "date": "2026-10-31",
+        "visits": 6,
+        "pageViews": 21
+      },
+      {
+        "date": "2026-11-01",
+        "visits": 9,
+        "pageViews": 27
+      },
+      {
+        "date": "2026-11-02",
+        "visits": 5,
+        "pageViews": 16
+      },
+      {
+        "date": "2026-11-03",
+        "visits": 8,
+        "pageViews": 26
+      },
+      {
+        "date": "2026-11-04",
+        "visits": 4,
+        "pageViews": 15
+      },
+      {
+        "date": "2026-11-05",
+        "visits": 7,
+        "pageViews": 21
+      },
+      {
+        "date": "2026-11-06",
+        "visits": 10,
+        "pageViews": 31
+      },
+      {
+        "date": "2026-11-07",
+        "visits": 6,
+        "pageViews": 20
+      },
+      {
+        "date": "2026-11-08",
+        "visits": 9,
+        "pageViews": 30
+      },
+      {
+        "date": "2026-11-09",
+        "visits": 5,
+        "pageViews": 15
+      },
+      {
+        "date": "2026-11-10",
+        "visits": 8,
+        "pageViews": 25
+      },
+      {
+        "date": "2026-11-11",
+        "visits": 4,
+        "pageViews": 14
+      },
+      {
+        "date": "2026-11-12",
+        "visits": 7,
+        "pageViews": 24
+      },
+      {
+        "date": "2026-11-13",
+        "visits": 10,
+        "pageViews": 30
+      },
+      {
+        "date": "2026-11-14",
+        "visits": 6,
+        "pageViews": 19
+      },
+      {
+        "date": "2026-11-15",
+        "visits": 9,
+        "pageViews": 29
+      },
+      {
+        "date": "2026-11-16",
+        "visits": 5,
+        "pageViews": 18
+      },
+      {
+        "date": "2026-11-17",
+        "visits": 8,
+        "pageViews": 24
+      },
+      {
+        "date": "2026-11-18",
+        "visits": 4,
+        "pageViews": 13
+      },
+      {
+        "date": "2026-11-19",
+        "visits": 7,
+        "pageViews": 23
+      },
+      {
+        "date": "2026-11-20",
+        "visits": 10,
+        "pageViews": 33
+      },
+      {
+        "date": "2026-11-21",
+        "visits": 6,
+        "pageViews": 18
+      },
+      {
+        "date": "2026-11-22",
+        "visits": 9,
+        "pageViews": 28
+      },
+      {
+        "date": "2026-11-23",
+        "visits": 5,
+        "pageViews": 17
+      },
+      {
+        "date": "2026-11-24",
+        "visits": 14,
+        "pageViews": 45
+      },
+      {
+        "date": "2026-11-25",
+        "visits": 4,
+        "pageViews": 12
+      },
+      {
+        "date": "2026-11-26",
+        "visits": 7,
+        "pageViews": 22
+      }
+    ],
+    "totals": {
+      "visits": 213,
+      "pageViews": 682
+    },
+    "previous": {
+      "visits": 0,
+      "pageViews": 0
+    },
+    "previousDaily": [
+      {
+        "date": "2026-09-28",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-09-29",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-09-30",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-01",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-02",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-03",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-04",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-05",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-06",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-07",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-08",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-09",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-10",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-11",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-12",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-13",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-14",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-15",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-16",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-17",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-18",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-19",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-20",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-21",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-22",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-23",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-24",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-25",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-26",
+        "visits": 0,
+        "pageViews": 0
+      },
+      {
+        "date": "2026-10-27",
+        "visits": 0,
+        "pageViews": 0
+      }
+    ]
+  }
+}

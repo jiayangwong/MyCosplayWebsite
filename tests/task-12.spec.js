@@ -3,7 +3,7 @@
 // a test on any unhandled api.github.com call, and if the token shows up anywhere except the Authorization
 // header of a request to https://api.github.com.
 const fs = require('fs');
-const { test, expect, BRANCH, API, FAKE_TOKEN, FakeRepo, gitBlobSha, openFold } = require('./github-mock');
+const { test, expect, BRANCH, API, FAKE_TOKEN, FakeRepo, gitBlobSha, openFold, openBackup } = require('./github-mock');
 const { SAMPLE_EVENTS } = require('./helpers');
 
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
@@ -75,6 +75,7 @@ async function addEvent(page, short = 'PUB', name = 'Publish Test Con') {
 }
 
 async function exportedText(page) {
+  await openBackup(page);
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
   return fs.readFileSync(await download.path(), 'utf8');
 }
@@ -207,6 +208,7 @@ test('stale recovery: Export backup -> Discard draft -> Import backup -> Publish
   const backup = fs.readFileSync(await download.path(), 'utf8');
   expect(backup).toContain('Backup Con');
   // 2. Discard draft: loads the newest events.json from GitHub (not the older site copy) and takes its SHA as base.
+  await openBackup(page);
   await page.click('#discard-draft');
   await expectResult(page.locator('#source-banner')).toContainText('newest copy from GitHub');
   await expect(page.locator('.event-row')).toHaveCount(1);
@@ -243,6 +245,7 @@ test('Discard draft locks Publish, Import and Discard while it reads GitHub, and
   await expect(page.locator('#publish-btn')).toBeEnabled();
   // Hold the GitHub read open, so the locked state stays on screen until the test has checked it.
   const read = github.hold(`GET ${REPO}/contents/data/events.json`);
+  await openBackup(page);
   await page.click('#discard-draft');
   await read.arrived;
   await expect(page.locator('#publish-btn')).toBeDisabled();
@@ -263,6 +266,7 @@ test('Discard draft unlocks again when GitHub cannot be reached (falls back to t
   await saveFakeToken(page);
   await addEvent(page);
   github.respond(`GET ${REPO}/contents/data/events.json`, { abort: true });
+  await openBackup(page);
   await page.click('#discard-draft');
   await expectResult(page.locator('#source-banner')).toHaveText('Source: published data/events.json');
   await expect(page.locator('#import-file')).toBeEnabled();

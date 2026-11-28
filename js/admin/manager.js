@@ -439,8 +439,15 @@ async function loadFromRepo() {
   }
 }
 
+/** Tells the Backup menu (js/admin/backup-menu.js) that an item's action ended, so it closes. */
+function backupDone() {
+  document.dispatchEvent(new CustomEvent('backup:done'));
+}
+
 async function discardDraft() {
-  if (!window.confirm('Discard your browser draft (events, site photos and moments) and reload the published data/events.json?')) return;
+  const yes = window.confirm('Discard your browser draft (events, site photos and moments) and reload the published data/events.json?');
+  backupDone();
+  if (!yes) return;
   localStorage.removeItem(DRAFT_KEY);
   // While the published copy loads, Publish, Import and Discard are locked so nothing races the swap.
   draftLoading = true;
@@ -827,11 +834,11 @@ async function init() {
   initSlots();
   $('f-date').addEventListener('input', notify);
   $('f-short').addEventListener('input', notify);
-  $('export-events').addEventListener('click', exportEvents);
-  $('import-file').addEventListener('change', (e) => {
+  $('export-events').addEventListener('click', () => { exportEvents(); backupDone(); });
+  $('import-file').addEventListener('change', async (e) => {
     const file = e.target.files[0];
-    if (file) importEvents(file);
     e.target.value = '';
+    if (file) { await importEvents(file); backupDone(); }
   });
   $('discard-draft').addEventListener('click', discardDraft);
   state.size = readPageSize(matchMedia('(max-width: 767px)').matches ? defaultPageSize(0) : defaultPageSize(768));

@@ -3,7 +3,7 @@
 // api.github.com call, an unreleased hold() or a leaked token fails the test.
 const fs = require('fs');
 const path = require('path');
-const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, FakeRepo, openFold, openBackup } = require('./github-mock');
 
 const ROOT = path.join(__dirname, '..');
 const REPO = '/repos/jiayangwong/MyCosplayWebsite';
@@ -274,6 +274,7 @@ test('Discard draft also restarts the moments draft (from GitHub with a token)',
   await addMoment(page, { year: 2025, caption: 'To be discarded', link: 'https://example.com/d' });
   await expect(page.locator('#mo-count')).toHaveText('5 moments');
   github.repo.pushOutside({ 'data/moments.json': `${JSON.stringify({ version: 1, moments: [PUBLISHED[0]] })}\n` });
+  await openBackup(page);
   await page.locator('#discard-draft').press('Enter');
   await expectResult(page.locator('#mo-count')).toHaveText('1 moment');
   expect(await rowIds(page)).toEqual(['2024-old']);

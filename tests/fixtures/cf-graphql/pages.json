@@ -1,0 +1,76 @@
+{
+ "data": {
+  "viewer": {
+   "accounts": [
+    {
+     "paths": [
+      {
+       "count": 30,
+       "sum": {
+        "visits": 20
+       },
+       "dimensions": {
+        "requestPath": "/"
+       }
+      },
+      {
+       "count": 10,
+       "sum": {
+        "visits": 5
+       },
+       "dimensions": {
+        "requestPath": "/index.html"
+       }
+      },
+      {
+       "count": 50,
+       "sum": {
+        "visits": 10
+       },
+       "dimensions": {
+        "requestPath": "/reels.html"
+       }
+      },
+      {
+       "count": 5,
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "requestPath": "/gallery"
+       }
+      },
+      {
+       "count": 2,
+       "sum": {
+        "visits": 2
+       },
+       "dimensions": {
+        "requestPath": "/wp-login.php"
+       }
+      },
+      {
+       "count": 1,
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "requestPath": "/nope/x"
+       }
+      },
+      {
+       "count": 3,
+       "sum": {
+        "visits": 0
+       },
+       "dimensions": {
+        "requestPath": "/404.html"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "errors": null
+}

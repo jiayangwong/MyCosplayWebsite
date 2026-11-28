@@ -2,7 +2,7 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
-const { mockEvents, trackErrors, openFold, SAMPLE_EVENTS } = require('./helpers');
+const { mockEvents, trackErrors, openFold, openBackup, SAMPLE_EVENTS } = require('./helpers');
 
 const PNG = fs.readFileSync(path.join(__dirname, 'fixtures', 'flat-2400x1600.png'));
 const SVG = fs.readFileSync(path.join(__dirname, '..', 'favicon.svg'));
@@ -235,6 +235,7 @@ test('admin: Display photo and Full-size photo are saved, kept after reload and 
   await page.fill('#f-photo-full', '');
   await page.click('#save-event');
 
+  await openBackup(page);
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
   const raw = fs.readFileSync(await download.path(), 'utf8');
   const data = JSON.parse(raw);

@@ -1,0 +1,8 @@
+{
+ "data": null,
+ "errors": [
+  {
+   "message": "secret-cloudflare-error-text token=abc"
+  }
+ ]
+}

@@ -1,0 +1,102 @@
+{
+  "v": 1,
+  "tab": "audience",
+  "days": 90,
+  "from": "2026-08-29",
+  "to": "2026-11-26",
+  "tz": "+08:00",
+  "sampled": true,
+  "generatedAt": "2026-11-26T12:00:00Z",
+  "data": {
+    "countries": [
+      {
+        "name": "Malaysia",
+        "visits": 269
+      },
+      {
+        "name": "Singapore",
+        "visits": 39
+      },
+      {
+        "name": "Indonesia",
+        "visits": 25
+      },
+      {
+        "name": "Japan",
+        "visits": 17
+      },
+      {
+        "name": "Philippines",
+        "visits": 14
+      },
+      {
+        "name": "Thailand",
+        "visits": 11
+      },
+      {
+        "name": "United States",
+        "visits": 8
+      },
+      {
+        "name": "Australia",
+        "visits": 8
+      },
+      {
+        "name": "United Kingdom",
+        "visits": 6
+      },
+      {
+        "name": "Hong Kong",
+        "visits": 6
+      },
+      {
+        "name": "Other",
+        "visits": 17
+      }
+    ],
+    "devices": [
+      {
+        "type": "mobile",
+        "visits": 238
+      },
+      {
+        "type": "desktop",
+        "visits": 90
+      },
+      {
+        "type": "tablet",
+        "visits": 8
+      }
+    ],
+    "browsers": [
+      {
+        "name": "Chrome",
+        "visits": 146
+      },
+      {
+        "name": "Safari",
+        "visits": 106
+      },
+      {
+        "name": "Instagram app",
+        "visits": 67
+      },
+      {
+        "name": "Edge",
+        "visits": 34
+      },
+      {
+        "name": "Firefox",
+        "visits": 17
+      },
+      {
+        "name": "Samsung Internet",
+        "visits": 8
+      },
+      {
+        "name": "Other",
+        "visits": 11
+      }
+    ]
+  }
+}

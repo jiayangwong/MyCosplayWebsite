@@ -367,7 +367,7 @@ const test = base.test.extend({
 
 /** TASK-23: the GitHub and Publish panels start collapsed. Opens one (which = 'gh' | 'pub') if it is closed. */
 // TASK-24: one shared helper (tests/helpers.js); 'gh' and 'pub' still work, panel ids ('form-panel', ...) too.
-const { openFold } = require('./helpers');
+const { openFold, openBackup } = require('./helpers');
 
 /** Saves the fake token through the admin GitHub panel (opens the panel first). */
 async function saveFakeToken(page, token = FAKE_TOKEN) {
@@ -376,4 +376,4 @@ async function saveFakeToken(page, token = FAKE_TOKEN) {
   await page.click('#gh-save');
 }
 
-module.exports = { test, expect, FAKE_TOKEN, API, BRANCH, FakeRepo, FakeGitHub, installGitHubMock, watchTokenLeaks, gitBlobSha, saveFakeToken, openFold };
+module.exports = { test, expect, FAKE_TOKEN, API, BRANCH, FakeRepo, FakeGitHub, installGitHubMock, watchTokenLeaks, gitBlobSha, saveFakeToken, openFold, openBackup };

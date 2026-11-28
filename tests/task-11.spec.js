@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { test, expect, BRANCH, FAKE_TOKEN, saveFakeToken, openFold } = require('./github-mock');
+const { test, expect, BRANCH, FAKE_TOKEN, saveFakeToken, openFold, openBackup } = require('./github-mock');
 
 const TOKEN_KEY = 'puzzkezz.github.token';
 const REPO_PATH = '/repos/jiayangwong/MyCosplayWebsite';
@@ -160,6 +160,7 @@ test('the token never reaches the draft or an exported events.json', async ({ pa
   const others = await page.evaluate((k) => Object.keys(localStorage).filter((key) => key !== k).map((key) => localStorage.getItem(key)), TOKEN_KEY);
   expect(others.length).toBeGreaterThan(0);
   for (const value of others) expect(value).not.toContain(FAKE_TOKEN);
+  await openBackup(page);
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
   const text = fs.readFileSync(await download.path(), 'utf8');
   expect(text).toContain('Token Test Con');
@@ -170,7 +171,11 @@ test('the token never reaches the draft or an exported events.json', async ({ pa
 test('CSP allows only self + api.github.com for fetch, referrer is off', async ({ page }) => {
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
   const connect = csp.split(';').map((d) => d.trim()).find((d) => d.startsWith('connect-src'));
-  expect(connect).toBe("connect-src 'self' https://api.github.com");
+  // The only extra host is the Worker origin from js/admin/analytics-config.js (single source of truth).
+  const cfg = fs.readFileSync(path.join(__dirname, '..', 'js', 'admin', 'analytics-config.js'), 'utf8');
+  const workerUrl = (/workerUrl:\s*'([^']*)'/.exec(cfg) || [])[1];
+  expect(workerUrl, 'workerUrl is set in analytics-config.js').toMatch(/^https:\/\/[^/]+$/);
+  expect(connect).toBe(`connect-src 'self' https://api.github.com ${workerUrl}`);
   const directives = csp.split(';').map((d) => d.trim()).filter(Boolean);
   for (const d of ["object-src 'none'", "base-uri 'none'", "form-action 'self'"]) expect(directives).toContain(d);
   // Nothing else may widen what the page can connect to.

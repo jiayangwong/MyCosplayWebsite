@@ -1,0 +1,61 @@
+{
+  "v": 1,
+  "tab": "sources",
+  "days": 30,
+  "from": "2026-10-28",
+  "to": "2026-11-26",
+  "tz": "+08:00",
+  "sampled": true,
+  "generatedAt": "2026-11-26T12:00:00Z",
+  "data": {
+    "groups": [
+      {
+        "key": "instagram",
+        "label": "Instagram",
+        "visits": 82
+      },
+      {
+        "key": "facebook",
+        "label": "Facebook",
+        "visits": 12
+      },
+      {
+        "key": "google",
+        "label": "Google",
+        "visits": 26
+      },
+      {
+        "key": "direct",
+        "label": "Direct / unknown",
+        "visits": 70
+      },
+      {
+        "key": "other",
+        "label": "Other",
+        "visits": 20
+      }
+    ],
+    "otherHosts": [
+      {
+        "host": "t.co",
+        "visits": 6
+      },
+      {
+        "host": "bing.com",
+        "visits": 5
+      },
+      {
+        "host": "duckduckgo.com",
+        "visits": 4
+      },
+      {
+        "host": "reddit.com",
+        "visits": 3
+      },
+      {
+        "host": "linktr.ee",
+        "visits": 2
+      }
+    ]
+  }
+}

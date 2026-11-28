@@ -1,0 +1,40 @@
+{
+ "data": {
+  "viewer": {
+   "accounts": [
+    {
+     "hours": [
+      {
+       "count": 4,
+       "sum": {
+        "visits": 2
+       },
+       "dimensions": {
+        "datetimeHour": "2026-11-13T16:00:00Z"
+       }
+      },
+      {
+       "count": 6,
+       "sum": {
+        "visits": 3
+       },
+       "dimensions": {
+        "datetimeHour": "2026-11-19T15:00:00Z"
+       }
+      },
+      {
+       "count": 50,
+       "sum": {
+        "visits": 50
+       },
+       "dimensions": {
+        "datetimeHour": "2026-11-20T16:00:00Z"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "errors": null
+}

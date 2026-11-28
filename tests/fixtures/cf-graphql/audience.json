@@ -1,0 +1,209 @@
+{
+ "data": {
+  "viewer": {
+   "accounts": [
+    {
+     "countries": [
+      {
+       "sum": {
+        "visits": 20
+       },
+       "dimensions": {
+        "countryName": "Country 0"
+       }
+      },
+      {
+       "sum": {
+        "visits": 19
+       },
+       "dimensions": {
+        "countryName": "Country 1"
+       }
+      },
+      {
+       "sum": {
+        "visits": 18
+       },
+       "dimensions": {
+        "countryName": "Country 2"
+       }
+      },
+      {
+       "sum": {
+        "visits": 17
+       },
+       "dimensions": {
+        "countryName": "Country 3"
+       }
+      },
+      {
+       "sum": {
+        "visits": 16
+       },
+       "dimensions": {
+        "countryName": "Country 4"
+       }
+      },
+      {
+       "sum": {
+        "visits": 15
+       },
+       "dimensions": {
+        "countryName": "Country 5"
+       }
+      },
+      {
+       "sum": {
+        "visits": 14
+       },
+       "dimensions": {
+        "countryName": "Country 6"
+       }
+      },
+      {
+       "sum": {
+        "visits": 13
+       },
+       "dimensions": {
+        "countryName": "Country 7"
+       }
+      },
+      {
+       "sum": {
+        "visits": 12
+       },
+       "dimensions": {
+        "countryName": "Country 8"
+       }
+      },
+      {
+       "sum": {
+        "visits": 11
+       },
+       "dimensions": {
+        "countryName": "Country 9"
+       }
+      },
+      {
+       "sum": {
+        "visits": 10
+       },
+       "dimensions": {
+        "countryName": "Country 10"
+       }
+      },
+      {
+       "sum": {
+        "visits": 9
+       },
+       "dimensions": {
+        "countryName": "Country 11"
+       }
+      }
+     ],
+     "devices": [
+      {
+       "sum": {
+        "visits": 70
+       },
+       "dimensions": {
+        "deviceType": "mobile"
+       }
+      },
+      {
+       "sum": {
+        "visits": 30
+       },
+       "dimensions": {
+        "deviceType": "desktop"
+       }
+      },
+      {
+       "sum": {
+        "visits": 3
+       },
+       "dimensions": {
+        "deviceType": "tablet"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "deviceType": "bot"
+       }
+      }
+     ],
+     "browsers": [
+      {
+       "sum": {
+        "visits": 60
+       },
+       "dimensions": {
+        "userAgentBrowser": "Chrome"
+       }
+      },
+      {
+       "sum": {
+        "visits": 20
+       },
+       "dimensions": {
+        "userAgentBrowser": "Safari"
+       }
+      },
+      {
+       "sum": {
+        "visits": 9
+       },
+       "dimensions": {
+        "userAgentBrowser": "Firefox"
+       }
+      },
+      {
+       "sum": {
+        "visits": 8
+       },
+       "dimensions": {
+        "userAgentBrowser": "Edge"
+       }
+      },
+      {
+       "sum": {
+        "visits": 7
+       },
+       "dimensions": {
+        "userAgentBrowser": "Samsung Internet"
+       }
+      },
+      {
+       "sum": {
+        "visits": 6
+       },
+       "dimensions": {
+        "userAgentBrowser": "Opera"
+       }
+      },
+      {
+       "sum": {
+        "visits": 3
+       },
+       "dimensions": {
+        "userAgentBrowser": "Brave"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "userAgentBrowser": "Vivaldi"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "errors": null
+}

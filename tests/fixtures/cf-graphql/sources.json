@@ -1,0 +1,117 @@
+{
+ "data": {
+  "viewer": {
+   "accounts": [
+    {
+     "referrers": [
+      {
+       "sum": {
+        "visits": 10
+       },
+       "dimensions": {
+        "refererHost": "l.instagram.com"
+       }
+      },
+      {
+       "sum": {
+        "visits": 5
+       },
+       "dimensions": {
+        "refererHost": "instagram.com"
+       }
+      },
+      {
+       "sum": {
+        "visits": 4
+       },
+       "dimensions": {
+        "refererHost": "m.facebook.com"
+       }
+      },
+      {
+       "sum": {
+        "visits": 3
+       },
+       "dimensions": {
+        "refererHost": "google.com.my"
+       }
+      },
+      {
+       "sum": {
+        "visits": 7
+       },
+       "dimensions": {
+        "refererHost": ""
+       }
+      },
+      {
+       "sum": {
+        "visits": 20
+       },
+       "dimensions": {
+        "refererHost": "puzzkezz-testing.loc.cc"
+       }
+      },
+      {
+       "sum": {
+        "visits": 2
+       },
+       "dimensions": {
+        "refererHost": "t.co"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "refererHost": "a.example"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "refererHost": "b.example"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "refererHost": "c.example"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "refererHost": "d.example"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "refererHost": "e.example"
+       }
+      },
+      {
+       "sum": {
+        "visits": 1
+       },
+       "dimensions": {
+        "refererHost": "f.example"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "errors": null
+}

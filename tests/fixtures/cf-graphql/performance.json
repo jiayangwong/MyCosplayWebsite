@@ -1,0 +1,57 @@
+{
+ "data": {
+  "viewer": {
+   "accounts": [
+    {
+     "timings": [
+      {
+       "count": 100,
+       "quantiles": {
+        "pageLoadTimeP50": 1800,
+        "firstContentfulPaintP75": 1200
+       },
+       "dimensions": {
+        "deviceType": "mobile"
+       }
+      },
+      {
+       "count": 50,
+       "quantiles": {
+        "pageLoadTimeP50": 900,
+        "firstContentfulPaintP75": null
+       },
+       "dimensions": {
+        "deviceType": "desktop"
+       }
+      }
+     ],
+     "vitals": [
+      {
+       "count": 80,
+       "quantiles": {
+        "largestContentfulPaintP75": 2300,
+        "interactionToNextPaintP75": 150,
+        "cumulativeLayoutShiftP75": 0.04
+       },
+       "sum": {
+        "lcpGood": 60,
+        "lcpNeedsImprovement": 15,
+        "lcpPoor": 5,
+        "inpGood": 70,
+        "inpNeedsImprovement": 8,
+        "inpPoor": 2,
+        "clsGood": 75,
+        "clsNeedsImprovement": 3,
+        "clsPoor": 2
+       },
+       "dimensions": {
+        "deviceType": "mobile"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "errors": null
+}

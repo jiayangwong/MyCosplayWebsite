@@ -1,7 +1,10 @@
 // TASK-24: every admin panel folds (only the Events list is open on load) and the Events list is paged (5 / 10).
 const path = require('path');
 const { test, expect, FakeRepo, saveFakeToken } = require('./github-mock');
-const { mockEvents, mockMoments, noHorizontalScroll, openFold, showEvent } = require('./helpers');
+const { stubGoogleFonts, mockEvents, mockMoments, noHorizontalScroll, openFold, openBackup, showEvent } = require('./helpers');
+
+// BUG-24: answer only the two Google Fonts hosts so the zero-console-errors checks are not broken by them.
+test.beforeEach(async ({ page }) => { await stubGoogleFonts(page); });
 
 test.describe.configure({ timeout: 60000 });
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
@@ -9,6 +12,7 @@ const SIZE_KEY = 'puzzkezz.admin.eventsPerPage';
 const PANELS = [
   ['gh-panel', 'gh-body', 'gh-chip'], ['events-panel', 'events-body', 'event-count'], ['form-panel', 'form-body', 'form-chip'],
   ['publish-panel', 'pub-body', 'pub-chip'], ['moments-panel', 'mo-body', 'mo-count'], ['wm-panel', 'wm-body', 'wm-chip'],
+  ['an-panel', 'an-body', 'an-chip'], // TASK-32: Analytics, collapsed on load, the last block
 ];
 
 /** n events, newest first: 2026-01-n ... Ids "2026-01-NN-eNN". */
@@ -32,7 +36,7 @@ const size = (page) => page.evaluate(() => document.getElementById('event-page-s
 const isPhone = (page) => page.viewportSize().width < 768;
 
 test.describe('folds', () => {
-  test('six fold buttons, defaults: only Events open (no token, token, draft)', async ({ page, github }) => {
+  test('seven fold buttons, defaults: only Events open (no token, token, draft)', async ({ page, github }) => {
     await load(page, many(21));
     const check = async () => {
       for (const [panel, body, chip] of PANELS) {
@@ -361,6 +365,7 @@ test.describe('paging', () => {
     await expect(page.locator('#event-count')).toHaveText('25 events');
     await expect(page.locator('#event-page')).toHaveText('Page 1 of 3');
     await page.click('#event-next');
+    await openBackup(page);
     await page.click('#discard-draft');
     await expect(page.locator('#event-count')).toHaveText('21 events');
     await expect(page.locator('#event-page')).toHaveText('Page 1 of 3');
@@ -385,6 +390,7 @@ test.describe('paging', () => {
   test('paging is display only: Export text is the same on every page', async ({ page }) => {
     await load(page, many(21));
     const exportText = async () => {
+      await openBackup(page);
       const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
       return require('fs').readFileSync(await dl.path(), 'utf8');
     };

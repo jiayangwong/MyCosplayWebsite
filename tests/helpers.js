@@ -52,6 +52,22 @@ async function openFold(page, panelId) {
   await expect(page.locator(`#${await btn.getAttribute('aria-controls')}`)).toBeVisible();
 }
 
+/** TASK-36: opens the admin Backup menu (Import / Export / Discard) if it is closed. Safe to call twice.
+ *  The menu closes after every Export / Import / Discard, so call it before every click on Export or Discard. */
+async function openBackup(page) {
+  const menu = page.locator('#backup-menu');
+  if (!(await menu.evaluate((el) => el.open))) await page.locator('#backup-menu > summary').click();
+  await expect(page.locator('#export-events')).toBeVisible();
+}
+
+/** TASK-37: opens the Analytics panel and its Settings disclosure (passcode + opt-out) if they are closed. Safe to call twice. */
+async function openAnalyticsSettings(page) {
+  await openFold(page, 'an-panel');
+  const d = page.locator('#an-settings');
+  if (!(await d.evaluate((el) => el.open))) await d.locator('> summary').click();
+  await expect(d.locator('.an-set-in')).toBeVisible();
+}
+
 /** TASK-24: pages the Events list until the row of event `id` is shown (starts at page 1). */
 async function showEvent(page, id) {
   const row = page.locator(`.event-row[data-id="${id}"]`);
@@ -67,4 +83,15 @@ async function showEvent(page, id) {
   await expect(row).toHaveCount(1);
 }
 
-module.exports = { openFold, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };
+/**
+ * BUG-24: Google Fonts are unreachable in tests (playwright.config.js blocks both hosts; a sandbox proxy may refuse
+ * them too), which prints "Failed to load resource" and breaks zero-console-errors checks. Answer only those two
+ * hosts with an empty 200; every other console error, including a CSP violation, still counts.
+ * Call it in a beforeEach before the page loads.
+ */
+const GOOGLE_FONTS = /^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
+async function stubGoogleFonts(page) {
+  await page.route(GOOGLE_FONTS, (r) => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+}
+
+module.exports = { stubGoogleFonts, openFold, openBackup, openAnalyticsSettings, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };
