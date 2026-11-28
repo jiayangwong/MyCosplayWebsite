@@ -1,6 +1,9 @@
 // QA exploratory checks for IDEA-12 (TASK-19..22): keyboard, odd data, reduced motion, 360px, console, links, token.
 const { test, expect } = require('@playwright/test');
-const { mockEvents, mockMoments, trackErrors, noHorizontalScroll } = require('./helpers');
+const { stubGoogleFonts, mockEvents, mockMoments, trackErrors, noHorizontalScroll } = require('./helpers');
+
+// BUG-24: answer only the two Google Fonts hosts so the zero-console-errors checks are not broken by them.
+test.beforeEach(async ({ page }) => { await stubGoogleFonts(page); });
 
 const EVENTS = [
   { id: '2026-08-22-oma', date: '2026-08-22', short: 'OMA', name: 'Omatsuri' },

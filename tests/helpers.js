@@ -83,4 +83,15 @@ async function showEvent(page, id) {
   await expect(row).toHaveCount(1);
 }
 
-module.exports = { openFold, openBackup, openAnalyticsSettings, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };
+/**
+ * BUG-24: Google Fonts are unreachable in tests (playwright.config.js blocks both hosts; a sandbox proxy may refuse
+ * them too), which prints "Failed to load resource" and breaks zero-console-errors checks. Answer only those two
+ * hosts with an empty 200; every other console error, including a CSP violation, still counts.
+ * Call it in a beforeEach before the page loads.
+ */
+const GOOGLE_FONTS = /^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
+async function stubGoogleFonts(page) {
+  await page.route(GOOGLE_FONTS, (r) => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+}
+
+module.exports = { stubGoogleFonts, openFold, openBackup, openAnalyticsSettings, showEvent, PAGES, isPhone, trackErrors, noHorizontalScroll, mockEvents, mockMoments, SAMPLE_EVENTS };

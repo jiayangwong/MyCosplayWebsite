@@ -1,7 +1,10 @@
 // TASK-24: every admin panel folds (only the Events list is open on load) and the Events list is paged (5 / 10).
 const path = require('path');
 const { test, expect, FakeRepo, saveFakeToken } = require('./github-mock');
-const { mockEvents, mockMoments, noHorizontalScroll, openFold, openBackup, showEvent } = require('./helpers');
+const { stubGoogleFonts, mockEvents, mockMoments, noHorizontalScroll, openFold, openBackup, showEvent } = require('./helpers');
+
+// BUG-24: answer only the two Google Fonts hosts so the zero-console-errors checks are not broken by them.
+test.beforeEach(async ({ page }) => { await stubGoogleFonts(page); });
 
 test.describe.configure({ timeout: 60000 });
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');

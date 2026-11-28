@@ -1,6 +1,9 @@
 // QA for TASK-24: extra checks at 360 / 412 / 1280 on top of tests/task-24.spec.js.
 const { test, expect } = require('./github-mock');
-const { mockEvents, mockMoments, noHorizontalScroll, openFold } = require('./helpers');
+const { stubGoogleFonts, mockEvents, mockMoments, noHorizontalScroll, openFold } = require('./helpers');
+
+// BUG-24: answer only the two Google Fonts hosts so the zero-console-errors checks are not broken by them.
+test.beforeEach(async ({ page }) => { await stubGoogleFonts(page); });
 
 const KEY = 'puzzkezz.admin.eventsPerPage';
 const PANELS = ['gh-panel', 'events-panel', 'form-panel', 'publish-panel', 'moments-panel', 'wm-panel'];

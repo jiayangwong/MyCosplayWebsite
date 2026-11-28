@@ -1,6 +1,9 @@
 // TASK-19: Home - Hall ??? 番外 station, ??? on the timeline, album pop-up from data/moments.json.
 const { test, expect } = require('@playwright/test');
-const { mockEvents, mockMoments, trackErrors, noHorizontalScroll } = require('./helpers');
+const { stubGoogleFonts, mockEvents, mockMoments, trackErrors, noHorizontalScroll } = require('./helpers');
+
+// BUG-24: answer only the two Google Fonts hosts so the zero-console-errors checks are not broken by them.
+test.beforeEach(async ({ page }) => { await stubGoogleFonts(page); });
 
 const EVENTS = [
   { id: '2024-06-01-amg', date: '2024-06-01', short: 'AMG', name: 'Anime Matsuri Gathering' },

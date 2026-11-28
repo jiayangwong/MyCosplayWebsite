@@ -27,7 +27,7 @@ PLAN APPROVED: 2026-11-18
 - Out of scope for v1: IDEA-1 (wardrobe), IDEA-2 (gacha), IDEA-4 (petal storm)
 - Out of scope / future idea: an automatic GitHub Action that runs the watermark repo guard on every push (user answer to question 18, 2026-11-18). Goes to the idea-collector later.
 - Visual concept: "Concept 6B" on the design canvas "Puzz Kezz homepage concepts"
-- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11 + BUG-4) and TASK-17 (question 22) were approved by the user on 2026-11-19.** **TASK-25 (IDEA-15) and TASK-26 to TASK-29 (IDEA-16) were approved by the user on 2026-11-26 ("all approved").** **Section 12 (IDEA-17, TASK-30 to TASK-35) was approved by the user on 2026-11-27, with days in GMT+8 (question 51 changed); TASK-32 to TASK-35 still wait for the chart rules and the storyboard approval.** **Section 13 (IDEA-18, TASK-36 and TASK-37, amendments to TASK-32 / TASK-33) is waiting for user approval (2026-11-27). User answered 2026-11-27: Approved all, use 900px (questions 54-60 answered; plan text updated; approval marker not written yet).** TASK-38 (config only): built. Review: changes made, re-review pending (task-11 CSP expectation now includes the Worker origin from analytics-config.js). QA TASK-38: passed 2026-11-28 (config + CSP, no request to any other host). **TASK-30 (beacon): user approved `type="module"` 2026-11-28 (question 61, formerly numbered 54 in the TASK-30 note), merged into the release line, re-review pending.** **PENDING 1ST SERIOUS BUG (user decision 2026-11-28, OPEN, not fixed now, see bugs/BUGS.md): without www (https://puzzkezz-testing.loc.cc) the site/admin cannot be accessed; with www it works; the Worker ALLOWED_ORIGIN is www only. The user wants both addresses to work. Blocks nothing until the user decides; the release-manager must list it in the release checklist.**
+- Status: **APPROVED by the user on 2026-11-18** - the whole plan, including the IDEA-8 / IDEA-9 revision (TASK-7 rewritten, TASK-10 to TASK-13) and the IDEA-10 addition (TASK-14, TASK-15, 2x density). **TASK-16 (IDEA-11 + BUG-4) and TASK-17 (question 22) were approved by the user on 2026-11-19.** **TASK-25 (IDEA-15) and TASK-26 to TASK-29 (IDEA-16) were approved by the user on 2026-11-26 ("all approved").** **Section 12 (IDEA-17, TASK-30 to TASK-35) was approved by the user on 2026-11-27, with days in GMT+8 (question 51 changed); TASK-32 to TASK-35 still wait for the chart rules and the storyboard approval.** **Section 13 (IDEA-18, TASK-36 and TASK-37, amendments to TASK-32 / TASK-33) is waiting for user approval (2026-11-27). User answered 2026-11-27: Approved all, use 900px (questions 54-60 answered; plan text updated; approval marker not written yet).** TASK-38 (config only): built. Review: approved 2026-11-28 (re-review of dd32729: task-11 CSP expectation now includes the Worker origin from analytics-config.js; see docs/reviews.md, which also notes the qa-task-38 spec failing on Google Fonts console errors). QA: passed 2026-11-28 (TASK-38; GMT+8, tested at 35a12bc; replaces the earlier "failed - see BUG-24"). BUG-24 verified. TASK-38 checks out: config + CSP, no fetch to any host but the Worker (faked) and GitHub; tests/qa-task-38.spec.js passes. Full suite 1198 tests: 1154 passed, 42 skipped, 2 failed, both intermittent desktop publish tests outside TASK-38 (task-16:418 and task-13:682); each passed 10 of 10 re-runs alone; in 15 parallel repeats of both lines, 284 passed and 1 failed (task-16:418). Logged as BUG-25 (minor, open, TASK-36; cause of the task-13 failure not known), so the suite is not reliably green. Not checked: the live Worker, the live site, and pages with the real Google Fonts. **TASK-30 (beacon): user approved `type="module"` 2026-11-28 (question 61, formerly numbered 54 in the TASK-30 note), merged into the release line, re-review pending.** **PENDING 1ST SERIOUS BUG (user decision 2026-11-28, OPEN, not fixed now, see bugs/BUGS.md): without www (https://puzzkezz-testing.loc.cc) the site/admin cannot be accessed; with www it works; the Worker ALLOWED_ORIGIN is www only. The user wants both addresses to work. Blocks nothing until the user decides; the release-manager must list it in the release checklist.**
 
 ### Branch note (this job only)
 The integration branch is **`site-v1`**. It takes the place of `main`, because the real `main` is checked out somewhere else. Each task branch (for example `task-3-home-hall`) is created from `site-v1` and merged back into `site-v1`. Wherever CLAUDE.md says "main", read `site-v1`.
@@ -328,6 +328,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Status: done (built 2026-11-17 by the main session on site-v1)
 - Review: pending (STORYBOARD APPROVED 2026-11-18, ready for the reviewer agent)
 - QA: pending formal QA agent; automated tests in tests/ pass (80 checks, PC + phone)
+- QA note (2026-11-28): tests/task-4.spec.js:94 (desktop) was seen failing once under load by the bugfixer; QA could not repeat it; BUG-26 (minor, open).
 
 ### TASK-5: Events page - grouped by year, event cards, click-to-load embeds
 - Linked idea(s): IDEA-6, IDEA-7
@@ -476,6 +477,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Status: done (merged into site-v1 on 2026-11-19 as 5442abf; review approved round 2, QA passed)
 - Review: approved 2026-11-18 (round 2, commit eff0502; see docs/reviews.md)
 - QA: passed 2026-11-18 (94 passed + 2 skips full suite PC + phone; exploratory: loading/failed/full states, swipe, Esc + focus return, rapid navigation, admin + import validation, no console errors besides expected 404)
+- QA note (2026-11-28): tests/task-10.spec.js:202 (phone) fails now and then, cause not known; BUG-26 (minor, open).
 
 ### TASK-11: GitHub connection panel in `/admin/` (token save / test / forget)
 - Linked idea(s): IDEA-8
@@ -589,6 +591,7 @@ Status values: `todo | in-progress | done`. Each task also gets `Review:` and `Q
 - Status: done (merged into site-v1 on 2026-11-19; review approved round 3, QA passed)
 - Review: approved 2026-11-19
 - QA: passed 2026-11-19
+- QA note (2026-11-28): tests/task-13.spec.js:682 (desktop) failed once in a full run, cause not known; BUG-26 (minor, open).
 
 ### TASK-16: Publish never commits a broken photo link (events and site photos); "Remove from publish" puts back the published photo - APPROVED 2026-11-19
 - Linked idea(s): IDEA-11 (with IDEA-8, IDEA-9, IDEA-10); fixes BUG-4
@@ -1749,6 +1752,7 @@ The user answered (verbatim): "all approved except Q51, i need GMT+8 days". Ques
 - Status: built, waiting for review (branch `task-36-admin-shell`, based on `task-31-worker` because that branch carries the approved docs; 2026-11-27)
 - Review: approved 2026-11-28
 - QA: passed 2026-11-28
+- QA note (2026-11-28): BUG-25 (minor, Backup menu's delayed focus) fixed in 517be08 on branch task-38-worker-url and verified by QA on 2026-11-28 (GMT+8); full suite 1157 passed, 42 skipped, 1 failed (intermittent task-10 test, BUG-26, minor, open); see bugs/BUGS.md.
 
 ### TASK-37: Analytics panel layout - placement, controls row, Settings and About, compare switch, tile column
 - Linked idea(s): IDEA-18 (with IDEA-17)
