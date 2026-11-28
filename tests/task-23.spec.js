@@ -5,7 +5,10 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect, FAKE_TOKEN, FakeRepo, openFold, saveFakeToken } = require('./github-mock');
-const { noHorizontalScroll, mockMoments, showEvent } = require('./helpers');
+const { stubGoogleFonts, noHorizontalScroll, mockMoments, showEvent } = require('./helpers');
+
+// BUG-24: answer only the two Google Fonts hosts so the zero-console-errors checks are not broken by them.
+test.beforeEach(async ({ page }) => { await stubGoogleFonts(page); });
 
 const ROOT = path.join(__dirname, '..');
 const SMALL = path.join(__dirname, 'fixtures', 'flat-800x600.png');
