@@ -185,6 +185,30 @@ test.describe('TASK-36 Backup menu', () => {
     await expect(page.locator('#event-count')).toHaveText('1 event');
   });
 
+  test('BUG-25: focus moved elsewhere right after Import / Export stays there; it is not pulled back to Backup', async ({ page, github }) => {
+    await load(page, github);
+    const good = { version: 1, events: [{ id: '2026-01-01-imp', date: '2026-01-01', short: 'IMP', name: 'Imported Con', activities: ['Cosplay'] }] };
+    // When the action ends, move focus at once (well inside the 50 ms delay) and report where it is 300 ms later.
+    const moveOnDone = () => page.evaluate(() => new Promise((resolve) => {
+      document.addEventListener('backup:done', () => {
+        document.getElementById('new-event').focus();
+        setTimeout(() => resolve(document.activeElement && document.activeElement.id), 300);
+      }, { once: true });
+    }));
+    await openBackup(page);
+    const afterImport = moveOnDone();
+    await page.setInputFiles('#import-file', { name: 'good.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(good)) });
+    expect(await afterImport).toBe('new-event');
+    await expect(page.locator('#event-count')).toHaveText('1 event');
+    await expect(page.locator('#export-events')).toBeHidden();
+    await expect(page.locator('#new-event')).toBeFocused();
+    await openBackup(page);
+    const afterExport = moveOnDone();
+    await Promise.all([page.waitForEvent('download'), page.click('#export-events')]);
+    expect(await afterExport).toBe('new-event');
+    await expect(page.locator('#new-event')).toBeFocused();
+  });
+
   test('Discard is danger red and asks first: cancel keeps the draft, accept restores the published list', async ({ page, github }) => {
     await load(page, github, { dialog: 'dismiss' });
     await addEvent(page);

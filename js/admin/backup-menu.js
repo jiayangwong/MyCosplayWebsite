@@ -20,8 +20,12 @@ if (menu) {
     if (menu.open && !menu.contains(e.target)) close(false);
   });
   // Close at once; focus a moment later, after the browser has finished the click / download / file dialog.
+  // BUG-25: only if focus is still in the menu or nowhere; if the person has moved on, leave it there.
   document.addEventListener('backup:done', () => {
     close(false);
-    setTimeout(() => summary.focus(), 50);
+    setTimeout(() => {
+      const active = document.activeElement;
+      if (!active || active === document.body || menu.contains(active)) summary.focus();
+    }, 50);
   });
 }
