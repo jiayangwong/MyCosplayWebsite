@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; frame-src https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contact · Puzz Kezz</title>
   <meta name="description" content="Collabs and bookings with Puzz Kezz, cosplayer.">
@@ -34,24 +35,7 @@
       <div class="contact-row" id="contact-socials"></div>
     </div>
   </main>
-  <script type="module">
-    import { mountChrome } from './js/nav.js';
-    import { SITE } from './js/site-config.js';
-    mountChrome('contact');
-    const email = document.getElementById('contact-email');
-    email.href = `mailto:${SITE.email}`;
-    email.textContent = SITE.emailIsPlaceholder ? 'Email [email placeholder]' : `Email ${SITE.email}`;
-    if (SITE.emailIsPlaceholder) document.getElementById('contact-email-note').textContent = 'Real address coming soon.';
-    const socials = document.getElementById('contact-socials');
-    for (const s of SITE.socials) {
-      const a = document.createElement('a');
-      a.className = 'btn btn-secondary btn-sm';
-      a.href = s.url;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      a.textContent = s.label;
-      socials.append(a);
-    }
-  </script>
+  <script type="module" src="js/analytics.js"></script>
+  <script type="module" src="js/page-contact.js"></script>
 </body>
 </html>

@@ -192,3 +192,9 @@
 - Cause: count texts were built as number + a fixed plural word ('page loads', and the same for 'visits' / 'page views' in bar values, stacked-bar counts and chart summaries), so a count of 1 was never singular.
 - Fix: one helper `countWord(n, plural)` in js/admin/charts.js (visit/visits, page view/page views, page load/page loads, sample/samples) used by barChart values, stackedBar counts, and in js/admin/analytics-panel.js by the "from N page loads" line, the Overview and Sources chart summaries and the Other sites list. Table headers stay plural ("Visits", "Page views", "Page loads"); tile labels and tooltips print "Visits 1" / "Page views 1" style labels, unchanged per docs/style-guide.md; the few-samples line "Few samples (n)" has no count word, unchanged. Regression test tests/bug-23.spec.js (0 / 1 / 2 for each word, Performance, Sources, Pages; fails without the fix).
 - QA re-test (2026-11-28): verified. Real admin page with the fake Worker at 390 and 1280px, counts 0 / 1 / 2 on Overview, Sources, Pages, Performance: "1 visit", "1 page view", "1 page load", "from 1 page load"; 0 and 2 stay plural; no "1 visits" style text anywhere. tests/qa-bug-23-shots.spec.js + tests/bug-23.spec.js pass; screenshots /tmp/qa-shots/bug23-*.png.
+
+## PENDING 1ST SERIOUS BUG
+- Found by: the user (2026-11-28)
+- Severity: critical/major
+- Status: OPEN (do NOT fix now, user decision 2026-11-28)
+- Description: Without www (https://puzzkezz-testing.loc.cc) the site/admin cannot be accessed. With www (https://www.puzzkezz-testing.loc.cc) works. Admin analytics Worker ALLOWED_ORIGIN was changed to the www address on 2026-11-28 so only www works in the admin; Worker accepts a single origin. User wants both addresses to work. Needs investigation of non-www access (DNS/redirect/GitHub Pages custom domain) and, if needed, a Worker origin allow-list. Blocks nothing until the user decides; release-manager must list it in the release checklist.
